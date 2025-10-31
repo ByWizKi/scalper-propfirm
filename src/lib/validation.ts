@@ -29,16 +29,10 @@ export const registerSchema = z.object({
  */
 export const createAccountSchema = z.object({
   name: z.string().min(1, "Le nom est requis").max(100),
-  propfirm: z.enum(["TOPSTEP", "TAKEPROFITTRADER"], {
-    errorMap: () => ({ message: "Propfirm invalide" }),
-  }),
+  propfirm: z.enum(["TOPSTEP", "TAKEPROFITTRADER"]),
   size: z.number().int().positive("La taille doit être positive").max(1000000),
-  accountType: z.enum(["EVAL", "FUNDED"], {
-    errorMap: () => ({ message: "Type de compte invalide" }),
-  }),
-  status: z.enum(["ACTIVE", "VALIDATED", "FAILED", "ARCHIVED"], {
-    errorMap: () => ({ message: "Statut invalide" }),
-  }),
+  accountType: z.enum(["EVAL", "FUNDED"]),
+  status: z.enum(["ACTIVE", "VALIDATED", "FAILED", "ARCHIVED"]),
   pricePaid: z.number().nonnegative("Le prix doit être positif ou nul").max(100000),
   linkedEvalId: z.string().uuid().optional().or(z.literal("")),
   notes: z.string().max(1000).optional(),
@@ -90,7 +84,7 @@ export function validateData<T>(schema: z.ZodSchema<T>, data: unknown): T {
     return schema.parse(data)
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const messages = error.errors.map((e) => e.message).join(", ")
+      const messages = error.issues.map((e) => e.message).join(", ")
       throw new Error(`Validation échouée: ${messages}`)
     }
     throw error
@@ -109,7 +103,7 @@ export async function validateDataAsync<T>(
     return { success: true, data: validatedData }
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const messages = error.errors.map((e) => e.message).join(", ")
+      const messages = error.issues.map((e) => e.message).join(", ")
       return { success: false, error: `Validation échouée: ${messages}` }
     }
     return { success: false, error: "Erreur de validation" }
