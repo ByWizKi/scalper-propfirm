@@ -156,8 +156,8 @@ export default function AccountDetailPage() {
     return null
   }
 
-  const totalPnl = account.pnlEntries.reduce((sum: number, entry) => sum + entry.amount, 0)
-  const totalWithdrawals = account.withdrawals.reduce((sum: number, w) => sum + w.amount, 0)
+  const totalPnl = account.pnlEntries.reduce((sum: number, entry: { amount: number }) => sum + entry.amount, 0)
+  const totalWithdrawals = account.withdrawals.reduce((sum: number, w: { amount: number }) => sum + w.amount, 0)
 
   // Fonction pour obtenir le maxDrawdown selon la propfirm et la taille
   const getMaxDrawdown = (propfirm: string, size: number): number => {
@@ -182,19 +182,19 @@ export default function AccountDetailPage() {
   const totalInvested = account.pricePaid + (account.linkedEval?.pricePaid || 0)
 
   // Statistiques de trading avancées
-  const dailyPnlMap = account.pnlEntries.reduce((acc, entry) => {
+  const dailyPnlMap = account.pnlEntries.reduce((acc: Record<string, number>, entry: { date: string; amount: number }) => {
     const dateKey = entry.date.split('T')[0]
     acc[dateKey] = (acc[dateKey] || 0) + entry.amount
     return acc
   }, {} as Record<string, number>)
 
-  const dailyPnlValues = Object.values(dailyPnlMap)
+  const dailyPnlValues = Object.values(dailyPnlMap) as number[]
   const tradingDays = dailyPnlValues.length
   const bestDay = dailyPnlValues.length > 0 ? Math.max(...dailyPnlValues) : 0
   const avgPerDay = tradingDays > 0 ? totalPnl / tradingDays : 0
 
   // Calculer le PnL par mois
-  const monthlyPnl = account.pnlEntries.reduce((acc, entry) => {
+  const monthlyPnl = account.pnlEntries.reduce((acc: Record<string, { month: string; amount: number; count: number }>, entry: { date: string; amount: number }) => {
     const date = new Date(entry.date)
     const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
 
@@ -213,7 +213,7 @@ export default function AccountDetailPage() {
   }, {} as Record<string, { month: string; amount: number; count: number }>)
 
   // Convertir en tableau et trier par date
-  const monthlyPnlArray = Object.values(monthlyPnl).sort((a, b) =>
+  const monthlyPnlArray = (Object.values(monthlyPnl) as Array<{ month: string; amount: number; count: number }>).sort((a, b) =>
     b.month.localeCompare(a.month)
   )
 
@@ -443,7 +443,7 @@ export default function AccountDetailPage() {
               </p>
             ) : (
               <div className="space-y-3">
-                {account.pnlEntries.slice(0, 5).map((entry) => (
+                {account.pnlEntries.slice(0, 5).map((entry: { id: string; date: string; amount: number; notes?: string | null }) => (
                   <div
                     key={entry.id}
                     className="flex items-center justify-between p-3 rounded-lg bg-zinc-50 dark:bg-zinc-900"
@@ -506,7 +506,7 @@ export default function AccountDetailPage() {
               </p>
             ) : (
               <div className="space-y-3">
-                {account.withdrawals.slice(0, 5).map((withdrawal) => {
+                {account.withdrawals.slice(0, 5).map((withdrawal: { id: string; date: string; amount: number; notes?: string | null }) => {
                   // Calculer le montant net reçu (avec taxes pour TakeProfitTrader)
                   const isTakeProfitTrader = account.propfirm === "TAKEPROFITTRADER"
                   const netAmount = isTakeProfitTrader ? withdrawal.amount * 0.8 : withdrawal.amount

@@ -91,11 +91,11 @@ export default function AccountsPage() {
 
   // Filtrer et trier les comptes
   const filteredAndSortedAccounts = accounts
-    .filter((account) => {
+    .filter((account: { propfirm: string }) => {
       if (filterPropfirm === "all") return true
       return account.propfirm === filterPropfirm
     })
-    .sort((a, b) => {
+    .sort((a: { createdAt: string }, b: { createdAt: string }) => {
       if (sortBy === "date-desc") {
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       } else {
@@ -104,7 +104,7 @@ export default function AccountsPage() {
     })
 
   // Obtenir la liste des propfirms disponibles
-  const availablePropfirms = Array.from(new Set(accounts.map(acc => acc.propfirm)))
+  const availablePropfirms = Array.from(new Set(accounts.map((acc: { propfirm: string }) => acc.propfirm)))
 
   if (isLoading) {
     return (
@@ -142,9 +142,9 @@ export default function AccountsPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Toutes les propfirms</SelectItem>
-                {availablePropfirms.map((propfirm) => (
+                {availablePropfirms.map((propfirm: string) => (
                   <SelectItem key={propfirm} value={propfirm}>
-                    {PROPFIRM_LABELS[propfirm]}
+                    {PROPFIRM_LABELS[propfirm as keyof typeof PROPFIRM_LABELS]}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -190,7 +190,7 @@ export default function AccountsPage() {
         </Card>
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {filteredAndSortedAccounts.map((account) => (
+          {filteredAndSortedAccounts.map((account: { id: string; name: string; propfirm: string; size: number; accountType: string; status: string; pricePaid: number; notes?: string | null }) => (
             <Card
               key={account.id}
               className="cursor-pointer hover:shadow-lg transition-shadow"
