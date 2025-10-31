@@ -77,23 +77,27 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="p-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-50">Tableau de bord</h1>
-        <p className="text-zinc-600 dark:text-zinc-400 mt-2">
+    <div className="p-4 sm:p-6 lg:p-8">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-zinc-900 dark:text-zinc-50">
+          Tableau de bord
+        </h1>
+        <p className="text-sm sm:text-base text-zinc-600 dark:text-zinc-400 mt-1 sm:mt-2">
           Vue d&apos;ensemble de vos comptes propfirm
         </p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
+      <div className="grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-4 mb-6 sm:mb-8">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Comptes</CardTitle>
-            <Wallet className="h-4 w-4 text-zinc-500" />
+            <CardTitle className="text-xs sm:text-sm font-medium truncate pr-2">
+              Total Comptes
+            </CardTitle>
+            <Wallet className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-zinc-500 flex-shrink-0" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats?.totalAccounts || 0}</div>
-            <p className="text-xs text-zinc-500 mt-1">
+            <div className="text-xl sm:text-2xl font-bold">{stats?.totalAccounts || 0}</div>
+            <p className="text-[10px] sm:text-xs text-zinc-500 mt-1 truncate">
               {stats?.activeAccounts || 0} actifs • {stats?.fundedAccounts || 0} financés
             </p>
           </CardContent>
@@ -101,97 +105,113 @@ export default function DashboardPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Investi Total</CardTitle>
-            <Target className="h-4 w-4 text-zinc-500" />
+            <CardTitle className="text-xs sm:text-sm font-medium truncate pr-2">
+              Investi Total
+            </CardTitle>
+            <Target className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-zinc-500 flex-shrink-0" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(stats?.totalInvested || 0)}</div>
-            <p className="text-xs text-zinc-500 mt-1">
+            <div className="text-lg sm:text-2xl font-bold truncate">
+              {formatCurrency(stats?.totalInvested || 0)}
+            </div>
+            <p className="text-[10px] sm:text-xs text-zinc-500 mt-1 truncate">
               {formatCurrencyEUR((stats?.totalInvested || 0) * USD_TO_EUR)}
             </p>
-            <p className="text-xs text-zinc-500 mt-1">Coût des comptes</p>
+            <p className="text-[10px] sm:text-xs text-zinc-500 mt-1 hidden sm:block">
+              Coût des comptes
+            </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Retraits Nets</CardTitle>
-            <DollarSign className="h-4 w-4 text-zinc-500" />
+            <CardTitle className="text-xs sm:text-sm font-medium truncate pr-2">
+              Retraits Nets
+            </CardTitle>
+            <DollarSign className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-zinc-500 flex-shrink-0" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">
+            <div className="text-lg sm:text-2xl font-bold text-green-600 truncate">
               {formatCurrency(totalNetWithdrawals)}
             </div>
-            <p className="text-xs text-green-600 mt-1">
+            <p className="text-[10px] sm:text-xs text-green-600 mt-1 truncate">
               {formatCurrencyEUR(totalNetWithdrawals * USD_TO_EUR)}
             </p>
-            <p className="text-xs text-zinc-500 mt-1">Retraits nets après taxes</p>
+            <p className="text-[10px] sm:text-xs text-zinc-500 mt-1 hidden sm:block">
+              Retraits nets après taxes
+            </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Bilan</CardTitle>
-            <TrendingUp className="h-4 w-4 text-zinc-500" />
+            <CardTitle className="text-xs sm:text-sm font-medium truncate pr-2">
+              Bilan
+            </CardTitle>
+            <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-zinc-500 flex-shrink-0" />
           </CardHeader>
           <CardContent>
             <div
-              className={`text-2xl font-bold ${totalNetWithdrawals - (stats?.totalInvested || 0) >= 0 ? "text-green-600" : "text-red-600"}`}
+              className={`text-lg sm:text-2xl font-bold truncate ${totalNetWithdrawals - (stats?.totalInvested || 0) >= 0 ? "text-green-600" : "text-red-600"}`}
             >
               {formatCurrency(totalNetWithdrawals - (stats?.totalInvested || 0))}
             </div>
             <p
-              className={`text-xs mt-1 ${totalNetWithdrawals - (stats?.totalInvested || 0) >= 0 ? "text-green-600" : "text-red-600"}`}
+              className={`text-[10px] sm:text-xs mt-1 truncate ${totalNetWithdrawals - (stats?.totalInvested || 0) >= 0 ? "text-green-600" : "text-red-600"}`}
             >
               {formatCurrencyEUR((totalNetWithdrawals - (stats?.totalInvested || 0)) * USD_TO_EUR)}
             </p>
-            <p className="text-xs text-zinc-500 mt-1">Retraits nets - Investi</p>
+            <p className="text-[10px] sm:text-xs text-zinc-500 mt-1 hidden sm:block">
+              Retraits nets - Investi
+            </p>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-1 mb-8">
+      <div className="grid gap-4 sm:gap-6 md:grid-cols-1 mb-6 sm:mb-8">
         <Card>
           <CardHeader>
-            <CardTitle>Bilan Financier</CardTitle>
+            <CardTitle className="text-base sm:text-lg">Bilan Financier</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-zinc-600 dark:text-zinc-400">
+            <div className="space-y-3 sm:space-y-4">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400">
                   Total Retraits Nets
                 </span>
-                <div className="text-right">
-                  <div className="font-medium text-green-600">
+                <div className="text-right min-w-0">
+                  <div className="font-medium text-green-600 text-sm sm:text-base truncate">
                     {formatCurrency(totalNetWithdrawals)}
                   </div>
-                  <div className="text-xs text-green-600">
+                  <div className="text-[10px] sm:text-xs text-green-600 truncate">
                     {formatCurrencyEUR(totalNetWithdrawals * USD_TO_EUR)}
                   </div>
                 </div>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-zinc-600 dark:text-zinc-400">Total Investi</span>
-                <div className="text-right">
-                  <div className="font-medium text-red-600">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400">
+                  Total Investi
+                </span>
+                <div className="text-right min-w-0">
+                  <div className="font-medium text-red-600 text-sm sm:text-base truncate">
                     -{formatCurrency(stats?.totalInvested || 0)}
                   </div>
-                  <div className="text-xs text-red-600">
+                  <div className="text-[10px] sm:text-xs text-red-600 truncate">
                     {formatCurrencyEUR((stats?.totalInvested || 0) * USD_TO_EUR)}
                   </div>
                 </div>
               </div>
-              <div className="border-t border-zinc-200 dark:border-zinc-800 pt-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-lg font-medium">Différence</span>
-                  <div className="text-right">
+              <div className="border-t border-zinc-200 dark:border-zinc-800 pt-3 sm:pt-4">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-base sm:text-lg font-medium">Différence</span>
+                  <div className="text-right min-w-0">
                     <div
-                      className={`text-2xl font-bold ${totalNetWithdrawals - (stats?.totalInvested || 0) >= 0 ? "text-green-600" : "text-red-600"}`}
+                      className={`text-xl sm:text-2xl font-bold truncate ${totalNetWithdrawals - (stats?.totalInvested || 0) >= 0 ? "text-green-600" : "text-red-600"}`}
                     >
                       {formatCurrency(totalNetWithdrawals - (stats?.totalInvested || 0))}
                     </div>
                     <div
-                      className={`text-xs ${totalNetWithdrawals - (stats?.totalInvested || 0) >= 0 ? "text-green-600" : "text-red-600"}`}
+                      className={`text-[10px] sm:text-xs truncate ${totalNetWithdrawals - (stats?.totalInvested || 0) >= 0 ? "text-green-600" : "text-red-600"}`}
                     >
                       {formatCurrencyEUR(
                         (totalNetWithdrawals - (stats?.totalInvested || 0)) * USD_TO_EUR
@@ -199,7 +219,7 @@ export default function DashboardPage() {
                     </div>
                   </div>
                 </div>
-                <p className="text-xs text-zinc-500 mt-2 text-right">
+                <p className="text-[10px] sm:text-xs text-zinc-500 mt-2 text-right">
                   {totalNetWithdrawals - (stats?.totalInvested || 0) >= 0
                     ? "Vous êtes en profit"
                     : "Vous êtes en perte"}
@@ -211,7 +231,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Calendriers */}
-      <div className="grid gap-6 grid-cols-1 mb-8">
+      <div className="grid gap-4 sm:gap-6 grid-cols-1 mb-6 sm:mb-8">
         <ExpensesCalendar expenses={accounts} />
         <WithdrawalsCalendar withdrawals={withdrawals} />
       </div>
