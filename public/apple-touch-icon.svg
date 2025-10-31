@@ -1,27 +1,11 @@
 <svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Fond avec dégradé -->
-  <rect width="180" height="180" rx="40" fill="url(#gradient)"/>
+  <!-- Fond noir -->
+  <rect width="180" height="180" fill="#000000"/>
   
-  <!-- Définition du dégradé -->
-  <defs>
-    <linearGradient id="gradient" x1="0" y1="0" x2="180" y2="180" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#2563eb"/>
-      <stop offset="100%" stop-color="#1e40af"/>
-    </linearGradient>
-  </defs>
-  
-  <!-- Lettre S -->
-  <path d="M56 97 C56 108 63 115 73 115 C83 115 90 108 90 97 C90 87 83 83 73 80 C63 77 56 73 56 63 C56 52 63 45 73 45 C83 45 90 52 90 63" 
+  <!-- Lettre S centrée en blanc -->
+  <path d="M70 113 C70 127 77 137 95 137 C113 137 120 127 120 113 C120 99 113 91 95 88 C77 85 70 77 70 63 C70 49 77 39 95 39 C113 39 120 49 120 63" 
         stroke="white" 
-        stroke-width="10" 
-        stroke-linecap="round" 
-        fill="none"/>
-  
-  <!-- Lettre P -->
-  <path d="M100 115 L100 45 L118 45 C128 45 135 52 135 63 C135 73 128 80 118 80 L100 80" 
-        stroke="white" 
-        stroke-width="10" 
+        stroke-width="11" 
         stroke-linecap="round" 
         fill="none"/>
 </svg>
-
