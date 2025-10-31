@@ -1,11 +1,11 @@
 <svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
   <!-- Fond noir -->
   <rect width="180" height="180" fill="#000000"/>
-  
+
   <!-- Lettre S centrée en blanc -->
-  <path d="M70 113 C70 127 77 137 95 137 C113 137 120 127 120 113 C120 99 113 91 95 88 C77 85 70 77 70 63 C70 49 77 39 95 39 C113 39 120 49 120 63" 
+  <path d="M63 117 C63 131 71 141 90 141 C109 141 117 131 117 117 C117 103 109 95 90 92 C71 89 63 81 63 67 C63 53 71 43 90 43 C109 43 117 53 117 67" 
         stroke="white" 
-        stroke-width="11" 
+        stroke-width="12" 
         stroke-linecap="round" 
         fill="none"/>
 </svg>

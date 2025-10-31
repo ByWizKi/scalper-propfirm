@@ -1,11 +1,11 @@
 <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
   <!-- Fond noir -->
   <rect width="32" height="32" fill="#000000"/>
-  
+
   <!-- Lettre S centrée en blanc -->
-  <path d="M12 20 C12 22 13 24 16 24 C19 24 20 22 20 20 C20 18 19 17 16 16 C13 15 12 14 12 12 C12 10 13 8 16 8 C19 8 20 10 20 12" 
+  <path d="M11 21 C11 23 12.5 25 16 25 C19.5 25 21 23 21 21 C21 19 19.5 18 16 17 C12.5 16 11 15 11 13 C11 11 12.5 9 16 9 C19.5 9 21 11 21 13" 
         stroke="white" 
-        stroke-width="2.5" 
+        stroke-width="2.8" 
         stroke-linecap="round" 
         fill="none"/>
 </svg>
