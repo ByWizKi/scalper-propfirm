@@ -1,0 +1,174 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ========================================
+// UTILISATEURS & AUTHENTIFICATION
+// ========================================
+
+model User {
+  id            String    @id @default(cuid())
+  username      String    @unique
+  name          String?
+  email         String?
+  emailVerified DateTime?
+  password      String
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts         Account[]
+  propfirmAccounts PropfirmAccount[]
+  pnlEntries       PnlEntry[]
+  withdrawals      Withdrawal[]
+  sessions         Session[]
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+// ========================================
+// COMPTES PROPFIRM
+// ========================================
+
+model PropfirmAccount {
+  id             String            @id @default(cuid())
+  userId         String
+  name           String
+  propfirm       PropfirmType
+  size           Int               // Taille du compte (ex: 50000)
+  accountType    AccountType       // eval ou funded
+  status         AccountStatus     @default(ACTIVE)
+  pricePaid      Float             // Prix payé en USD
+  linkedEvalId   String?           // ID de l'évaluation liée (si compte funded)
+  notes          String?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  linkedEval     PropfirmAccount?  @relation("FundedToEval", fields: [linkedEvalId], references: [id])
+  fundedAccounts PropfirmAccount[] @relation("FundedToEval")
+  pnlEntries     PnlEntry[]
+  withdrawals    Withdrawal[]
+
+  @@index([userId])
+  @@index([status])
+  @@map("propfirm_accounts")
+}
+
+enum PropfirmType {
+  TOPSTEP
+  TAKEPROFITTRADER
+  APEX
+  FTMO
+  MYFUNDEDFUTURES
+  OTHER
+}
+
+enum AccountType {
+  EVAL
+  FUNDED
+}
+
+enum AccountStatus {
+  ACTIVE
+  VALIDATED
+  FAILED
+  ARCHIVED
+}
+
+// ========================================
+// PNL (PROFIT & LOSS)
+// ========================================
+
+model PnlEntry {
+  id        String          @id @default(cuid())
+  userId    String
+  accountId String
+  date      DateTime
+  amount    Float           // Montant en USD
+  notes     String?
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  account   PropfirmAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([accountId])
+  @@index([date])
+  @@map("pnl_entries")
+}
+
+// ========================================
+// RETRAITS
+// ========================================
+
+model Withdrawal {
+  id        String          @id @default(cuid())
+  userId    String
+  accountId String
+  date      DateTime
+  amount    Float           // Montant en USD
+  notes     String?
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  account   PropfirmAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([accountId])
+  @@index([date])
+  @@map("withdrawals")
+}
+
+// ========================================
+// TAUX DE CHANGE (CACHE)
+// ========================================
+
+model ExchangeRate {
+  id        String   @id @default(cuid())
+  usdToEur  Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("exchange_rates")
+}

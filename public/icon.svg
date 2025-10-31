@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+  <!-- Forme principale : S stylisé pour Scalper -->
+  <path d="M100 20 L140 50 L140 90 L100 70 L60 90 L60 50 Z" fill="black" stroke="black" stroke-width="4"/>
+  <path d="M100 90 L140 110 L140 150 L100 130 L60 150 L60 110 Z" fill="black" stroke="black" stroke-width="4"/>
+
+  <!-- Accent graphique -->
+  <circle cx="100" cy="100" r="3" fill="white"/>
+
+  <!-- Bordure élégante -->
+  <circle cx="100" cy="100" r="85" stroke="black" stroke-width="6" fill="none"/>
+</svg>
+
