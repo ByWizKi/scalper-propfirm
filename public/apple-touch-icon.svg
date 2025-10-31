@@ -3,9 +3,9 @@
   <rect width="180" height="180" fill="#000000"/>
 
   <!-- Lettre S centrée en blanc -->
-  <path d="M63 117 C63 131 71 141 90 141 C109 141 117 131 117 117 C117 103 109 95 90 92 C71 89 63 81 63 67 C63 53 71 43 90 43 C109 43 117 53 117 67" 
-        stroke="white" 
-        stroke-width="12" 
-        stroke-linecap="round" 
+  <path d="M63 117 C63 131 71 141 90 141 C109 141 117 131 117 117 C117 103 109 95 90 92 C71 89 63 81 63 67 C63 53 71 43 90 43 C109 43 117 53 117 67"
+        stroke="white"
+        stroke-width="17"
+        stroke-linecap="round"
         fill="none"/>
 </svg>

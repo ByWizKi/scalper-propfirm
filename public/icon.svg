@@ -3,10 +3,10 @@
   <rect width="512" height="512" fill="#000000"/>
 
   <!-- Lettre S centrée en blanc -->
-  <path d="M180 330 C180 370 205 400 256 400 C307 400 332 370 332 330 C332 290 307 270 256 260 C205 250 180 230 180 190 C180 150 205 120 256 120 C307 120 332 150 332 190" 
-        stroke="white" 
-        stroke-width="34" 
-        stroke-linecap="round" 
+  <path d="M180 330 C180 370 205 400 256 400 C307 400 332 370 332 330 C332 290 307 270 256 260 C205 250 180 230 180 190 C180 150 205 120 256 120 C307 120 332 150 332 190"
+        stroke="white"
+        stroke-width="48"
+        stroke-linecap="round"
         stroke-linejoin="round"
         fill="none"/>
 </svg>

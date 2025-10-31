@@ -126,21 +126,23 @@ export default function AccountsPage() {
   }
 
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-8">
+    <div className="p-4 sm:p-6 lg:p-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-50">Mes Comptes</h1>
-          <p className="text-zinc-600 dark:text-zinc-400 mt-2">Gérez vos comptes propfirm</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-zinc-900 dark:text-zinc-50">Mes Comptes</h1>
+          <p className="text-sm sm:text-base text-zinc-600 dark:text-zinc-400 mt-1 sm:mt-2">
+            Gérez vos comptes propfirm
+          </p>
         </div>
-        <Button onClick={handleAdd}>
+        <Button onClick={handleAdd} className="w-full sm:w-auto">
           <Plus className="h-4 w-4 mr-2" />
-          Ajouter un compte
+          <span className="sm:inline">Ajouter</span>
         </Button>
       </div>
 
       {/* Filtres et tri */}
       {accounts.length > 0 && (
-        <div className="flex gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6">
           <div className="flex-1">
             <Select value={filterPropfirm} onValueChange={setFilterPropfirm}>
               <SelectTrigger>
@@ -217,47 +219,49 @@ export default function AccountsPage() {
                 onClick={() => router.push(`/dashboard/accounts/${account.id}`)}
               >
                 <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <CardTitle className="text-lg">{account.name}</CardTitle>
-                      <CardDescription className="mt-1">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <CardTitle className="text-base sm:text-lg truncate">{account.name}</CardTitle>
+                      <CardDescription className="mt-1 text-xs sm:text-sm truncate">
                         {PROPFIRM_LABELS[account.propfirm]} • {formatCurrency(account.size)}
                       </CardDescription>
                     </div>
-                    <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex gap-1 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
                       <Button
                         variant="ghost"
                         size="icon"
+                        className="h-8 w-8"
                         onClick={(e) => {
                           e.stopPropagation()
                           handleEdit(account as any)
                         }}
                       >
-                        <Edit className="h-4 w-4" />
+                        <Edit className="h-3.5 w-3.5" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="icon"
+                        className="h-8 w-8"
                         onClick={(e) => {
                           e.stopPropagation()
                           handleDelete(account.id)
                         }}
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-3.5 w-3.5" />
                       </Button>
                     </div>
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-zinc-600 dark:text-zinc-400">Type</span>
-                      <span className="font-medium">
+                  <div className="space-y-2.5">
+                    <div className="flex items-center justify-between text-xs sm:text-sm gap-2">
+                      <span className="text-zinc-600 dark:text-zinc-400 shrink-0">Type</span>
+                      <span className="font-medium text-right truncate">
                         {ACCOUNT_TYPE_LABELS[account.accountType]}
                       </span>
                     </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-zinc-600 dark:text-zinc-400">Statut</span>
+                    <div className="flex items-center justify-between text-xs sm:text-sm gap-2">
+                      <span className="text-zinc-600 dark:text-zinc-400 shrink-0">Statut</span>
                       <span
                         className={`px-2 py-1 rounded-full text-xs font-medium ${
                           STATUS_COLORS[account.status]
@@ -266,13 +270,13 @@ export default function AccountsPage() {
                         {STATUS_LABELS[account.status]}
                       </span>
                     </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-zinc-600 dark:text-zinc-400">Prix payé</span>
-                      <span className="font-medium">{formatCurrency(account.pricePaid)}</span>
+                    <div className="flex items-center justify-between text-xs sm:text-sm gap-2">
+                      <span className="text-zinc-600 dark:text-zinc-400 shrink-0">Prix payé</span>
+                      <span className="font-medium text-right">{formatCurrency(account.pricePaid)}</span>
                     </div>
                     {account.notes && (
-                      <div className="pt-3 border-t border-zinc-200 dark:border-zinc-800">
-                        <p className="text-xs text-zinc-600 dark:text-zinc-400 line-clamp-2">
+                      <div className="pt-2.5 border-t border-zinc-200 dark:border-zinc-800">
+                        <p className="text-xs text-zinc-600 dark:text-zinc-400 line-clamp-2 break-words">
                           {account.notes}
                         </p>
                       </div>
