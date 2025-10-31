@@ -1,11 +1,11 @@
 <svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
   <!-- Fond noir -->
   <rect width="512" height="512" fill="#000000"/>
-  
+
   <!-- Lettre S centrée en blanc -->
-  <path d="M200 320 C200 360 220 390 270 390 C320 390 340 360 340 320 C340 280 320 260 270 250 C220 240 200 220 200 180 C200 140 220 110 270 110 C320 110 340 140 340 180" 
+  <path d="M180 330 C180 370 205 400 256 400 C307 400 332 370 332 330 C332 290 307 270 256 260 C205 250 180 230 180 190 C180 150 205 120 256 120 C307 120 332 150 332 190" 
         stroke="white" 
-        stroke-width="32" 
+        stroke-width="34" 
         stroke-linecap="round" 
         stroke-linejoin="round"
         fill="none"/>
