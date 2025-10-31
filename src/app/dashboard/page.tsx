@@ -145,9 +145,7 @@ export default function DashboardPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs sm:text-sm font-medium truncate pr-2">
-              Bilan
-            </CardTitle>
+            <CardTitle className="text-xs sm:text-sm font-medium truncate pr-2">Bilan</CardTitle>
             <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-zinc-500 flex-shrink-0" />
           </CardHeader>
           <CardContent>

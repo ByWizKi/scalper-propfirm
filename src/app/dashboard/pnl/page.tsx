@@ -147,15 +147,17 @@ export default function PnlPage() {
   }
 
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-8">
+    <div className="p-4 sm:p-6 lg:p-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-50">PnL</h1>
-          <p className="text-zinc-600 dark:text-zinc-400 mt-2">Suivez vos profits et pertes</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-zinc-900 dark:text-zinc-50">PnL</h1>
+          <p className="text-sm sm:text-base text-zinc-600 dark:text-zinc-400 mt-1 sm:mt-2">
+            Suivez vos profits et pertes
+          </p>
         </div>
-        <Button onClick={handleAdd} disabled={accounts.length === 0}>
+        <Button onClick={handleAdd} disabled={accounts.length === 0} className="w-full sm:w-auto">
           <Plus className="h-4 w-4 mr-2" />
-          Ajouter un PnL
+          <span>Ajouter</span>
         </Button>
       </div>
 
@@ -169,21 +171,23 @@ export default function PnlPage() {
         </Card>
       ) : (
         <>
-          <Card className="mb-6">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-1">PnL Total</p>
+          <Card className="mb-4 sm:mb-6">
+            <CardContent className="pt-4 sm:pt-6">
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 mb-1">
+                    PnL Total
+                  </p>
                   <p
-                    className={`text-3xl font-bold ${totalPnl >= 0 ? "text-green-600" : "text-red-600"}`}
+                    className={`text-2xl sm:text-3xl font-bold truncate ${totalPnl >= 0 ? "text-green-600" : "text-red-600"}`}
                   >
                     {formatCurrency(totalPnl)}
                   </p>
                 </div>
                 {totalPnl >= 0 ? (
-                  <TrendingUp className="h-12 w-12 text-green-600" />
+                  <TrendingUp className="h-8 w-8 sm:h-12 sm:w-12 text-green-600 flex-shrink-0" />
                 ) : (
-                  <TrendingDown className="h-12 w-12 text-red-600" />
+                  <TrendingDown className="h-8 w-8 sm:h-12 sm:w-12 text-red-600 flex-shrink-0" />
                 )}
               </div>
             </CardContent>
@@ -204,23 +208,25 @@ export default function PnlPage() {
               </CardContent>
             </Card>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {Object.entries(entriesByAccount).map(([accountId, accountData]) => (
                 <Card key={accountId}>
                   <CardContent className="p-0">
                     {/* En-tête du compte */}
-                    <div className="flex items-center justify-between p-4 bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800">
-                      <div>
-                        <h3 className="font-semibold text-lg">{accountData.accountName}</h3>
-                        <p className="text-sm text-zinc-500">
+                    <div className="flex items-center justify-between gap-3 p-3 sm:p-4 bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800">
+                      <div className="min-w-0 flex-1">
+                        <h3 className="font-semibold text-base sm:text-lg truncate">
+                          {accountData.accountName}
+                        </h3>
+                        <p className="text-xs sm:text-sm text-zinc-500">
                           {accountData.entries.length} entrée
                           {accountData.entries.length > 1 ? "s" : ""}
                         </p>
                       </div>
-                      <div className="text-right">
-                        <p className="text-xs text-zinc-500 mb-1">Total du compte</p>
+                      <div className="text-right min-w-0">
+                        <p className="text-[10px] sm:text-xs text-zinc-500 mb-1">Total</p>
                         <p
-                          className={`text-xl font-bold ${accountData.total >= 0 ? "text-green-600" : "text-red-600"}`}
+                          className={`text-base sm:text-xl font-bold truncate ${accountData.total >= 0 ? "text-green-600" : "text-red-600"}`}
                         >
                           {accountData.total >= 0 ? "+" : ""}
                           {formatCurrency(accountData.total)}
@@ -233,46 +239,52 @@ export default function PnlPage() {
                       {accountData.entries.map((entry) => (
                         <div
                           key={entry.id}
-                          className="flex items-center justify-between p-4 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors"
+                          className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 sm:p-4 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors"
                         >
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3">
-                              <div
-                                className={`p-2 rounded-lg ${entry.amount >= 0 ? "bg-green-100 dark:bg-green-900" : "bg-red-100 dark:bg-red-900"}`}
-                              >
-                                {entry.amount >= 0 ? (
-                                  <TrendingUp className="h-4 w-4 text-green-600 dark:text-green-400" />
-                                ) : (
-                                  <TrendingDown className="h-4 w-4 text-red-600 dark:text-red-400" />
-                                )}
-                              </div>
-                              <div className="flex-1">
-                                <p className="text-sm text-zinc-500">
-                                  {format(new Date(entry.date), "d MMMM yyyy", { locale: fr })}
+                          <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+                            <div
+                              className={`p-1.5 sm:p-2 rounded-lg flex-shrink-0 ${entry.amount >= 0 ? "bg-green-100 dark:bg-green-900" : "bg-red-100 dark:bg-red-900"}`}
+                            >
+                              {entry.amount >= 0 ? (
+                                <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-600 dark:text-green-400" />
+                              ) : (
+                                <TrendingDown className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-red-600 dark:text-red-400" />
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs sm:text-sm text-zinc-500 truncate">
+                                {format(new Date(entry.date), "d MMMM yyyy", { locale: fr })}
+                              </p>
+                              {entry.notes && (
+                                <p className="text-[10px] sm:text-xs text-zinc-500 mt-1 line-clamp-1">
+                                  {entry.notes}
                                 </p>
-                                {entry.notes && (
-                                  <p className="text-xs text-zinc-500 mt-1">{entry.notes}</p>
-                                )}
-                              </div>
+                              )}
                             </div>
                           </div>
-                          <div className="flex items-center gap-4">
+                          <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-4">
                             <span
-                              className={`text-lg font-bold ${entry.amount >= 0 ? "text-green-600" : "text-red-600"}`}
+                              className={`text-base sm:text-lg font-bold truncate ${entry.amount >= 0 ? "text-green-600" : "text-red-600"}`}
                             >
                               {entry.amount >= 0 ? "+" : ""}
                               {formatCurrency(entry.amount)}
                             </span>
-                            <div className="flex gap-2">
-                              <Button variant="ghost" size="icon" onClick={() => handleEdit(entry)}>
-                                <Edit className="h-4 w-4" />
+                            <div className="flex gap-1 flex-shrink-0">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => handleEdit(entry)}
+                              >
+                                <Edit className="h-3.5 w-3.5" />
                               </Button>
                               <Button
                                 variant="ghost"
                                 size="icon"
+                                className="h-8 w-8"
                                 onClick={() => handleDelete(entry.id)}
                               >
-                                <Trash2 className="h-4 w-4" />
+                                <Trash2 className="h-3.5 w-3.5" />
                               </Button>
                             </div>
                           </div>
