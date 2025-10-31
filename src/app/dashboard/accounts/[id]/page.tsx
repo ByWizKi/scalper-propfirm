@@ -156,8 +156,8 @@ export default function AccountDetailPage() {
     return null
   }
 
-  const totalPnl = account.pnlEntries.reduce((sum, entry) => sum + entry.amount, 0)
-  const totalWithdrawals = account.withdrawals.reduce((sum, w) => sum + w.amount, 0)
+  const totalPnl = account.pnlEntries.reduce((sum: number, entry) => sum + entry.amount, 0)
+  const totalWithdrawals = account.withdrawals.reduce((sum: number, w) => sum + w.amount, 0)
 
   // Fonction pour obtenir le maxDrawdown selon la propfirm et la taille
   const getMaxDrawdown = (propfirm: string, size: number): number => {
