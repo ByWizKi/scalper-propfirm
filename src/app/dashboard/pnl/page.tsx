@@ -113,22 +113,25 @@ export default function PnlPage() {
   const totalPnl = entries.reduce((sum, entry) => sum + entry.amount, 0)
 
   // Regrouper les entrées par compte
-  const entriesByAccount = entries.reduce((acc, entry) => {
-    const accountId = entry.accountId
-    if (!acc[accountId]) {
-      acc[accountId] = {
-        accountName: entry.account.name,
-        entries: [],
-        total: 0,
+  const entriesByAccount = entries.reduce(
+    (acc, entry) => {
+      const accountId = entry.accountId
+      if (!acc[accountId]) {
+        acc[accountId] = {
+          accountName: entry.account.name,
+          entries: [],
+          total: 0,
+        }
       }
-    }
-    acc[accountId].entries.push(entry)
-    acc[accountId].total += entry.amount
-    return acc
-  }, {} as Record<string, { accountName: string; entries: PnlEntry[]; total: number }>)
+      acc[accountId].entries.push(entry)
+      acc[accountId].total += entry.amount
+      return acc
+    },
+    {} as Record<string, { accountName: string; entries: PnlEntry[]; total: number }>
+  )
 
   // Trier les entrées dans chaque compte par date (plus récent en premier)
-  Object.values(entriesByAccount).forEach(account => {
+  Object.values(entriesByAccount).forEach((account) => {
     account.entries.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
   })
 
@@ -148,9 +151,7 @@ export default function PnlPage() {
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-50">PnL</h1>
-          <p className="text-zinc-600 dark:text-zinc-400 mt-2">
-            Suivez vos profits et pertes
-          </p>
+          <p className="text-zinc-600 dark:text-zinc-400 mt-2">Suivez vos profits et pertes</p>
         </div>
         <Button onClick={handleAdd} disabled={accounts.length === 0}>
           <Plus className="h-4 w-4 mr-2" />
@@ -162,7 +163,7 @@ export default function PnlPage() {
         <Card>
           <CardContent className="py-12 text-center">
             <p className="text-sm text-zinc-600 dark:text-zinc-400">
-              Vous devez d'abord créer un compte avant d'ajouter des entrées PnL
+              Vous devez d&apos;abord créer un compte avant d&apos;ajouter des entrées PnL
             </p>
           </CardContent>
         </Card>
@@ -173,7 +174,9 @@ export default function PnlPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-1">PnL Total</p>
-                  <p className={`text-3xl font-bold ${totalPnl >= 0 ? "text-green-600" : "text-red-600"}`}>
+                  <p
+                    className={`text-3xl font-bold ${totalPnl >= 0 ? "text-green-600" : "text-red-600"}`}
+                  >
                     {formatCurrency(totalPnl)}
                   </p>
                 </div>
@@ -210,13 +213,17 @@ export default function PnlPage() {
                       <div>
                         <h3 className="font-semibold text-lg">{accountData.accountName}</h3>
                         <p className="text-sm text-zinc-500">
-                          {accountData.entries.length} entrée{accountData.entries.length > 1 ? "s" : ""}
+                          {accountData.entries.length} entrée
+                          {accountData.entries.length > 1 ? "s" : ""}
                         </p>
                       </div>
                       <div className="text-right">
                         <p className="text-xs text-zinc-500 mb-1">Total du compte</p>
-                        <p className={`text-xl font-bold ${accountData.total >= 0 ? "text-green-600" : "text-red-600"}`}>
-                          {accountData.total >= 0 ? "+" : ""}{formatCurrency(accountData.total)}
+                        <p
+                          className={`text-xl font-bold ${accountData.total >= 0 ? "text-green-600" : "text-red-600"}`}
+                        >
+                          {accountData.total >= 0 ? "+" : ""}
+                          {formatCurrency(accountData.total)}
                         </p>
                       </div>
                     </div>
@@ -230,7 +237,9 @@ export default function PnlPage() {
                         >
                           <div className="flex-1">
                             <div className="flex items-center gap-3">
-                              <div className={`p-2 rounded-lg ${entry.amount >= 0 ? "bg-green-100 dark:bg-green-900" : "bg-red-100 dark:bg-red-900"}`}>
+                              <div
+                                className={`p-2 rounded-lg ${entry.amount >= 0 ? "bg-green-100 dark:bg-green-900" : "bg-red-100 dark:bg-red-900"}`}
+                              >
                                 {entry.amount >= 0 ? (
                                   <TrendingUp className="h-4 w-4 text-green-600 dark:text-green-400" />
                                 ) : (
@@ -248,15 +257,14 @@ export default function PnlPage() {
                             </div>
                           </div>
                           <div className="flex items-center gap-4">
-                            <span className={`text-lg font-bold ${entry.amount >= 0 ? "text-green-600" : "text-red-600"}`}>
-                              {entry.amount >= 0 ? "+" : ""}{formatCurrency(entry.amount)}
+                            <span
+                              className={`text-lg font-bold ${entry.amount >= 0 ? "text-green-600" : "text-red-600"}`}
+                            >
+                              {entry.amount >= 0 ? "+" : ""}
+                              {formatCurrency(entry.amount)}
                             </span>
                             <div className="flex gap-2">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleEdit(entry)}
-                              >
+                              <Button variant="ghost" size="icon" onClick={() => handleEdit(entry)}>
                                 <Edit className="h-4 w-4" />
                               </Button>
                               <Button
@@ -289,4 +297,3 @@ export default function PnlPage() {
     </div>
   )
 }
-

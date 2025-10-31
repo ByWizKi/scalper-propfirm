@@ -68,7 +68,9 @@ export default function DashboardPage() {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-zinc-900 dark:border-zinc-50 mx-auto"></div>
-          <p className="mt-4 text-sm text-zinc-600 dark:text-zinc-400">Chargement des statistiques...</p>
+          <p className="mt-4 text-sm text-zinc-600 dark:text-zinc-400">
+            Chargement des statistiques...
+          </p>
         </div>
       </div>
     )
@@ -79,7 +81,7 @@ export default function DashboardPage() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-50">Tableau de bord</h1>
         <p className="text-zinc-600 dark:text-zinc-400 mt-2">
-          Vue d'ensemble de vos comptes propfirm
+          Vue d&apos;ensemble de vos comptes propfirm
         </p>
       </div>
 
@@ -107,9 +109,7 @@ export default function DashboardPage() {
             <p className="text-xs text-zinc-500 mt-1">
               {formatCurrencyEUR((stats?.totalInvested || 0) * USD_TO_EUR)}
             </p>
-            <p className="text-xs text-zinc-500 mt-1">
-              Coût des comptes
-            </p>
+            <p className="text-xs text-zinc-500 mt-1">Coût des comptes</p>
           </CardContent>
         </Card>
 
@@ -119,13 +119,13 @@ export default function DashboardPage() {
             <DollarSign className="h-4 w-4 text-zinc-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{formatCurrency(totalNetWithdrawals)}</div>
+            <div className="text-2xl font-bold text-green-600">
+              {formatCurrency(totalNetWithdrawals)}
+            </div>
             <p className="text-xs text-green-600 mt-1">
               {formatCurrencyEUR(totalNetWithdrawals * USD_TO_EUR)}
             </p>
-            <p className="text-xs text-zinc-500 mt-1">
-              Retraits nets après taxes
-            </p>
+            <p className="text-xs text-zinc-500 mt-1">Retraits nets après taxes</p>
           </CardContent>
         </Card>
 
@@ -135,15 +135,17 @@ export default function DashboardPage() {
             <TrendingUp className="h-4 w-4 text-zinc-500" />
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold ${(totalNetWithdrawals - (stats?.totalInvested || 0)) >= 0 ? "text-green-600" : "text-red-600"}`}>
+            <div
+              className={`text-2xl font-bold ${totalNetWithdrawals - (stats?.totalInvested || 0) >= 0 ? "text-green-600" : "text-red-600"}`}
+            >
               {formatCurrency(totalNetWithdrawals - (stats?.totalInvested || 0))}
             </div>
-            <p className={`text-xs mt-1 ${(totalNetWithdrawals - (stats?.totalInvested || 0)) >= 0 ? "text-green-600" : "text-red-600"}`}>
+            <p
+              className={`text-xs mt-1 ${totalNetWithdrawals - (stats?.totalInvested || 0) >= 0 ? "text-green-600" : "text-red-600"}`}
+            >
               {formatCurrencyEUR((totalNetWithdrawals - (stats?.totalInvested || 0)) * USD_TO_EUR)}
             </p>
-            <p className="text-xs text-zinc-500 mt-1">
-              Retraits nets - Investi
-            </p>
+            <p className="text-xs text-zinc-500 mt-1">Retraits nets - Investi</p>
           </CardContent>
         </Card>
       </div>
@@ -156,7 +158,9 @@ export default function DashboardPage() {
           <CardContent>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-zinc-600 dark:text-zinc-400">Total Retraits Nets</span>
+                <span className="text-sm text-zinc-600 dark:text-zinc-400">
+                  Total Retraits Nets
+                </span>
                 <div className="text-right">
                   <div className="font-medium text-green-600">
                     {formatCurrency(totalNetWithdrawals)}
@@ -181,16 +185,24 @@ export default function DashboardPage() {
                 <div className="flex items-center justify-between">
                   <span className="text-lg font-medium">Différence</span>
                   <div className="text-right">
-                    <div className={`text-2xl font-bold ${(totalNetWithdrawals - (stats?.totalInvested || 0)) >= 0 ? "text-green-600" : "text-red-600"}`}>
+                    <div
+                      className={`text-2xl font-bold ${totalNetWithdrawals - (stats?.totalInvested || 0) >= 0 ? "text-green-600" : "text-red-600"}`}
+                    >
                       {formatCurrency(totalNetWithdrawals - (stats?.totalInvested || 0))}
                     </div>
-                    <div className={`text-xs ${(totalNetWithdrawals - (stats?.totalInvested || 0)) >= 0 ? "text-green-600" : "text-red-600"}`}>
-                      {formatCurrencyEUR((totalNetWithdrawals - (stats?.totalInvested || 0)) * USD_TO_EUR)}
+                    <div
+                      className={`text-xs ${totalNetWithdrawals - (stats?.totalInvested || 0) >= 0 ? "text-green-600" : "text-red-600"}`}
+                    >
+                      {formatCurrencyEUR(
+                        (totalNetWithdrawals - (stats?.totalInvested || 0)) * USD_TO_EUR
+                      )}
                     </div>
                   </div>
                 </div>
                 <p className="text-xs text-zinc-500 mt-2 text-right">
-                  {(totalNetWithdrawals - (stats?.totalInvested || 0)) >= 0 ? "Vous êtes en profit" : "Vous êtes en perte"}
+                  {totalNetWithdrawals - (stats?.totalInvested || 0) >= 0
+                    ? "Vous êtes en profit"
+                    : "Vous êtes en perte"}
                 </p>
               </div>
             </div>
@@ -218,4 +230,3 @@ export default function DashboardPage() {
     </div>
   )
 }
-
