@@ -165,8 +165,8 @@ export default function AccountsPage() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="date-desc">Plus récents d'abord</SelectItem>
-                <SelectItem value="date-asc">Plus anciens d'abord</SelectItem>
+                <SelectItem value="date-desc">Plus récents d&apos;abord</SelectItem>
+                <SelectItem value="date-asc">Plus anciens d&apos;abord</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -209,6 +209,7 @@ export default function AccountsPage() {
               status: string
               pricePaid: number
               notes?: string | null
+              createdAt: string
             }) => (
               <Card
                 key={account.id}
