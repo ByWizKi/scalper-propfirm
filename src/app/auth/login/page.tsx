@@ -7,7 +7,14 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import { toast } from "@/hooks/use-toast"
 
 export default function LoginPage() {
@@ -59,9 +66,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold">Connexion</CardTitle>
-          <CardDescription>
-            Connectez-vous à votre compte Propfirm
-          </CardDescription>
+          <CardDescription>Connectez-vous à votre compte Propfirm</CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
@@ -94,8 +99,11 @@ export default function LoginPage() {
             </Button>
             <p className="text-sm text-center text-zinc-600 dark:text-zinc-400">
               Pas encore de compte ?{" "}
-              <Link href="/auth/register" className="text-zinc-900 dark:text-zinc-50 font-medium hover:underline">
-                S'inscrire
+              <Link
+                href="/auth/register"
+                className="text-zinc-900 dark:text-zinc-50 font-medium hover:underline"
+              >
+                S&apos;inscrire
               </Link>
             </p>
           </CardFooter>
@@ -104,4 +112,3 @@ export default function LoginPage() {
     </div>
   )
 }
-

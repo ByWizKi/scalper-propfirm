@@ -4,7 +4,16 @@ import { useState } from "react"
 import { useRouter, useParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowLeft, Edit, Trash2, TrendingUp, TrendingDown, DollarSign, Calendar, CheckCircle2 } from "lucide-react"
+import {
+  ArrowLeft,
+  Edit,
+  Trash2,
+  TrendingUp,
+  TrendingDown,
+  DollarSign,
+  Calendar,
+  CheckCircle2,
+} from "lucide-react"
 import { AccountFormDialog } from "@/components/account-form-dialog"
 import { PnlFormDialog } from "@/components/pnl-form-dialog"
 import { WithdrawalFormDialog } from "@/components/withdrawal-form-dialog"
@@ -156,8 +165,14 @@ export default function AccountDetailPage() {
     return null
   }
 
-  const totalPnl = account.pnlEntries.reduce((sum: number, entry: { amount: number }) => sum + entry.amount, 0)
-  const totalWithdrawals = account.withdrawals.reduce((sum: number, w: { amount: number }) => sum + w.amount, 0)
+  const totalPnl = account.pnlEntries.reduce(
+    (sum: number, entry: { amount: number }) => sum + entry.amount,
+    0
+  )
+  const totalWithdrawals = account.withdrawals.reduce(
+    (sum: number, w: { amount: number }) => sum + w.amount,
+    0
+  )
 
   // Fonction pour obtenir le maxDrawdown selon la propfirm et la taille
   const getMaxDrawdown = (propfirm: string, size: number): number => {
@@ -182,11 +197,14 @@ export default function AccountDetailPage() {
   const totalInvested = account.pricePaid + (account.linkedEval?.pricePaid || 0)
 
   // Statistiques de trading avancées
-  const dailyPnlMap = account.pnlEntries.reduce((acc: Record<string, number>, entry: { date: string; amount: number }) => {
-    const dateKey = entry.date.split('T')[0]
-    acc[dateKey] = (acc[dateKey] || 0) + entry.amount
-    return acc
-  }, {} as Record<string, number>)
+  const dailyPnlMap = account.pnlEntries.reduce(
+    (acc: Record<string, number>, entry: { date: string; amount: number }) => {
+      const dateKey = entry.date.split("T")[0]
+      acc[dateKey] = (acc[dateKey] || 0) + entry.amount
+      return acc
+    },
+    {} as Record<string, number>
+  )
 
   const dailyPnlValues = Object.values(dailyPnlMap) as number[]
   const tradingDays = dailyPnlValues.length
@@ -194,28 +212,34 @@ export default function AccountDetailPage() {
   const avgPerDay = tradingDays > 0 ? totalPnl / tradingDays : 0
 
   // Calculer le PnL par mois
-  const monthlyPnl = account.pnlEntries.reduce((acc: Record<string, { month: string; amount: number; count: number }>, entry: { date: string; amount: number }) => {
-    const date = new Date(entry.date)
-    const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+  const monthlyPnl = account.pnlEntries.reduce(
+    (
+      acc: Record<string, { month: string; amount: number; count: number }>,
+      entry: { date: string; amount: number }
+    ) => {
+      const date = new Date(entry.date)
+      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`
 
-    if (!acc[monthKey]) {
-      acc[monthKey] = {
-        month: monthKey,
-        amount: 0,
-        count: 0,
+      if (!acc[monthKey]) {
+        acc[monthKey] = {
+          month: monthKey,
+          amount: 0,
+          count: 0,
+        }
       }
-    }
 
-    acc[monthKey].amount += entry.amount
-    acc[monthKey].count += 1
+      acc[monthKey].amount += entry.amount
+      acc[monthKey].count += 1
 
-    return acc
-  }, {} as Record<string, { month: string; amount: number; count: number }>)
+      return acc
+    },
+    {} as Record<string, { month: string; amount: number; count: number }>
+  )
 
   // Convertir en tableau et trier par date
-  const monthlyPnlArray = (Object.values(monthlyPnl) as Array<{ month: string; amount: number; count: number }>).sort((a, b) =>
-    b.month.localeCompare(a.month)
-  )
+  const monthlyPnlArray = (
+    Object.values(monthlyPnl) as Array<{ month: string; amount: number; count: number }>
+  ).sort((a, b) => b.month.localeCompare(a.month))
 
   // Obtenir les 6 derniers mois
   const last6Months = monthlyPnlArray.slice(0, 6)
@@ -225,29 +249,25 @@ export default function AccountDetailPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => router.push("/dashboard/accounts")}
-          >
+          <Button variant="ghost" size="icon" onClick={() => router.push("/dashboard/accounts")}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
-            <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-50">
-              {account.name}
-            </h1>
+            <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-50">{account.name}</h1>
             <p className="text-zinc-600 dark:text-zinc-400 mt-1">
               {PROPFIRM_LABELS[account.propfirm]} • {formatCurrency(account.size)}
             </p>
           </div>
         </div>
         <div className="flex gap-2">
-          {account.accountType === "EVAL" && account.status === "ACTIVE" && isEligibleForValidation && (
-            <Button onClick={handleValidate} className="bg-green-600 hover:bg-green-700">
-              <CheckCircle2 className="h-4 w-4 mr-2" />
-              Valider le compte
-            </Button>
-          )}
+          {account.accountType === "EVAL" &&
+            account.status === "ACTIVE" &&
+            isEligibleForValidation && (
+              <Button onClick={handleValidate} className="bg-green-600 hover:bg-green-700">
+                <CheckCircle2 className="h-4 w-4 mr-2" />
+                Valider le compte
+              </Button>
+            )}
           <Button variant="outline" onClick={() => setEditDialogOpen(true)}>
             <Edit className="h-4 w-4 mr-2" />
             Modifier
@@ -272,7 +292,9 @@ export default function AccountDetailPage() {
             </div>
             <div>
               <p className="text-sm text-zinc-600 dark:text-zinc-400">Statut</p>
-              <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${STATUS_COLORS[account.status]}`}>
+              <span
+                className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${STATUS_COLORS[account.status]}`}
+              >
                 {STATUS_LABELS[account.status]}
               </span>
             </div>
@@ -281,10 +303,13 @@ export default function AccountDetailPage() {
                 {account.linkedEval ? "Total investi" : "Prix payé"}
               </p>
               <p className="font-medium">{formatCurrency(totalInvested)}</p>
-              <p className="text-xs text-zinc-500">{formatCurrencyEUR(totalInvested * USD_TO_EUR)}</p>
+              <p className="text-xs text-zinc-500">
+                {formatCurrencyEUR(totalInvested * USD_TO_EUR)}
+              </p>
               {account.linkedEval && (
                 <p className="text-xs text-zinc-500 mt-1">
-                  Compte: {formatCurrency(account.pricePaid)} + Eval: {formatCurrency(account.linkedEval.pricePaid)}
+                  Compte: {formatCurrency(account.pricePaid)} + Eval:{" "}
+                  {formatCurrency(account.linkedEval.pricePaid)}
                 </p>
               )}
             </div>
@@ -297,12 +322,18 @@ export default function AccountDetailPage() {
           </div>
           {account.linkedEval && (
             <div className="mt-4 pt-4 border-t border-zinc-200 dark:border-zinc-800">
-              <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-1">Compte d'évaluation lié</p>
+              <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-1">
+                Compte d&apos;évaluation lié
+              </p>
               <div className="flex items-center justify-between">
                 <p className="text-sm font-medium">{account.linkedEval.name}</p>
                 <div className="text-right">
-                  <p className="text-sm font-medium">{formatCurrency(account.linkedEval.pricePaid)}</p>
-                  <p className="text-xs text-zinc-500">{formatCurrencyEUR(account.linkedEval.pricePaid * USD_TO_EUR)}</p>
+                  <p className="text-sm font-medium">
+                    {formatCurrency(account.linkedEval.pricePaid)}
+                  </p>
+                  <p className="text-xs text-zinc-500">
+                    {formatCurrencyEUR(account.linkedEval.pricePaid * USD_TO_EUR)}
+                  </p>
                 </div>
               </div>
             </div>
@@ -317,7 +348,9 @@ export default function AccountDetailPage() {
       </Card>
 
       {/* Statistiques */}
-      <div className={`grid gap-6 mb-6 ${account.accountType === "EVAL" ? "md:grid-cols-3" : "md:grid-cols-2 lg:grid-cols-4"}`}>
+      <div
+        className={`grid gap-6 mb-6 ${account.accountType === "EVAL" ? "md:grid-cols-3" : "md:grid-cols-2 lg:grid-cols-4"}`}
+      >
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">PnL Total</CardTitle>
@@ -328,7 +361,9 @@ export default function AccountDetailPage() {
             )}
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold ${totalPnl >= 0 ? "text-green-600" : "text-red-600"}`}>
+            <div
+              className={`text-2xl font-bold ${totalPnl >= 0 ? "text-green-600" : "text-red-600"}`}
+            >
               {formatCurrency(totalPnl)}
             </div>
             <p className="text-xs text-zinc-500 mt-1">
@@ -363,12 +398,8 @@ export default function AccountDetailPage() {
             <TrendingUp className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              {formatCurrency(bestDay)}
-            </div>
-            <p className="text-xs text-zinc-500 mt-1">
-              Plus haut PnL quotidien
-            </p>
+            <div className="text-2xl font-bold text-green-600">{formatCurrency(bestDay)}</div>
+            <p className="text-xs text-zinc-500 mt-1">Plus haut PnL quotidien</p>
           </CardContent>
         </Card>
 
@@ -378,12 +409,12 @@ export default function AccountDetailPage() {
             <Calendar className="h-4 w-4 text-zinc-500" />
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold ${avgPerDay >= 0 ? "text-green-600" : "text-red-600"}`}>
+            <div
+              className={`text-2xl font-bold ${avgPerDay >= 0 ? "text-green-600" : "text-red-600"}`}
+            >
               {formatCurrency(avgPerDay)}
             </div>
-            <p className="text-xs text-zinc-500 mt-1">
-              PnL moyen par jour
-            </p>
+            <p className="text-xs text-zinc-500 mt-1">PnL moyen par jour</p>
           </CardContent>
         </Card>
       </div>
@@ -422,7 +453,9 @@ export default function AccountDetailPage() {
       )}
 
       {/* PnL et Retraits */}
-      <div className={`grid gap-6 ${account.accountType === "EVAL" ? "md:grid-cols-1" : "md:grid-cols-2"}`}>
+      <div
+        className={`grid gap-6 ${account.accountType === "EVAL" ? "md:grid-cols-1" : "md:grid-cols-2"}`}
+      >
         {/* Historique PnL */}
         <Card>
           <CardHeader>
@@ -432,9 +465,7 @@ export default function AccountDetailPage() {
                 Ajouter
               </Button>
             </div>
-            <CardDescription>
-              Les dernières entrées de profit et perte
-            </CardDescription>
+            <CardDescription>Les dernières entrées de profit et perte</CardDescription>
           </CardHeader>
           <CardContent>
             {account.pnlEntries.length === 0 ? (
@@ -443,33 +474,45 @@ export default function AccountDetailPage() {
               </p>
             ) : (
               <div className="space-y-3">
-                {account.pnlEntries.slice(0, 5).map((entry: { id: string; date: string; amount: number; notes?: string | null }) => (
-                  <div
-                    key={entry.id}
-                    className="flex items-center justify-between p-3 rounded-lg bg-zinc-50 dark:bg-zinc-900"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-lg ${entry.amount >= 0 ? "bg-green-100 dark:bg-green-900" : "bg-red-100 dark:bg-red-900"}`}>
-                        {entry.amount >= 0 ? (
-                          <TrendingUp className="h-4 w-4 text-green-600 dark:text-green-400" />
-                        ) : (
-                          <TrendingDown className="h-4 w-4 text-red-600 dark:text-red-400" />
-                        )}
+                {account.pnlEntries
+                  .slice(0, 5)
+                  .map(
+                    (entry: {
+                      id: string
+                      date: string
+                      amount: number
+                      notes?: string | null
+                    }) => (
+                      <div
+                        key={entry.id}
+                        className="flex items-center justify-between p-3 rounded-lg bg-zinc-50 dark:bg-zinc-900"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div
+                            className={`p-2 rounded-lg ${entry.amount >= 0 ? "bg-green-100 dark:bg-green-900" : "bg-red-100 dark:bg-red-900"}`}
+                          >
+                            {entry.amount >= 0 ? (
+                              <TrendingUp className="h-4 w-4 text-green-600 dark:text-green-400" />
+                            ) : (
+                              <TrendingDown className="h-4 w-4 text-red-600 dark:text-red-400" />
+                            )}
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium">
+                              {format(new Date(entry.date), "d MMM yyyy", { locale: fr })}
+                            </p>
+                            {entry.notes && <p className="text-xs text-zinc-500">{entry.notes}</p>}
+                          </div>
+                        </div>
+                        <span
+                          className={`font-bold ${entry.amount >= 0 ? "text-green-600" : "text-red-600"}`}
+                        >
+                          {entry.amount >= 0 ? "+" : ""}
+                          {formatCurrency(entry.amount)}
+                        </span>
                       </div>
-                      <div>
-                        <p className="text-sm font-medium">
-                          {format(new Date(entry.date), "d MMM yyyy", { locale: fr })}
-                        </p>
-                        {entry.notes && (
-                          <p className="text-xs text-zinc-500">{entry.notes}</p>
-                        )}
-                      </div>
-                    </div>
-                    <span className={`font-bold ${entry.amount >= 0 ? "text-green-600" : "text-red-600"}`}>
-                      {entry.amount >= 0 ? "+" : ""}{formatCurrency(entry.amount)}
-                    </span>
-                  </div>
-                ))}
+                    )
+                  )}
                 {account.pnlEntries.length > 5 && (
                   <Button
                     variant="ghost"
@@ -487,78 +530,87 @@ export default function AccountDetailPage() {
 
         {/* Historique Retraits - Seulement pour les comptes financés */}
         {account.accountType !== "EVAL" && (
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>Historique Retraits</CardTitle>
-              <Button size="sm" onClick={() => setWithdrawalDialogOpen(true)}>
-                Ajouter
-              </Button>
-            </div>
-            <CardDescription>
-              Les derniers retraits effectués
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {account.withdrawals.length === 0 ? (
-              <p className="text-sm text-zinc-500 text-center py-8">
-                Aucun retrait pour le moment
-              </p>
-            ) : (
-              <div className="space-y-3">
-                {account.withdrawals.slice(0, 5).map((withdrawal: { id: string; date: string; amount: number; notes?: string | null }) => {
-                  // Calculer le montant net reçu (avec taxes pour TakeProfitTrader)
-                  const isTakeProfitTrader = account.propfirm === "TAKEPROFITTRADER"
-                  const netAmount = isTakeProfitTrader ? withdrawal.amount * 0.8 : withdrawal.amount
-
-                  return (
-                    <div
-                      key={withdrawal.id}
-                      className="flex items-center justify-between p-3 rounded-lg bg-zinc-50 dark:bg-zinc-900"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900">
-                          <DollarSign className="h-4 w-4 text-green-600 dark:text-green-400" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium">
-                            {format(new Date(withdrawal.date), "d MMM yyyy", { locale: fr })}
-                          </p>
-                          {withdrawal.notes && (
-                            <p className="text-xs text-zinc-500">{withdrawal.notes}</p>
-                          )}
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-bold text-green-600">
-                          {formatCurrency(withdrawal.amount)}
-                        </p>
-                        {isTakeProfitTrader && (
-                          <p className="text-xs text-orange-600 dark:text-orange-400">
-                            Net: {formatCurrency(netAmount)} (20% taxe)
-                          </p>
-                        )}
-                        <p className="text-xs text-green-600">
-                          {formatCurrencyEUR(netAmount * USD_TO_EUR)}
-                        </p>
-                      </div>
-                    </div>
-                  )
-                })}
-                {account.withdrawals.length > 5 && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="w-full"
-                    onClick={() => router.push("/dashboard/withdrawals")}
-                  >
-                    Voir tout ({account.withdrawals.length})
-                  </Button>
-                )}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>Historique Retraits</CardTitle>
+                <Button size="sm" onClick={() => setWithdrawalDialogOpen(true)}>
+                  Ajouter
+                </Button>
               </div>
-            )}
-          </CardContent>
-        </Card>
+              <CardDescription>Les derniers retraits effectués</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {account.withdrawals.length === 0 ? (
+                <p className="text-sm text-zinc-500 text-center py-8">
+                  Aucun retrait pour le moment
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {account.withdrawals
+                    .slice(0, 5)
+                    .map(
+                      (withdrawal: {
+                        id: string
+                        date: string
+                        amount: number
+                        notes?: string | null
+                      }) => {
+                        // Calculer le montant net reçu (avec taxes pour TakeProfitTrader)
+                        const isTakeProfitTrader = account.propfirm === "TAKEPROFITTRADER"
+                        const netAmount = isTakeProfitTrader
+                          ? withdrawal.amount * 0.8
+                          : withdrawal.amount
+
+                        return (
+                          <div
+                            key={withdrawal.id}
+                            className="flex items-center justify-between p-3 rounded-lg bg-zinc-50 dark:bg-zinc-900"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900">
+                                <DollarSign className="h-4 w-4 text-green-600 dark:text-green-400" />
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium">
+                                  {format(new Date(withdrawal.date), "d MMM yyyy", { locale: fr })}
+                                </p>
+                                {withdrawal.notes && (
+                                  <p className="text-xs text-zinc-500">{withdrawal.notes}</p>
+                                )}
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-bold text-green-600">
+                                {formatCurrency(withdrawal.amount)}
+                              </p>
+                              {isTakeProfitTrader && (
+                                <p className="text-xs text-orange-600 dark:text-orange-400">
+                                  Net: {formatCurrency(netAmount)} (20% taxe)
+                                </p>
+                              )}
+                              <p className="text-xs text-green-600">
+                                {formatCurrencyEUR(netAmount * USD_TO_EUR)}
+                              </p>
+                            </div>
+                          </div>
+                        )
+                      }
+                    )}
+                  {account.withdrawals.length > 5 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full"
+                      onClick={() => router.push("/dashboard/withdrawals")}
+                    >
+                      Voir tout ({account.withdrawals.length})
+                    </Button>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         )}
       </div>
 
@@ -573,17 +625,32 @@ export default function AccountDetailPage() {
       <PnlFormDialog
         open={pnlDialogOpen}
         onOpenChange={setPnlDialogOpen}
-        accounts={[{ id: account.id, name: account.name, propfirm: account.propfirm, accountType: account.accountType, size: account.size }]}
+        accounts={[
+          {
+            id: account.id,
+            name: account.name,
+            propfirm: account.propfirm,
+            accountType: account.accountType,
+            size: account.size,
+          },
+        ]}
         onSuccess={() => {}}
       />
 
       <WithdrawalFormDialog
         open={withdrawalDialogOpen}
         onOpenChange={setWithdrawalDialogOpen}
-        accounts={[{ id: account.id, name: account.name, accountType: account.accountType, propfirm: account.propfirm, size: account.size }]}
+        accounts={[
+          {
+            id: account.id,
+            name: account.name,
+            accountType: account.accountType,
+            propfirm: account.propfirm,
+            size: account.size,
+          },
+        ]}
         onSuccess={() => {}}
       />
     </div>
   )
 }
-
