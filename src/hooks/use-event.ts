@@ -62,7 +62,7 @@ export function useEvents(
 
     Object.entries(events).forEach(([event, callback]) => {
       if (callback) {
-        const unsubscribe = eventBus.on(event as AppEventType, callback)
+        const unsubscribe = eventBus.on(event as AppEventType, callback as any)
         unsubscribers.push(unsubscribe)
       }
     })
