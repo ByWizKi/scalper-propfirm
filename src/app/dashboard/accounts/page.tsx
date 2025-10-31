@@ -230,7 +230,7 @@ export default function AccountsPage() {
                         size="icon"
                         onClick={(e) => {
                           e.stopPropagation()
-                          handleEdit(account)
+                          handleEdit(account as any)
                         }}
                       >
                         <Edit className="h-4 w-4" />
