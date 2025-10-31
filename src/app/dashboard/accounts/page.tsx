@@ -129,7 +129,9 @@ export default function AccountsPage() {
     <div className="p-4 sm:p-6 lg:p-8">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-zinc-900 dark:text-zinc-50">Mes Comptes</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-zinc-900 dark:text-zinc-50">
+            Mes Comptes
+          </h1>
           <p className="text-sm sm:text-base text-zinc-600 dark:text-zinc-400 mt-1 sm:mt-2">
             Gérez vos comptes propfirm
           </p>
@@ -221,7 +223,9 @@ export default function AccountsPage() {
                 <CardHeader>
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
-                      <CardTitle className="text-base sm:text-lg truncate">{account.name}</CardTitle>
+                      <CardTitle className="text-base sm:text-lg truncate">
+                        {account.name}
+                      </CardTitle>
                       <CardDescription className="mt-1 text-xs sm:text-sm truncate">
                         {PROPFIRM_LABELS[account.propfirm]} • {formatCurrency(account.size)}
                       </CardDescription>
@@ -272,7 +276,9 @@ export default function AccountsPage() {
                     </div>
                     <div className="flex items-center justify-between text-xs sm:text-sm gap-2">
                       <span className="text-zinc-600 dark:text-zinc-400 shrink-0">Prix payé</span>
-                      <span className="font-medium text-right">{formatCurrency(account.pricePaid)}</span>
+                      <span className="font-medium text-right">
+                        {formatCurrency(account.pricePaid)}
+                      </span>
                     </div>
                     {account.notes && (
                       <div className="pt-2.5 border-t border-zinc-200 dark:border-zinc-800">
