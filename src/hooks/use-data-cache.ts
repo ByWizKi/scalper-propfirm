@@ -51,7 +51,7 @@ export function useDataCache<T>(
   const [lastFetchTime, setLastFetchTime] = useState<number>(0)
 
   const isMountedRef = useRef(true)
-  const refetchTimeoutRef = useRef<NodeJS.Timeout>()
+  const refetchTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined)
 
   /**
    * Fonction pour fetch les données
