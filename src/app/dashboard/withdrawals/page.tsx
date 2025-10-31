@@ -181,7 +181,7 @@ export default function WithdrawalsPage() {
         <Card>
           <CardContent className="py-12 text-center">
             <p className="text-sm text-zinc-600 dark:text-zinc-400">
-              Vous devez d'abord créer un compte avant d'ajouter des retraits
+              Vous devez d&apos;abord créer un compte avant d&apos;ajouter des retraits
             </p>
           </CardContent>
         </Card>
