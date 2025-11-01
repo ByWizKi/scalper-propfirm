@@ -245,35 +245,44 @@ export default function AccountDetailPage() {
   const last6Months = monthlyPnlArray.slice(0, 6)
 
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-6 lg:p-8">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => router.push("/dashboard/accounts")}>
-            <ArrowLeft className="h-5 w-5" />
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
+        <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => router.push("/dashboard/accounts")}
+            className="flex-shrink-0"
+          >
+            <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
           </Button>
-          <div>
-            <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-50">{account.name}</h1>
-            <p className="text-zinc-600 dark:text-zinc-400 mt-1">
+          <div className="min-w-0 flex-1">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-zinc-900 dark:text-zinc-50 truncate">
+              {account.name}
+            </h1>
+            <p className="text-sm sm:text-base text-zinc-600 dark:text-zinc-400 mt-1 truncate">
               {PROPFIRM_LABELS[account.propfirm]} • {formatCurrency(account.size)}
             </p>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {account.accountType === "EVAL" &&
             account.status === "ACTIVE" &&
             isEligibleForValidation && (
-              <Button onClick={handleValidate} className="bg-green-600 hover:bg-green-700">
-                <CheckCircle2 className="h-4 w-4 mr-2" />
-                Valider le compte
+              <Button onClick={handleValidate} className="bg-green-600 hover:bg-green-700 text-sm">
+                <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-2" />
+                <span className="hidden sm:inline">Valider le compte</span>
+                <span className="sm:hidden">Valider</span>
               </Button>
             )}
-          <Button variant="outline" onClick={() => setEditDialogOpen(true)}>
-            <Edit className="h-4 w-4 mr-2" />
-            Modifier
+          <Button variant="outline" onClick={() => setEditDialogOpen(true)} className="text-sm">
+            <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-2" />
+            <span className="hidden sm:inline">Modifier</span>
+            <span className="sm:hidden">Éditer</span>
           </Button>
-          <Button variant="destructive" onClick={handleDelete}>
-            <Trash2 className="h-4 w-4 mr-2" />
+          <Button variant="destructive" onClick={handleDelete} className="text-sm">
+            <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-2" />
             Supprimer
           </Button>
         </div>
@@ -349,24 +358,24 @@ export default function AccountDetailPage() {
 
       {/* Statistiques */}
       <div
-        className={`grid gap-6 mb-6 ${account.accountType === "EVAL" ? "md:grid-cols-3" : "md:grid-cols-2 lg:grid-cols-4"}`}
+        className={`grid gap-4 sm:gap-6 mb-4 sm:mb-6 ${account.accountType === "EVAL" ? "grid-cols-1 sm:grid-cols-2 md:grid-cols-3" : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"}`}
       >
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">PnL Total</CardTitle>
+            <CardTitle className="text-xs sm:text-sm font-medium truncate pr-2">PnL Total</CardTitle>
             {totalPnl >= 0 ? (
-              <TrendingUp className="h-4 w-4 text-green-600" />
+              <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-600 flex-shrink-0" />
             ) : (
-              <TrendingDown className="h-4 w-4 text-red-600" />
+              <TrendingDown className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-red-600 flex-shrink-0" />
             )}
           </CardHeader>
           <CardContent>
             <div
-              className={`text-2xl font-bold ${totalPnl >= 0 ? "text-green-600" : "text-red-600"}`}
+              className={`text-lg sm:text-xl lg:text-2xl font-bold break-words leading-tight ${totalPnl >= 0 ? "text-green-600" : "text-red-600"}`}
             >
               {formatCurrency(totalPnl)}
             </div>
-            <p className="text-xs text-zinc-500 mt-1">
+            <p className="text-[10px] sm:text-xs text-zinc-500 mt-1">
               {tradingDays} jour{tradingDays > 1 ? "s" : ""} de trading
             </p>
           </CardContent>
@@ -375,17 +384,17 @@ export default function AccountDetailPage() {
         {account.accountType !== "EVAL" && (
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Retraits</CardTitle>
-              <DollarSign className="h-4 w-4 text-green-600" />
+              <CardTitle className="text-xs sm:text-sm font-medium truncate pr-2">Retraits</CardTitle>
+              <DollarSign className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-600 flex-shrink-0" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">
+              <div className="text-lg sm:text-xl lg:text-2xl font-bold text-green-600 break-words leading-tight">
                 {formatCurrency(totalWithdrawals)}
               </div>
-              <p className="text-xs text-green-600 mt-1">
+              <p className="text-[10px] sm:text-xs text-green-600 mt-1 break-words">
                 {formatCurrencyEUR(totalWithdrawals * USD_TO_EUR)}
               </p>
-              <p className="text-xs text-zinc-500 mt-1">
+              <p className="text-[10px] sm:text-xs text-zinc-500 mt-1">
                 {account.withdrawals.length} retrait{account.withdrawals.length > 1 ? "s" : ""}
               </p>
             </CardContent>
@@ -394,27 +403,29 @@ export default function AccountDetailPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Meilleur Jour</CardTitle>
-            <TrendingUp className="h-4 w-4 text-green-600" />
+            <CardTitle className="text-xs sm:text-sm font-medium truncate pr-2">Meilleur Jour</CardTitle>
+            <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-600 flex-shrink-0" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{formatCurrency(bestDay)}</div>
-            <p className="text-xs text-zinc-500 mt-1">Plus haut PnL quotidien</p>
+            <div className="text-lg sm:text-xl lg:text-2xl font-bold text-green-600 break-words leading-tight">
+              {formatCurrency(bestDay)}
+            </div>
+            <p className="text-[10px] sm:text-xs text-zinc-500 mt-1">Plus haut PnL quotidien</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Moyenne/Jour</CardTitle>
-            <Calendar className="h-4 w-4 text-zinc-500" />
+            <CardTitle className="text-xs sm:text-sm font-medium truncate pr-2">Moyenne/Jour</CardTitle>
+            <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-zinc-500 flex-shrink-0" />
           </CardHeader>
           <CardContent>
             <div
-              className={`text-2xl font-bold ${avgPerDay >= 0 ? "text-green-600" : "text-red-600"}`}
+              className={`text-lg sm:text-xl lg:text-2xl font-bold break-words leading-tight ${avgPerDay >= 0 ? "text-green-600" : "text-red-600"}`}
             >
               {formatCurrency(avgPerDay)}
             </div>
-            <p className="text-xs text-zinc-500 mt-1">PnL moyen par jour</p>
+            <p className="text-[10px] sm:text-xs text-zinc-500 mt-1">PnL moyen par jour</p>
           </CardContent>
         </Card>
       </div>

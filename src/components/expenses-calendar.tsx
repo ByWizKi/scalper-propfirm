@@ -81,9 +81,9 @@ export function ExpensesCalendar({ expenses }: ExpensesCalendarProps) {
             </CardDescription>
           </div>
           <div className="flex items-center gap-1 sm:gap-2 justify-center sm:justify-end">
-            <Button 
-              variant="outline" 
-              size="icon" 
+            <Button
+              variant="outline"
+              size="icon"
               onClick={previousMonth}
               className="h-7 w-7 sm:h-9 sm:w-9"
             >
@@ -92,9 +92,9 @@ export function ExpensesCalendar({ expenses }: ExpensesCalendarProps) {
             <div className="text-xs sm:text-sm font-medium min-w-[100px] sm:min-w-[140px] text-center px-2">
               {format(currentMonth, "MMMM yyyy", { locale: fr })}
             </div>
-            <Button 
-              variant="outline" 
-              size="icon" 
+            <Button
+              variant="outline"
+              size="icon"
               onClick={nextMonth}
               className="h-7 w-7 sm:h-9 sm:w-9"
             >
@@ -153,13 +153,13 @@ export function ExpensesCalendar({ expenses }: ExpensesCalendarProps) {
                       </div>
                       {dayExpenses.length > 0 && (
                         <div className="space-y-0.5 md:space-y-1">
-                          <div className="text-xs md:text-sm font-bold text-red-600 dark:text-red-400 truncate">
+                          <div className="text-[10px] md:text-sm font-bold text-red-600 dark:text-red-400 break-words leading-tight">
                             -{formatCurrency(dayTotal)}
                           </div>
-                          <div className="text-[10px] md:text-xs text-red-600 dark:text-red-400 truncate">
+                          <div className="text-[9px] md:text-xs text-red-600 dark:text-red-400 break-words leading-tight">
                             {formatCurrencyEUR(dayTotal * USD_TO_EUR)}
                           </div>
-                          <div className="text-[10px] md:text-xs text-zinc-500 hidden md:block">
+                          <div className="text-[9px] md:text-xs text-zinc-500 hidden md:block">
                             {dayExpenses.length} dépense{dayExpenses.length > 1 ? "s" : ""}
                           </div>
                         </div>
@@ -183,10 +183,10 @@ export function ExpensesCalendar({ expenses }: ExpensesCalendarProps) {
                   </div>
                   {weekTotal > 0 && (
                     <>
-                      <div className="text-sm md:text-lg font-bold text-red-600 dark:text-red-400 mb-0.5 md:mb-1 truncate">
+                      <div className="text-xs md:text-lg font-bold text-red-600 dark:text-red-400 mb-0.5 md:mb-1 break-words leading-tight">
                         -{formatCurrency(weekTotal)}
                       </div>
-                      <div className="text-[10px] md:text-xs text-red-600 dark:text-red-400 truncate">
+                      <div className="text-[9px] md:text-xs text-red-600 dark:text-red-400 break-words leading-tight">
                         {formatCurrencyEUR(weekTotal * USD_TO_EUR)}
                       </div>
                     </>
