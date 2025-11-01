@@ -1,15 +1,12 @@
 "use client"
 
-import { StatCard } from "@/components/stat-card"
+import { StatCard, useStatVariant } from "@/components/stat-card"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Wallet, TrendingUp, DollarSign, Target } from "lucide-react"
 import { ExpensesCalendar } from "@/components/expenses-calendar"
 import { WithdrawalsCalendar } from "@/components/withdrawals-calendar"
 import { useDashboardStatsCache } from "@/hooks/use-data-cache"
 import { calculateTotalNetWithdrawals } from "@/lib/withdrawal-utils"
-
-
-
 
 export default function DashboardPage() {
   // Utilisation du hook de cache avec invalidation automatique
@@ -21,6 +18,9 @@ export default function DashboardPage() {
 
   // Calculer le total net des retraits (après taxes)
   const totalNetWithdrawals = calculateTotalNetWithdrawals(withdrawals)
+
+  // Calculer le variant toujours (avant toute condition)
+  const differenceVariant = useStatVariant(totalNetWithdrawals - (stats?.totalInvested || 0))
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("fr-FR", {
