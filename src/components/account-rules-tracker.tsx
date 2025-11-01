@@ -102,6 +102,56 @@ const RULES_CONFIG: Record<
       minTradingDays: 5,
     },
   },
+  APEX: {
+    25000: {
+      maxDrawdown: 1500,
+      dailyLossLimit: 0,
+      profitTarget: 1500,
+      consistencyRule: 0,
+      minTradingDays: 1,
+      maxContracts: { mini: 4, micro: 40 },
+    },
+    50000: {
+      maxDrawdown: 2500,
+      dailyLossLimit: 0,
+      profitTarget: 3000,
+      consistencyRule: 0,
+      minTradingDays: 1,
+      maxContracts: { mini: 10, micro: 100 },
+    },
+    100000: {
+      maxDrawdown: 3000,
+      dailyLossLimit: 0,
+      profitTarget: 6000,
+      consistencyRule: 0,
+      minTradingDays: 1,
+      maxContracts: { mini: 14, micro: 140 },
+    },
+    150000: {
+      maxDrawdown: 5000,
+      dailyLossLimit: 0,
+      profitTarget: 9000,
+      consistencyRule: 0,
+      minTradingDays: 1,
+      maxContracts: { mini: 17, micro: 170 },
+    },
+    250000: {
+      maxDrawdown: 6500,
+      dailyLossLimit: 0,
+      profitTarget: 15000,
+      consistencyRule: 0,
+      minTradingDays: 1,
+      maxContracts: { mini: 27, micro: 270 },
+    },
+    300000: {
+      maxDrawdown: 7500,
+      dailyLossLimit: 0,
+      profitTarget: 20000,
+      consistencyRule: 0,
+      minTradingDays: 1,
+      maxContracts: { mini: 35, micro: 350 },
+    },
+  },
 }
 
 export function AccountRulesTracker({
@@ -124,6 +174,11 @@ export function AccountRulesTracker({
       style: "currency",
       currency: "USD",
     }).format(amount)
+  }
+
+  // Vérifier que les règles existent AVANT tout calcul
+  if (!rules) {
+    return null
   }
 
   // Calculer le PnL total
@@ -152,10 +207,6 @@ export function AccountRulesTracker({
   const tradingDays = Object.keys(dailyPnl).length
   const biggestDay = Math.max(...Object.values(dailyPnl), 0)
   const consistencyPercentage = totalPnl > 0 ? (biggestDay / totalPnl) * 100 : 0
-
-  if (!rules) {
-    return null
-  }
 
   // Statuts
   const profitTargetStatus = totalPnl >= rules.profitTarget
