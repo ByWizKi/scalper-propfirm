@@ -132,7 +132,7 @@ export function MonthlyCalendar({ pnlEntries }: MonthlyCalendarProps) {
   const weekRows: Date[][] = []
   let currentWeek: Date[] = []
 
-  calendarDays.forEach((day, _index) => {
+  calendarDays.forEach((day, index) => {
     currentWeek.push(day)
 
     // Si c'est vendredi ou le dernier jour, commencer une nouvelle semaine
