@@ -1,15 +1,12 @@
 import { NextResponse } from "next/server"
-import { getServerSession } from "next-auth"
+import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 
 // PUT - Mettre à jour un retrait
-export async function PUT(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = (await getServerSession(authOptions)) as { user?: { id?: string } } | null
 
     if (!session?.user?.id) {
       return NextResponse.json({ message: "Non authentifié" }, { status: 401 })
@@ -28,10 +25,7 @@ export async function PUT(
     })
 
     if (!existingWithdrawal) {
-      return NextResponse.json(
-        { message: "Retrait non trouvé" },
-        { status: 404 }
-      )
+      return NextResponse.json({ message: "Retrait non trouvé" }, { status: 404 })
     }
 
     const withdrawal = await prisma.withdrawal.update({
@@ -50,7 +44,7 @@ export async function PUT(
 
     return NextResponse.json(withdrawal)
   } catch (_error) {
-    console.error("Erreur lors de la mise à jour du retrait:", error)
+    console.error("API Error:", _error)
     return NextResponse.json(
       { message: "Erreur lors de la mise à jour du retrait" },
       { status: 500 }
@@ -59,12 +53,9 @@ export async function PUT(
 }
 
 // DELETE - Supprimer un retrait
-export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = (await getServerSession(authOptions)) as { user?: { id?: string } } | null
 
     if (!session?.user?.id) {
       return NextResponse.json({ message: "Non authentifié" }, { status: 401 })
@@ -81,10 +72,7 @@ export async function DELETE(
     })
 
     if (!existingWithdrawal) {
-      return NextResponse.json(
-        { message: "Retrait non trouvé" },
-        { status: 404 }
-      )
+      return NextResponse.json({ message: "Retrait non trouvé" }, { status: 404 })
     }
 
     await prisma.withdrawal.delete({
@@ -95,11 +83,10 @@ export async function DELETE(
 
     return NextResponse.json({ message: "Retrait supprimé avec succès" })
   } catch (_error) {
-    console.error("Erreur lors de la suppression du retrait:", error)
+    console.error("API Error:", _error)
     return NextResponse.json(
       { message: "Erreur lors de la suppression du retrait" },
       { status: 500 }
     )
   }
 }
-

@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server"
-import { getServerSession } from "next-auth"
+import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 
 // GET - Récupérer toutes les entrées PnL de l'utilisateur
 export async function GET(request: Request) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = (await getServerSession(authOptions)) as { user?: { id?: string } } | null
 
     if (!session?.user?.id) {
       return NextResponse.json({ message: "Non authentifié" }, { status: 401 })
@@ -32,18 +32,15 @@ export async function GET(request: Request) {
 
     return NextResponse.json(pnlEntries)
   } catch (_error) {
-    console.error("Erreur lors de la récupération des PnL:", error)
-    return NextResponse.json(
-      { message: "Erreur lors de la récupération des PnL" },
-      { status: 500 }
-    )
+    console.error("API Error:", _error)
+    return NextResponse.json({ message: "Erreur lors de la récupération des PnL" }, { status: 500 })
   }
 }
 
 // POST - Créer une nouvelle entrée PnL
 export async function POST(request: Request) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = (await getServerSession(authOptions)) as { user?: { id?: string } } | null
 
     if (!session?.user?.id) {
       return NextResponse.json({ message: "Non authentifié" }, { status: 401 })
@@ -69,10 +66,7 @@ export async function POST(request: Request) {
     })
 
     if (!account) {
-      return NextResponse.json(
-        { message: "Compte non trouvé" },
-        { status: 404 }
-      )
+      return NextResponse.json({ message: "Compte non trouvé" }, { status: 404 })
     }
 
     const pnlEntry = await prisma.pnlEntry.create({
@@ -90,11 +84,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(pnlEntry, { status: 201 })
   } catch (_error) {
-    console.error("Erreur lors de la création du PnL:", error)
-    return NextResponse.json(
-      { message: "Erreur lors de la création du PnL" },
-      { status: 500 }
-    )
+    console.error("API Error:", _error)
+    return NextResponse.json({ message: "Erreur lors de la création du PnL" }, { status: 500 })
   }
 }
-

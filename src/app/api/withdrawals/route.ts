@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server"
-import { getServerSession } from "next-auth"
+import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 
 // GET - Récupérer tous les retraits de l'utilisateur
 export async function GET(request: Request) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = (await getServerSession(authOptions)) as { user?: { id?: string } } | null
 
     if (!session?.user?.id) {
       return NextResponse.json({ message: "Non authentifié" }, { status: 401 })
@@ -32,7 +32,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json(withdrawals)
   } catch (_error) {
-    console.error("Erreur lors de la récupération des retraits:", error)
+    console.error("API Error:", _error)
     return NextResponse.json(
       { message: "Erreur lors de la récupération des retraits" },
       { status: 500 }
@@ -43,7 +43,7 @@ export async function GET(request: Request) {
 // POST - Créer un nouveau retrait
 export async function POST(request: Request) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = (await getServerSession(authOptions)) as { user?: { id?: string } } | null
 
     if (!session?.user?.id) {
       return NextResponse.json({ message: "Non authentifié" }, { status: 401 })
@@ -69,10 +69,7 @@ export async function POST(request: Request) {
     })
 
     if (!account) {
-      return NextResponse.json(
-        { message: "Compte non trouvé" },
-        { status: 404 }
-      )
+      return NextResponse.json({ message: "Compte non trouvé" }, { status: 404 })
     }
 
     const withdrawal = await prisma.withdrawal.create({
@@ -90,11 +87,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(withdrawal, { status: 201 })
   } catch (_error) {
-    console.error("Erreur lors de la création du retrait:", error)
-    return NextResponse.json(
-      { message: "Erreur lors de la création du retrait" },
-      { status: 500 }
-    )
+    console.error("API Error:", _error)
+    return NextResponse.json({ message: "Erreur lors de la création du retrait" }, { status: 500 })
   }
 }
-

@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server"
-import { getServerSession } from "next-auth"
+import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions)
+    const session = (await getServerSession(authOptions)) as { user?: { id?: string } } | null
 
     if (!session?.user?.id) {
       return NextResponse.json({ message: "Non authentifié" }, { status: 401 })
@@ -24,8 +24,8 @@ export async function GET() {
 
     // Calculer les statistiques
     const totalAccounts = accounts.length
-    const activeAccounts = accounts.filter(a => a.status === "ACTIVE").length
-    const fundedAccounts = accounts.filter(a => a.accountType === "FUNDED").length
+    const activeAccounts = accounts.filter((a) => a.status === "ACTIVE").length
+    const fundedAccounts = accounts.filter((a) => a.accountType === "FUNDED").length
 
     const totalInvested = accounts.reduce((sum, acc) => sum + acc.pricePaid, 0)
 
@@ -68,11 +68,10 @@ export async function GET() {
       recentPnl,
     })
   } catch (_error) {
-    console.error("Erreur lors de la récupération des statistiques:", error)
+    console.error("API Error:", _error)
     return NextResponse.json(
       { message: "Erreur lors de la récupération des statistiques" },
       { status: 500 }
     )
   }
 }
-

@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import type { NextAuthOptions } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { PrismaAdapter } from "@next-auth/prisma-adapter"
 import { prisma } from "@/lib/prisma"
@@ -31,7 +32,7 @@ export const authOptions: NextAuthOptions = {
       name: "credentials",
       credentials: {
         username: { label: "Pseudo", type: "text" },
-        password: { label: "Mot de passe", type: "password" }
+        password: { label: "Mot de passe", type: "password" },
       },
       async authorize(credentials) {
         if (!credentials?.username || !credentials?.password) {
@@ -39,17 +40,14 @@ export const authOptions: NextAuthOptions = {
         }
 
         const user = await prisma.user.findUnique({
-          where: { username: credentials.username }
+          where: { username: credentials.username },
         })
 
         if (!user || !user.password) {
           throw new Error("Pseudo ou mot de passe incorrect")
         }
 
-        const isPasswordValid = await bcrypt.compare(
-          credentials.password,
-          user.password
-        )
+        const isPasswordValid = await bcrypt.compare(credentials.password, user.password)
 
         if (!isPasswordValid) {
           throw new Error("Pseudo ou mot de passe incorrect")
@@ -62,8 +60,8 @@ export const authOptions: NextAuthOptions = {
           email: user.email || "",
           image: user.image,
         } as any
-      }
-    })
+      },
+    }),
   ],
 
   callbacks: {
@@ -91,5 +89,3 @@ export const authOptions: NextAuthOptions = {
 
   debug: process.env.NODE_ENV === "development",
 }
-
-

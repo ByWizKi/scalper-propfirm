@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server"
-import { getServerSession } from "next-auth"
+import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 
 // GET - Récupérer tous les comptes de l'utilisateur
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions)
+    const session = (await getServerSession(authOptions)) as { user?: { id?: string } } | null
 
     if (!session?.user?.id) {
       return NextResponse.json({ message: "Non authentifié" }, { status: 401 })
@@ -28,7 +28,7 @@ export async function GET() {
 
     return NextResponse.json(accounts)
   } catch (_error) {
-    console.error("Erreur lors de la récupération des comptes:", error)
+    console.error("API Error:", _error)
     return NextResponse.json(
       { message: "Erreur lors de la récupération des comptes" },
       { status: 500 }
@@ -39,7 +39,7 @@ export async function GET() {
 // POST - Créer un nouveau compte
 export async function POST(request: Request) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = (await getServerSession(authOptions)) as { user?: { id?: string } } | null
 
     if (!session?.user?.id) {
       return NextResponse.json({ message: "Non authentifié" }, { status: 401 })
@@ -72,11 +72,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(account, { status: 201 })
   } catch (_error) {
-    console.error("Erreur lors de la création du compte:", error)
-    return NextResponse.json(
-      { message: "Erreur lors de la création du compte" },
-      { status: 500 }
-    )
+    console.error("API Error:", _error)
+    return NextResponse.json({ message: "Erreur lors de la création du compte" }, { status: 500 })
   }
 }
-

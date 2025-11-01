@@ -1,15 +1,14 @@
 import { NextResponse } from "next/server"
-import { getServerSession } from "next-auth"
+import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 
 // GET - Récupérer un compte spécifique
-export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = (await getServerSession(authOptions)) as {
+      user?: { id?: string }
+    } | null
 
     if (!session?.user?.id) {
       return NextResponse.json({ message: "Non authentifié" }, { status: 401 })
@@ -35,15 +34,12 @@ export async function GET(
     })
 
     if (!account) {
-      return NextResponse.json(
-        { message: "Compte non trouvé" },
-        { status: 404 }
-      )
+      return NextResponse.json({ message: "Compte non trouvé" }, { status: 404 })
     }
 
     return NextResponse.json(account)
   } catch (_error) {
-    console.error("Erreur lors de la récupération du compte:", error)
+    console.error("API Error:", _error)
     return NextResponse.json(
       { message: "Erreur lors de la récupération du compte" },
       { status: 500 }
@@ -52,12 +48,9 @@ export async function GET(
 }
 
 // PUT - Mettre à jour un compte
-export async function PUT(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = (await getServerSession(authOptions)) as { user?: { id?: string } } | null
 
     if (!session?.user?.id) {
       return NextResponse.json({ message: "Non authentifié" }, { status: 401 })
@@ -76,10 +69,7 @@ export async function PUT(
     })
 
     if (!existingAccount) {
-      return NextResponse.json(
-        { message: "Compte non trouvé" },
-        { status: 404 }
-      )
+      return NextResponse.json({ message: "Compte non trouvé" }, { status: 404 })
     }
 
     const account = await prisma.propfirmAccount.update({
@@ -100,7 +90,7 @@ export async function PUT(
 
     return NextResponse.json(account)
   } catch (_error) {
-    console.error("Erreur lors de la mise à jour du compte:", error)
+    console.error("API Error:", _error)
     return NextResponse.json(
       { message: "Erreur lors de la mise à jour du compte" },
       { status: 500 }
@@ -109,12 +99,9 @@ export async function PUT(
 }
 
 // DELETE - Supprimer un compte
-export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = (await getServerSession(authOptions)) as { user?: { id?: string } } | null
 
     if (!session?.user?.id) {
       return NextResponse.json({ message: "Non authentifié" }, { status: 401 })
@@ -131,10 +118,7 @@ export async function DELETE(
     })
 
     if (!existingAccount) {
-      return NextResponse.json(
-        { message: "Compte non trouvé" },
-        { status: 404 }
-      )
+      return NextResponse.json({ message: "Compte non trouvé" }, { status: 404 })
     }
 
     await prisma.propfirmAccount.delete({
@@ -145,11 +129,10 @@ export async function DELETE(
 
     return NextResponse.json({ message: "Compte supprimé avec succès" })
   } catch (_error) {
-    console.error("Erreur lors de la suppression du compte:", error)
+    console.error("API Error:", _error)
     return NextResponse.json(
       { message: "Erreur lors de la suppression du compte" },
       { status: 500 }
     )
   }
 }
-

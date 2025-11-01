@@ -88,8 +88,8 @@ export async function POST(request: Request) {
       },
       { status: 201 }
     )
-  } catch (error) {
-    console.error("Erreur lors de l'inscription:", error)
+  } catch (_error) {
+    console.error("API Error:", _error)
     return genericErrorResponse("Une erreur est survenue")
   }
 }
