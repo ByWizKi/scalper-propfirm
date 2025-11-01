@@ -87,7 +87,7 @@ const sizeStyles = {
 
 /**
  * Composant polymorphe et responsive pour afficher des statistiques
- * 
+ *
  * @example
  * ```tsx
  * <StatCard
@@ -143,7 +143,7 @@ export function StatCard({
               <p className="font-bold">{valueString}</p>
             </TooltipContent>
           </Tooltip>
-          
+
           {secondaryText && (
             <Tooltip>
               <TooltipTrigger asChild>
@@ -156,7 +156,7 @@ export function StatCard({
               </TooltipContent>
             </Tooltip>
           )}
-          
+
           {description && (
             <Tooltip>
               <TooltipTrigger asChild>

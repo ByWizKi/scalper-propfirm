@@ -1,5 +1,6 @@
 "use client"
 
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Wallet, TrendingUp, DollarSign, Target } from "lucide-react"
 import { ExpensesCalendar } from "@/components/expenses-calendar"
 import { WithdrawalsCalendar } from "@/components/withdrawals-calendar"
@@ -119,7 +120,9 @@ export default function DashboardPage() {
           value={formatCurrency(totalNetWithdrawals - (stats?.totalInvested || 0))}
           icon={TrendingUp}
           variant={useStatVariant(totalNetWithdrawals - (stats?.totalInvested || 0))}
-          secondaryText={formatCurrencyEUR((totalNetWithdrawals - (stats?.totalInvested || 0)) * USD_TO_EUR)}
+          secondaryText={formatCurrencyEUR(
+            (totalNetWithdrawals - (stats?.totalInvested || 0)) * USD_TO_EUR
+          )}
           description="Retraits nets - Investi"
         />
       </div>
