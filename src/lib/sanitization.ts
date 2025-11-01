@@ -4,14 +4,12 @@
  * Protection contre XSS et injection
  */
 
-import DOMPurify from "isomorphic-dompurify"
-
 export function sanitizeString(input: string): string {
-  // Supprimer tous les tags HTML et scripts
-  return DOMPurify.sanitize(input, {
-    ALLOWED_TAGS: [],
-    ALLOWED_ATTR: [],
-  })
+  // Supprimer tous les tags HTML et caractères dangereux
+  return input
+    .replace(/<[^>]*>/g, "") // Supprimer tags HTML
+    .replace(/[<>]/g, "") // Supprimer chevrons restants
+    .trim()
 }
 
 export function sanitizeObject<T extends Record<string, any>>(obj: T): T {
