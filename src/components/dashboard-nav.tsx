@@ -4,22 +4,8 @@ import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { signOut, useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet"
-import {
-  LayoutDashboard,
-  Wallet,
-  TrendingUp,
-  DollarSign,
-  LogOut,
-  User,
-  Menu,
-} from "lucide-react"
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
+import { LayoutDashboard, Wallet, TrendingUp, DollarSign, LogOut, User, Menu } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useState } from "react"
 
@@ -79,19 +65,16 @@ export function DashboardNav() {
             </div>
             <div className="flex-1 overflow-hidden">
               <p className="text-sm font-medium truncate">
-                {(session?.user as any)?.username || session?.user?.name || "Utilisateur"}
+                {(session?.user as { username?: string })?.username ||
+                  session?.user?.name ||
+                  "Utilisateur"}
               </p>
               {session?.user?.name && (
                 <p className="text-xs text-zinc-500 truncate">{session.user.name}</p>
               )}
             </div>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full"
-            onClick={handleSignOut}
-          >
+          <Button variant="outline" size="sm" className="w-full" onClick={handleSignOut}>
             <LogOut className="h-4 w-4 mr-2" />
             Déconnexion
           </Button>
@@ -140,7 +123,9 @@ export function DashboardNav() {
                 </div>
                 <div className="flex-1 overflow-hidden">
                   <p className="text-sm font-medium truncate">
-                    {(session?.user as any)?.username || session?.user?.name || "Utilisateur"}
+                    {(session?.user as { username?: string })?.username ||
+                      session?.user?.name ||
+                      "Utilisateur"}
                   </p>
                   {session?.user?.name && (
                     <p className="text-xs text-zinc-500 truncate">{session.user.name}</p>
@@ -166,4 +151,3 @@ export function DashboardNav() {
     </>
   )
 }
-

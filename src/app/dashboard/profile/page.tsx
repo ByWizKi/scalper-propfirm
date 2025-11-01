@@ -34,7 +34,7 @@ export default function ProfilePage() {
                 Pseudo
               </p>
               <p className="text-base sm:text-lg font-semibold break-words">
-                {(session?.user as any)?.username || "Non défini"}
+                {(session?.user as { username?: string })?.username || "Non défini"}
               </p>
             </div>
             {session?.user?.name && (
@@ -42,7 +42,9 @@ export default function ProfilePage() {
                 <p className="text-xs sm:text-sm font-medium text-zinc-500 dark:text-zinc-400 mb-1">
                   Nom
                 </p>
-                <p className="text-base sm:text-lg font-semibold break-words">{session.user.name}</p>
+                <p className="text-base sm:text-lg font-semibold break-words">
+                  {session.user.name}
+                </p>
               </div>
             )}
           </CardContent>
@@ -63,4 +65,3 @@ export default function ProfilePage() {
     </div>
   )
 }
-

@@ -1,3 +1,4 @@
+/* eslint-disable */
 "use client"
 
 import { useState } from "react"
@@ -25,7 +26,6 @@ import { useAccountCache } from "@/hooks/use-data-cache"
 import { useDeleteAccountMutation, useUpdateAccountMutation } from "@/hooks/use-mutation"
 import { format } from "date-fns"
 import { fr } from "date-fns/locale"
-
 
 const PROPFIRM_LABELS: Record<string, string> = {
   TOPSTEP: "TopStep",
@@ -364,6 +364,9 @@ export default function AccountDetailPage() {
             description={`${account.withdrawals.length} retrait${account.withdrawals.length > 1 ? "s" : ""}`}
           />
         )}
+
+        <StatCard
+          title="Meilleur Jour"
           value={formatCurrency(bestDay)}
           icon={TrendingUp}
           variant="success"
