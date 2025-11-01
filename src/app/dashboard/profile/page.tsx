@@ -12,7 +12,7 @@ export default function ProfilePage() {
     <div className="p-4 sm:p-6 lg:p-8">
       <div className="mb-6 sm:mb-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-zinc-900 dark:text-zinc-50">Profil</h1>
-        <p className="text-zinc-600 dark:text-zinc-400 mt-2">
+        <p className="text-sm sm:text-base text-zinc-600 dark:text-zinc-400 mt-1 sm:mt-2">
           Gérez vos informations personnelles et paramètres de sécurité
         </p>
       </div>
@@ -20,29 +20,29 @@ export default function ProfilePage() {
       <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <User className="h-5 w-5" />
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <User className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
               Informations personnelles
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-xs sm:text-sm">
               Vos informations de compte
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-3 sm:space-y-4">
             <div>
-              <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+              <p className="text-xs sm:text-sm font-medium text-zinc-500 dark:text-zinc-400 mb-1">
                 Pseudo
               </p>
-              <p className="text-lg font-semibold break-words">
+              <p className="text-base sm:text-lg font-semibold break-words">
                 {(session?.user as any)?.username || "Non défini"}
               </p>
             </div>
             {session?.user?.name && (
               <div>
-                <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+                <p className="text-xs sm:text-sm font-medium text-zinc-500 dark:text-zinc-400 mb-1">
                   Nom
                 </p>
-                <p className="text-lg font-semibold break-words">{session.user.name}</p>
+                <p className="text-base sm:text-lg font-semibold break-words">{session.user.name}</p>
               </div>
             )}
           </CardContent>
@@ -50,8 +50,8 @@ export default function ProfilePage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Sécurité</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-base sm:text-lg">Sécurité</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">
               Gérez la sécurité de votre compte
             </CardDescription>
           </CardHeader>
