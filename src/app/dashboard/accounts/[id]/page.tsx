@@ -24,6 +24,7 @@ import { fr } from "date-fns/locale"
 import { MonthlyCalendar } from "@/components/monthly-calendar"
 import { AccountRulesTracker } from "@/components/account-rules-tracker"
 import { TradingCyclesTracker } from "@/components/trading-cycles-tracker"
+import { ApexPaRulesTracker } from "@/components/apex-pa-rules-tracker"
 
 // ⚡ CODE SPLITTING: Lazy load dialogs only (opened on user action)
 const AccountFormDialog = dynamic(() =>
@@ -413,7 +414,7 @@ export default function AccountDetailPage() {
       )}
 
       {/* Cycles de trading pour comptes financés */}
-      {account.accountType === "FUNDED" && (
+      {account.accountType === "FUNDED" && account.propfirm !== "APEX" && (
         <div className="mb-6">
           <TradingCyclesTracker
             pnlEntries={account.pnlEntries}
@@ -422,6 +423,13 @@ export default function AccountDetailPage() {
             propfirm={account.propfirm}
             maxDrawdown={getMaxDrawdown(account.propfirm, account.size)}
           />
+        </div>
+      )}
+
+      {/* Règles PA pour comptes financés Apex */}
+      {account.accountType === "FUNDED" && account.propfirm === "APEX" && (
+        <div className="mb-6">
+          <ApexPaRulesTracker accountSize={account.size} pnlEntries={account.pnlEntries} />
         </div>
       )}
 
