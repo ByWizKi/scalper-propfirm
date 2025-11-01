@@ -1,0 +1,15 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Run ESLint on all staged files before push
+echo "🔍 Running ESLint before push..."
+npm run lint:strict
+
+# If ESLint fails, prevent the push
+if [ $? -ne 0 ]; then
+  echo "❌ ESLint errors found. Please fix them before pushing."
+  exit 1
+fi
+
+echo "✅ ESLint passed!"
+
