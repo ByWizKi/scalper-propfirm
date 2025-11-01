@@ -106,6 +106,10 @@ export default function PnlPage() {
     setDialogOpen(true)
   }
 
+  const handleBulkAdd = () => {
+    setBulkDialogOpen(true)
+  }
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("fr-FR", {
       style: "currency",
@@ -166,10 +170,21 @@ export default function PnlPage() {
             Suivez vos profits et pertes
           </p>
         </div>
-        <Button onClick={handleAdd} disabled={accounts.length === 0} className="w-full sm:w-auto">
-          <Plus className="h-4 w-4 mr-2" />
-          <span>Ajouter</span>
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <Button onClick={handleAdd} disabled={accounts.length === 0} className="w-full sm:w-auto">
+            <Plus className="h-4 w-4 mr-2" />
+            <span>Ajouter un PnL</span>
+          </Button>
+          <Button
+            onClick={handleBulkAdd}
+            disabled={accounts.length === 0}
+            variant="outline"
+            className="w-full sm:w-auto"
+          >
+            <Table className="h-4 w-4 mr-2" />
+            <span>Ajout groupé</span>
+          </Button>
+        </div>
       </div>
 
       {/* Filtre pour masquer les comptes d'évaluation */}
