@@ -3,10 +3,17 @@
 import * as React from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { ChevronLeft, ChevronRight } from "lucide-react"
+import { ChevronLeft, ChevronRight, X } from "lucide-react"
 import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, format, isSameMonth, addMonths, subMonths } from "date-fns"
 import { fr } from "date-fns/locale"
 import { getNetWithdrawalAmount } from "@/lib/withdrawal-utils"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 
 interface Withdrawal {
   id: string
@@ -24,6 +31,11 @@ interface WithdrawalsCalendarProps {
 
 export function WithdrawalsCalendar({ withdrawals }: WithdrawalsCalendarProps) {
   const [currentMonth, setCurrentMonth] = React.useState(new Date())
+  const [selectedDay, setSelectedDay] = React.useState<{
+    date: Date
+    withdrawals: Withdrawal[]
+    total: number
+  } | null>(null)
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("fr-FR", {
@@ -148,22 +160,27 @@ export function WithdrawalsCalendar({ withdrawals }: WithdrawalsCalendarProps) {
                         !isCurrentMonth
                           ? "bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800"
                           : dayTotal > 0
-                          ? "border-green-300 bg-green-50 dark:border-green-900 dark:bg-green-950"
+                          ? "border-green-300 bg-green-50 dark:border-green-900 dark:bg-green-950 cursor-pointer hover:bg-green-100 dark:hover:bg-green-900 transition-colors"
                           : "border-zinc-200 dark:border-zinc-800"
                       }`}
+                      onClick={() => {
+                        if (dayWithdrawals.length > 0) {
+                          setSelectedDay({ date: day, withdrawals: dayWithdrawals, total: dayTotal })
+                        }
+                      }}
                     >
                       <div className="text-xs md:text-sm font-medium text-zinc-600 dark:text-zinc-400 mb-1 md:mb-2">
                         {format(day, "d")}
                       </div>
                       {dayWithdrawals.length > 0 && (
                         <div className="space-y-0.5 md:space-y-1">
-                          <div className="text-[10px] md:text-sm font-bold text-green-600 dark:text-green-400 break-words leading-tight">
+                          <div className="text-xs md:text-sm font-bold text-green-600 dark:text-green-400 truncate">
                             +{formatCurrency(dayTotal)}
                           </div>
-                          <div className="text-[9px] md:text-xs text-green-600 dark:text-green-400 break-words leading-tight">
+                          <div className="text-[10px] md:text-xs text-green-600 dark:text-green-400 truncate">
                             {formatCurrencyEUR(dayTotal * USD_TO_EUR)}
                           </div>
-                          <div className="text-[9px] md:text-xs text-zinc-500 hidden md:block">
+                          <div className="text-[10px] md:text-xs text-zinc-500 hidden md:block">
                             {dayWithdrawals.length} retrait{dayWithdrawals.length > 1 ? "s" : ""}
                           </div>
                         </div>
@@ -187,10 +204,10 @@ export function WithdrawalsCalendar({ withdrawals }: WithdrawalsCalendarProps) {
                   </div>
                   {weekTotal > 0 && (
                     <>
-                      <div className="text-xs md:text-lg font-bold text-green-600 dark:text-green-400 mb-0.5 md:mb-1 break-words leading-tight">
+                      <div className="text-sm md:text-lg font-bold text-green-600 dark:text-green-400 mb-0.5 md:mb-1 truncate">
                         +{formatCurrency(weekTotal)}
                       </div>
-                      <div className="text-[9px] md:text-xs text-green-600 dark:text-green-400 break-words leading-tight">
+                      <div className="text-[10px] md:text-xs text-green-600 dark:text-green-400 truncate">
                         {formatCurrencyEUR(weekTotal * USD_TO_EUR)}
                       </div>
                     </>
@@ -201,6 +218,59 @@ export function WithdrawalsCalendar({ withdrawals }: WithdrawalsCalendarProps) {
           })}
         </div>
       </CardContent>
+
+      {/* Modal de détails */}
+      <Dialog open={!!selectedDay} onOpenChange={() => setSelectedDay(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              Retraits du {selectedDay && format(selectedDay.date, "d MMMM yyyy", { locale: fr })}
+            </DialogTitle>
+            <DialogDescription>
+              Total net: {selectedDay && formatCurrency(selectedDay.total)} ({formatCurrencyEUR(selectedDay ? selectedDay.total * USD_TO_EUR : 0)})
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 mt-4">
+            {selectedDay?.withdrawals.map((withdrawal) => {
+              const netAmount = getNetWithdrawalAmount(withdrawal.amount, withdrawal.account.propfirm)
+              const isTakeProfitTrader = withdrawal.account.propfirm === "TAKEPROFITTRADER"
+              
+              return (
+                <div
+                  key={withdrawal.id}
+                  className="flex flex-col gap-2 p-3 rounded-lg bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-900"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1 min-w-0 mr-3">
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                        {format(new Date(withdrawal.date), "HH:mm", { locale: fr })}
+                      </p>
+                      {withdrawal.notes && (
+                        <p className="text-xs text-zinc-600 dark:text-zinc-300 mt-1 line-clamp-1">
+                          {withdrawal.notes}
+                        </p>
+                      )}
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <p className="font-bold text-green-600 dark:text-green-400">
+                        +{formatCurrency(withdrawal.amount)}
+                      </p>
+                      {isTakeProfitTrader && (
+                        <p className="text-xs text-orange-600 dark:text-orange-400">
+                          Net: {formatCurrency(netAmount)}
+                        </p>
+                      )}
+                      <p className="text-xs text-green-600 dark:text-green-400">
+                        {formatCurrencyEUR(netAmount * USD_TO_EUR)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   )
 }

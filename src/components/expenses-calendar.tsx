@@ -3,9 +3,16 @@
 import * as React from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { ChevronLeft, ChevronRight } from "lucide-react"
+import { ChevronLeft, ChevronRight, X } from "lucide-react"
 import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, format, isSameMonth, addMonths, subMonths } from "date-fns"
 import { fr } from "date-fns/locale"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 
 interface ExpenseEntry {
   id: string
@@ -20,6 +27,11 @@ interface ExpensesCalendarProps {
 
 export function ExpensesCalendar({ expenses }: ExpensesCalendarProps) {
   const [currentMonth, setCurrentMonth] = React.useState(new Date())
+  const [selectedDay, setSelectedDay] = React.useState<{
+    date: Date
+    expenses: ExpenseEntry[]
+    total: number
+  } | null>(null)
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("fr-FR", {
@@ -144,22 +156,27 @@ export function ExpensesCalendar({ expenses }: ExpensesCalendarProps) {
                         !isCurrentMonth
                           ? "bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800"
                           : dayTotal > 0
-                          ? "border-red-300 bg-red-50 dark:border-red-900 dark:bg-red-950"
+                          ? "border-red-300 bg-red-50 dark:border-red-900 dark:bg-red-950 cursor-pointer hover:bg-red-100 dark:hover:bg-red-900 transition-colors"
                           : "border-zinc-200 dark:border-zinc-800"
                       }`}
+                      onClick={() => {
+                        if (dayExpenses.length > 0) {
+                          setSelectedDay({ date: day, expenses: dayExpenses, total: dayTotal })
+                        }
+                      }}
                     >
                       <div className="text-xs md:text-sm font-medium text-zinc-600 dark:text-zinc-400 mb-1 md:mb-2">
                         {format(day, "d")}
                       </div>
                       {dayExpenses.length > 0 && (
                         <div className="space-y-0.5 md:space-y-1">
-                          <div className="text-[10px] md:text-sm font-bold text-red-600 dark:text-red-400 break-words leading-tight">
+                          <div className="text-xs md:text-sm font-bold text-red-600 dark:text-red-400 truncate">
                             -{formatCurrency(dayTotal)}
                           </div>
-                          <div className="text-[9px] md:text-xs text-red-600 dark:text-red-400 break-words leading-tight">
+                          <div className="text-[10px] md:text-xs text-red-600 dark:text-red-400 truncate">
                             {formatCurrencyEUR(dayTotal * USD_TO_EUR)}
                           </div>
-                          <div className="text-[9px] md:text-xs text-zinc-500 hidden md:block">
+                          <div className="text-[10px] md:text-xs text-zinc-500 hidden md:block">
                             {dayExpenses.length} dépense{dayExpenses.length > 1 ? "s" : ""}
                           </div>
                         </div>
@@ -183,10 +200,10 @@ export function ExpensesCalendar({ expenses }: ExpensesCalendarProps) {
                   </div>
                   {weekTotal > 0 && (
                     <>
-                      <div className="text-xs md:text-lg font-bold text-red-600 dark:text-red-400 mb-0.5 md:mb-1 break-words leading-tight">
+                      <div className="text-sm md:text-lg font-bold text-red-600 dark:text-red-400 mb-0.5 md:mb-1 truncate">
                         -{formatCurrency(weekTotal)}
                       </div>
-                      <div className="text-[9px] md:text-xs text-red-600 dark:text-red-400 break-words leading-tight">
+                      <div className="text-[10px] md:text-xs text-red-600 dark:text-red-400 truncate">
                         {formatCurrencyEUR(weekTotal * USD_TO_EUR)}
                       </div>
                     </>
@@ -197,6 +214,43 @@ export function ExpensesCalendar({ expenses }: ExpensesCalendarProps) {
           })}
         </div>
       </CardContent>
+
+      {/* Modal de détails */}
+      <Dialog open={!!selectedDay} onOpenChange={() => setSelectedDay(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              Dépenses du {selectedDay && format(selectedDay.date, "d MMMM yyyy", { locale: fr })}
+            </DialogTitle>
+            <DialogDescription>
+              Total: {selectedDay && formatCurrency(selectedDay.total)} ({formatCurrencyEUR(selectedDay ? selectedDay.total * USD_TO_EUR : 0)})
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 mt-4">
+            {selectedDay?.expenses.map((expense) => (
+              <div
+                key={expense.id}
+                className="flex items-center justify-between p-3 rounded-lg bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-900"
+              >
+                <div className="flex-1 min-w-0 mr-3">
+                  <p className="font-medium text-sm truncate">{expense.name}</p>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                    {format(new Date(expense.createdAt), "HH:mm", { locale: fr })}
+                  </p>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <p className="font-bold text-red-600 dark:text-red-400">
+                    -{formatCurrency(expense.pricePaid)}
+                  </p>
+                  <p className="text-xs text-red-600 dark:text-red-400">
+                    {formatCurrencyEUR(expense.pricePaid * USD_TO_EUR)}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   )
 }

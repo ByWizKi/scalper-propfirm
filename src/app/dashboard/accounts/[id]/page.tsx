@@ -249,9 +249,9 @@ export default function AccountDetailPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
         <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
-          <Button 
-            variant="ghost" 
-            size="icon" 
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={() => router.push("/dashboard/accounts")}
             className="flex-shrink-0"
           >
@@ -362,7 +362,9 @@ export default function AccountDetailPage() {
       >
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs sm:text-sm font-medium truncate pr-2">PnL Total</CardTitle>
+            <CardTitle className="text-xs sm:text-sm font-medium truncate pr-2">
+              PnL Total
+            </CardTitle>
             {totalPnl >= 0 ? (
               <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-600 flex-shrink-0" />
             ) : (
@@ -384,7 +386,9 @@ export default function AccountDetailPage() {
         {account.accountType !== "EVAL" && (
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-xs sm:text-sm font-medium truncate pr-2">Retraits</CardTitle>
+              <CardTitle className="text-xs sm:text-sm font-medium truncate pr-2">
+                Retraits
+              </CardTitle>
               <DollarSign className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-600 flex-shrink-0" />
             </CardHeader>
             <CardContent>
@@ -403,7 +407,9 @@ export default function AccountDetailPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs sm:text-sm font-medium truncate pr-2">Meilleur Jour</CardTitle>
+            <CardTitle className="text-xs sm:text-sm font-medium truncate pr-2">
+              Meilleur Jour
+            </CardTitle>
             <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-600 flex-shrink-0" />
           </CardHeader>
           <CardContent>
@@ -416,7 +422,9 @@ export default function AccountDetailPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs sm:text-sm font-medium truncate pr-2">Moyenne/Jour</CardTitle>
+            <CardTitle className="text-xs sm:text-sm font-medium truncate pr-2">
+              Moyenne/Jour
+            </CardTitle>
             <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-zinc-500 flex-shrink-0" />
           </CardHeader>
           <CardContent>
