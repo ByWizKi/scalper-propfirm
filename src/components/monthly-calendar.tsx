@@ -4,8 +4,17 @@ import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight, TrendingUp, TrendingDown } from "lucide-react"
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth } from "date-fns"
-// import { isSameDay, isToday, startOfWeek, endOfWeek, addMonths, subMonths } from "date-fns"
+import {
+  format,
+  startOfMonth,
+  endOfMonth,
+  eachDayOfInterval,
+  isSameMonth,
+  startOfWeek,
+  endOfWeek,
+  addMonths,
+  subMonths,
+} from "date-fns"
 import { fr } from "date-fns/locale"
 import { useCalendarModal } from "@/hooks/use-calendar-modal"
 import { CalendarDayDetailsDialog } from "@/components/calendar-day-details-dialog"
@@ -33,47 +42,56 @@ export function MonthlyCalendar({ pnlEntries }: MonthlyCalendarProps) {
   }
 
   // Grouper les entrées PnL par date
-  const entriesByDate = pnlEntries.reduce((acc, entry) => {
-    const dateKey = format(new Date(entry.date), "yyyy-MM-dd")
-    if (!acc[dateKey]) {
-      acc[dateKey] = []
-    }
-    acc[dateKey].push(entry)
-    return acc
-  }, {} as Record<string, PnlEntry[]>)
+  const entriesByDate = pnlEntries.reduce(
+    (acc, entry) => {
+      const dateKey = format(new Date(entry.date), "yyyy-MM-dd")
+      if (!acc[dateKey]) {
+        acc[dateKey] = []
+      }
+      acc[dateKey].push(entry)
+      return acc
+    },
+    {} as Record<string, PnlEntry[]>
+  )
 
   // Calculer le P/L par jour
-  const dailyPnl = pnlEntries.reduce((acc, entry) => {
-    const dateKey = format(new Date(entry.date), "yyyy-MM-dd")
+  const dailyPnl = pnlEntries.reduce(
+    (acc, entry) => {
+      const dateKey = format(new Date(entry.date), "yyyy-MM-dd")
 
-    if (!acc[dateKey]) {
-      acc[dateKey] = {
-        amount: 0,
-        count: 0,
+      if (!acc[dateKey]) {
+        acc[dateKey] = {
+          amount: 0,
+          count: 0,
+        }
       }
-    }
 
-    acc[dateKey].amount += entry.amount
-    acc[dateKey].count += 1
+      acc[dateKey].amount += entry.amount
+      acc[dateKey].count += 1
 
-    return acc
-  }, {} as Record<string, { amount: number; count: number }>)
+      return acc
+    },
+    {} as Record<string, { amount: number; count: number }>
+  )
 
   // Calculer le P/L mensuel
   const monthlyTotal = pnlEntries
-    .filter(entry => {
+    .filter((entry) => {
       const entryDate = new Date(entry.date)
-      return entryDate.getMonth() === currentMonth.getMonth() &&
-             entryDate.getFullYear() === currentMonth.getFullYear()
+      return (
+        entryDate.getMonth() === currentMonth.getMonth() &&
+        entryDate.getFullYear() === currentMonth.getFullYear()
+      )
     })
     .reduce((sum, entry) => sum + entry.amount, 0)
 
-  const monthlyTrades = pnlEntries
-    .filter(entry => {
-      const entryDate = new Date(entry.date)
-      return entryDate.getMonth() === currentMonth.getMonth() &&
-             entryDate.getFullYear() === currentMonth.getFullYear()
-    }).length
+  const monthlyTrades = pnlEntries.filter((entry) => {
+    const entryDate = new Date(entry.date)
+    return (
+      entryDate.getMonth() === currentMonth.getMonth() &&
+      entryDate.getFullYear() === currentMonth.getFullYear()
+    )
+  }).length
 
   // Obtenir tous les jours à afficher (incluant les jours des mois précédent/suivant)
   const monthStart = startOfMonth(currentMonth)
@@ -84,7 +102,7 @@ export function MonthlyCalendar({ pnlEntries }: MonthlyCalendarProps) {
   const allDays = eachDayOfInterval({ start: calendarStart, end: calendarEnd })
 
   // Filtrer pour garder uniquement les jours de semaine (lundi à vendredi)
-  const calendarDays = allDays.filter(day => {
+  const calendarDays = allDays.filter((day) => {
     const dayOfWeek = day.getDay()
     return dayOfWeek >= 1 && dayOfWeek <= 5 // 1 = lundi, 5 = vendredi
   })
@@ -170,10 +188,15 @@ export function MonthlyCalendar({ pnlEntries }: MonthlyCalendarProps) {
           <div className="flex items-center justify-between sm:justify-end gap-2 pt-2 border-t border-zinc-200 dark:border-zinc-800">
             <div className="text-left sm:text-right">
               <p className="text-[10px] sm:text-xs text-zinc-600 dark:text-zinc-400">P/L Mensuel</p>
-              <p className={`text-base sm:text-xl md:text-2xl font-bold break-words leading-tight ${monthlyTotal >= 0 ? "text-green-600" : "text-red-600"}`}>
-                {monthlyTotal >= 0 ? "+" : ""}{formatCurrency(monthlyTotal)}
+              <p
+                className={`text-base sm:text-xl md:text-2xl font-bold break-words leading-tight ${monthlyTotal >= 0 ? "text-green-600" : "text-red-600"}`}
+              >
+                {monthlyTotal >= 0 ? "+" : ""}
+                {formatCurrency(monthlyTotal)}
               </p>
-              <p className="text-[10px] sm:text-xs text-zinc-500">{monthlyTrades} trade{monthlyTrades > 1 ? "s" : ""}</p>
+              <p className="text-[10px] sm:text-xs text-zinc-500">
+                {monthlyTrades} trade{monthlyTrades > 1 ? "s" : ""}
+              </p>
             </div>
           </div>
         </div>
@@ -197,7 +220,9 @@ export function MonthlyCalendar({ pnlEntries }: MonthlyCalendarProps) {
           {weekRows.map((week, weekIdx) => {
             // Calculer le numéro de semaine
             const firstDayOfWeek = week[0]
-            const weekNumber = Math.ceil((firstDayOfWeek.getDate() + startOfMonth(firstDayOfWeek).getDay()) / 7)
+            const weekNumber = Math.ceil(
+              (firstDayOfWeek.getDate() + startOfMonth(firstDayOfWeek).getDay()) / 7
+            )
             const weekData = weeklyPnl[weekNumber] || { amount: 0, count: 0, days: [] }
 
             return (
@@ -216,13 +241,11 @@ export function MonthlyCalendar({ pnlEntries }: MonthlyCalendarProps) {
                         !isCurrentMonth
                           ? "border-zinc-100 bg-zinc-50 dark:border-zinc-900 dark:bg-zinc-950 opacity-40"
                           : dayPnl
-                          ? dayPnl.amount >= 0
-                            ? "border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950 cursor-pointer hover:bg-green-100 dark:hover:bg-green-900 hover:scale-105 hover:shadow-md"
-                            : "border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950 cursor-pointer hover:bg-red-100 dark:hover:bg-red-900 hover:scale-105 hover:shadow-md"
-                          : "border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900"
-                      } ${
-                        isCurrentDay ? "ring-2 ring-blue-500 dark:ring-blue-400" : ""
-                      }`}
+                            ? dayPnl.amount >= 0
+                              ? "border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950 cursor-pointer hover:bg-green-100 dark:hover:bg-green-900 hover:scale-105 hover:shadow-md"
+                              : "border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950 cursor-pointer hover:bg-red-100 dark:hover:bg-red-900 hover:scale-105 hover:shadow-md"
+                            : "border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900"
+                      } ${isCurrentDay ? "ring-2 ring-blue-500 dark:ring-blue-400" : ""}`}
                       onClick={() => {
                         // Ne rien faire si le jour n'est pas dans le mois courant
                         if (!isCurrentMonth) return
@@ -239,8 +262,8 @@ export function MonthlyCalendar({ pnlEntries }: MonthlyCalendarProps) {
                             isCurrentDay
                               ? "flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-full bg-blue-500 text-white text-[10px] sm:text-sm"
                               : !isCurrentMonth
-                              ? "text-zinc-400"
-                              : "text-zinc-900 dark:text-zinc-50"
+                                ? "text-zinc-400"
+                                : "text-zinc-900 dark:text-zinc-50"
                           }`}
                         >
                           {format(day, "d")}
@@ -274,11 +297,9 @@ export function MonthlyCalendar({ pnlEntries }: MonthlyCalendarProps) {
                     weekData.amount > 0
                       ? "border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950"
                       : weekData.amount < 0
-                      ? "border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950"
-                      : "border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900"
-                  } ${
-                    weekData.count > 0 ? "cursor-pointer hover:scale-105 hover:shadow-md" : ""
-                  }`}
+                        ? "border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950"
+                        : "border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900"
+                  } ${weekData.count > 0 ? "cursor-pointer hover:scale-105 hover:shadow-md" : ""}`}
                   onClick={() => {
                     if (weekData.count > 0 && weekData.days.length > 0) {
                       // Collecter toutes les entrées de la semaine
@@ -301,10 +322,15 @@ export function MonthlyCalendar({ pnlEntries }: MonthlyCalendarProps) {
                       Total semaine
                     </span>
                   </div>
-                  <div className={`text-xs sm:text-sm md:text-lg font-bold mb-0.5 sm:mb-1 truncate ${
-                    weekData.amount >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
-                  }`}>
-                    {weekData.amount >= 0 ? "+" : ""}{formatCurrency(weekData.amount)}
+                  <div
+                    className={`text-xs sm:text-sm md:text-lg font-bold mb-0.5 sm:mb-1 truncate ${
+                      weekData.amount >= 0
+                        ? "text-green-600 dark:text-green-400"
+                        : "text-red-600 dark:text-red-400"
+                    }`}
+                  >
+                    {weekData.amount >= 0 ? "+" : ""}
+                    {formatCurrency(weekData.amount)}
                   </div>
                   <div className="text-[9px] sm:text-[10px] md:text-xs text-zinc-500">
                     {weekData.count} trade{weekData.count > 1 ? "s" : ""}
@@ -325,13 +351,19 @@ export function MonthlyCalendar({ pnlEntries }: MonthlyCalendarProps) {
         formatTitle={(date) => {
           // Vérifier si c'est une vue de semaine (plusieurs entrées sur plusieurs jours)
           if (selectedDay && selectedDay.items.length > 1) {
-            const dates = selectedDay.items.map((entry) => format(new Date(entry.date), "yyyy-MM-dd"))
+            const dates = selectedDay.items.map((entry) =>
+              format(new Date(entry.date), "yyyy-MM-dd")
+            )
             const uniqueDates = [...new Set(dates)]
 
             if (uniqueDates.length > 1) {
               // C'est une semaine complète
-              const firstDay = new Date(Math.min(...selectedDay.items.map((e) => new Date(e.date).getTime())))
-              const lastDay = new Date(Math.max(...selectedDay.items.map((e) => new Date(e.date).getTime())))
+              const firstDay = new Date(
+                Math.min(...selectedDay.items.map((e) => new Date(e.date).getTime()))
+              )
+              const lastDay = new Date(
+                Math.max(...selectedDay.items.map((e) => new Date(e.date).getTime()))
+              )
 
               return `PnL du ${format(firstDay, "d", { locale: fr })} au ${format(lastDay, "d MMMM yyyy", { locale: fr })}`
             }
@@ -396,4 +428,3 @@ export function MonthlyCalendar({ pnlEntries }: MonthlyCalendarProps) {
     </Card>
   )
 }
-
