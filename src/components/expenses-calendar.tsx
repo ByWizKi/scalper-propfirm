@@ -1,6 +1,6 @@
 "use client"
 
-import * as React from "react"
+import { useState, memo } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight } from "lucide-react"
@@ -32,7 +32,7 @@ interface ExpensesCalendarProps {
 
 // ⚡ REACT.MEMO: Component de base
 function ExpensesCalendarBase({ expenses }: ExpensesCalendarProps) {
-  const [currentMonth, setCurrentMonth] = React.useState(new Date())
+  const [currentMonth, setCurrentMonth] = useState(new Date())
   const { selectedDay, isOpen, openModal, closeModal } = useCalendarModal<ExpenseEntry>()
 
   const formatCurrency = (amount: number) => {

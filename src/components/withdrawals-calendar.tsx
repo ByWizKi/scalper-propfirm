@@ -1,6 +1,6 @@
 "use client"
 
-import * as React from "react"
+import { useState, memo } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight } from "lucide-react"
@@ -36,7 +36,7 @@ interface WithdrawalsCalendarProps {
 
 // ⚡ REACT.MEMO: Component de base
 function WithdrawalsCalendarBase({ withdrawals }: WithdrawalsCalendarProps) {
-  const [currentMonth, setCurrentMonth] = React.useState(new Date())
+  const [currentMonth, setCurrentMonth] = useState(new Date())
   const { selectedDay, isOpen, openModal, closeModal } = useCalendarModal<Withdrawal>()
 
   const formatCurrency = (amount: number) => {
