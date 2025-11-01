@@ -20,6 +20,7 @@ import { WithdrawalFormDialog } from "@/components/withdrawal-form-dialog"
 import { MonthlyCalendar } from "@/components/monthly-calendar"
 import { AccountRulesTracker } from "@/components/account-rules-tracker"
 import { TradingCyclesTracker } from "@/components/trading-cycles-tracker"
+import { StatCard, useStatVariant } from "@/components/stat-card"
 import { useAccountCache } from "@/hooks/use-data-cache"
 import { useDeleteAccountMutation, useUpdateAccountMutation } from "@/hooks/use-mutation"
 import { format } from "date-fns"
@@ -360,82 +361,40 @@ export default function AccountDetailPage() {
       <div
         className={`grid gap-4 sm:gap-6 mb-4 sm:mb-6 ${account.accountType === "EVAL" ? "grid-cols-1 sm:grid-cols-2 md:grid-cols-3" : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"}`}
       >
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs sm:text-sm font-medium truncate pr-2">
-              PnL Total
-            </CardTitle>
-            {totalPnl >= 0 ? (
-              <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-600 flex-shrink-0" />
-            ) : (
-              <TrendingDown className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-red-600 flex-shrink-0" />
-            )}
-          </CardHeader>
-          <CardContent>
-            <div
-              className={`text-lg sm:text-xl lg:text-2xl font-bold break-words leading-tight ${totalPnl >= 0 ? "text-green-600" : "text-red-600"}`}
-            >
-              {formatCurrency(totalPnl)}
-            </div>
-            <p className="text-[10px] sm:text-xs text-zinc-500 mt-1">
-              {tradingDays} jour{tradingDays > 1 ? "s" : ""} de trading
-            </p>
-          </CardContent>
-        </Card>
+        <StatCard
+          title="PnL Total"
+          value={formatCurrency(totalPnl)}
+          icon={totalPnl >= 0 ? TrendingUp : TrendingDown}
+          variant={useStatVariant(totalPnl)}
+          description={`${tradingDays} jour${tradingDays > 1 ? "s" : ""} de trading`}
+        />
 
         {account.accountType !== "EVAL" && (
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-xs sm:text-sm font-medium truncate pr-2">
-                Retraits
-              </CardTitle>
-              <DollarSign className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-600 flex-shrink-0" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-lg sm:text-xl lg:text-2xl font-bold text-green-600 break-words leading-tight">
-                {formatCurrency(totalWithdrawals)}
-              </div>
-              <p className="text-[10px] sm:text-xs text-green-600 mt-1 break-words">
-                {formatCurrencyEUR(totalWithdrawals * USD_TO_EUR)}
-              </p>
-              <p className="text-[10px] sm:text-xs text-zinc-500 mt-1">
-                {account.withdrawals.length} retrait{account.withdrawals.length > 1 ? "s" : ""}
-              </p>
-            </CardContent>
-          </Card>
+          <StatCard
+            title="Retraits"
+            value={formatCurrency(totalWithdrawals)}
+            icon={DollarSign}
+            variant="success"
+            secondaryText={formatCurrencyEUR(totalWithdrawals * USD_TO_EUR)}
+            description={`${account.withdrawals.length} retrait${account.withdrawals.length > 1 ? "s" : ""}`}
+          />
         )}
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs sm:text-sm font-medium truncate pr-2">
-              Meilleur Jour
-            </CardTitle>
-            <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-600 flex-shrink-0" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-lg sm:text-xl lg:text-2xl font-bold text-green-600 break-words leading-tight">
-              {formatCurrency(bestDay)}
-            </div>
-            <p className="text-[10px] sm:text-xs text-zinc-500 mt-1">Plus haut PnL quotidien</p>
-          </CardContent>
-        </Card>
+        <StatCard
+          title="Meilleur Jour"
+          value={formatCurrency(bestDay)}
+          icon={TrendingUp}
+          variant="success"
+          description="Plus haut PnL quotidien"
+        />
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs sm:text-sm font-medium truncate pr-2">
-              Moyenne/Jour
-            </CardTitle>
-            <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-zinc-500 flex-shrink-0" />
-          </CardHeader>
-          <CardContent>
-            <div
-              className={`text-lg sm:text-xl lg:text-2xl font-bold break-words leading-tight ${avgPerDay >= 0 ? "text-green-600" : "text-red-600"}`}
-            >
-              {formatCurrency(avgPerDay)}
-            </div>
-            <p className="text-[10px] sm:text-xs text-zinc-500 mt-1">PnL moyen par jour</p>
-          </CardContent>
-        </Card>
+        <StatCard
+          title="Moyenne/Jour"
+          value={formatCurrency(avgPerDay)}
+          icon={Calendar}
+          variant={useStatVariant(avgPerDay)}
+          description="PnL moyen par jour"
+        />
       </div>
 
       {/* Règles de validation */}
