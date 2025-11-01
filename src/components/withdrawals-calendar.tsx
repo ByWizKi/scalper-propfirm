@@ -34,7 +34,8 @@ interface WithdrawalsCalendarProps {
   withdrawals: Withdrawal[]
 }
 
-export function WithdrawalsCalendar({ withdrawals }: WithdrawalsCalendarProps) {
+// ⚡ REACT.MEMO: Component de base
+function WithdrawalsCalendarBase({ withdrawals }: WithdrawalsCalendarProps) {
   const [currentMonth, setCurrentMonth] = React.useState(new Date())
   const { selectedDay, isOpen, openModal, closeModal } = useCalendarModal<Withdrawal>()
 
@@ -331,4 +332,5 @@ export function WithdrawalsCalendar({ withdrawals }: WithdrawalsCalendarProps) {
 }
 
 // ⚡ REACT.MEMO: Export memoized version
-export const WithdrawalsCalendar = memo(WithdrawalsCalendarComponent)
+const WithdrawalsCalendar = memo(WithdrawalsCalendarBase)
+export { WithdrawalsCalendar }

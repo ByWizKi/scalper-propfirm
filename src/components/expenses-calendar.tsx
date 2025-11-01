@@ -30,7 +30,8 @@ interface ExpensesCalendarProps {
   expenses: ExpenseEntry[]
 }
 
-export function ExpensesCalendar({ expenses }: ExpensesCalendarProps) {
+// ⚡ REACT.MEMO: Component de base
+function ExpensesCalendarBase({ expenses }: ExpensesCalendarProps) {
   const [currentMonth, setCurrentMonth] = React.useState(new Date())
   const { selectedDay, isOpen, openModal, closeModal } = useCalendarModal<ExpenseEntry>()
 
@@ -297,4 +298,5 @@ export function ExpensesCalendar({ expenses }: ExpensesCalendarProps) {
 }
 
 // ⚡ REACT.MEMO: Export memoized version
-export const ExpensesCalendar = memo(ExpensesCalendarComponent)
+const ExpensesCalendar = memo(ExpensesCalendarBase)
+export { ExpensesCalendar }

@@ -31,7 +31,8 @@ interface MonthlyCalendarProps {
   pnlEntries: PnlEntry[]
 }
 
-export function MonthlyCalendar({ pnlEntries }: MonthlyCalendarProps) {
+// ⚡ REACT.MEMO: Component de base
+function MonthlyCalendarBase({ pnlEntries }: MonthlyCalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const { selectedDay, isOpen, openModal, closeModal } = useCalendarModal<PnlEntry>()
 
@@ -431,4 +432,5 @@ export function MonthlyCalendar({ pnlEntries }: MonthlyCalendarProps) {
 }
 
 // ⚡ REACT.MEMO: Export memoized version
-export const MonthlyCalendar = memo(MonthlyCalendarComponent)
+const MonthlyCalendar = memo(MonthlyCalendarBase)
+export { MonthlyCalendar }
