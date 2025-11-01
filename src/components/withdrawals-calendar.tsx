@@ -184,9 +184,24 @@ export function WithdrawalsCalendar({ withdrawals }: WithdrawalsCalendarProps) {
                 <div
                   className={`min-h-[80px] md:min-h-[100px] p-1.5 md:p-3 rounded-lg border-2 ${
                     weekTotal > 0
-                      ? "border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950"
+                      ? "border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950 cursor-pointer hover:bg-green-100 dark:hover:bg-green-900 transition-colors"
                       : "border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900"
                   }`}
+                  onClick={() => {
+                    if (weekTotal > 0) {
+                      // Collecter tous les retraits de la semaine
+                      const weekWithdrawals: Withdrawal[] = []
+                      week.forEach((day) => {
+                        const dateKey = format(day, "yyyy-MM-dd")
+                        const dayWithdrawals = dailyWithdrawals[dateKey] || []
+                        weekWithdrawals.push(...dayWithdrawals)
+                      })
+                      
+                      if (weekWithdrawals.length > 0) {
+                        openModal(week[0], weekWithdrawals, weekTotal)
+                      }
+                    }
+                  }}
                 >
                   <div className="flex items-center justify-between mb-1 md:mb-2">
                     <span className="text-xs md:text-sm font-medium text-zinc-600 dark:text-zinc-400">
@@ -216,7 +231,23 @@ export function WithdrawalsCalendar({ withdrawals }: WithdrawalsCalendarProps) {
         onOpenChange={closeModal}
         selectedDate={selectedDay?.date || null}
         data={selectedDay?.items || null}
-        formatTitle={(date) => `Retraits du ${format(date, "d MMMM yyyy", { locale: fr })}`}
+        formatTitle={(date) => {
+          // Vérifier si c'est une vue de semaine
+          if (selectedDay && selectedDay.items.length > 1) {
+            const dates = selectedDay.items.map((withdrawal) => format(new Date(withdrawal.date), "yyyy-MM-dd"))
+            const uniqueDates = [...new Set(dates)]
+            
+            if (uniqueDates.length > 1) {
+              // C'est une semaine complète
+              const firstDay = new Date(Math.min(...selectedDay.items.map((w) => new Date(w.date).getTime())))
+              const lastDay = new Date(Math.max(...selectedDay.items.map((w) => new Date(w.date).getTime())))
+              
+              return `Retraits du ${format(firstDay, "d", { locale: fr })} au ${format(lastDay, "d MMMM yyyy", { locale: fr })}`
+            }
+          }
+          
+          return `Retraits du ${format(date, "d MMMM yyyy", { locale: fr })}`
+        }}
         formatDescription={(items) => {
           const total = items.reduce((sum, item) => sum + getNetWithdrawalAmount(item.amount, item.account.propfirm), 0)
           return `Total net: ${formatCurrency(total)} (${formatCurrencyEUR(total * USD_TO_EUR)})`

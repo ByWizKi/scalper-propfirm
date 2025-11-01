@@ -180,9 +180,24 @@ export function ExpensesCalendar({ expenses }: ExpensesCalendarProps) {
                 <div
                   className={`min-h-[80px] md:min-h-[100px] p-1.5 md:p-3 rounded-lg border-2 ${
                     weekTotal > 0
-                      ? "border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950"
+                      ? "border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950 cursor-pointer hover:bg-red-100 dark:hover:bg-red-900 transition-colors"
                       : "border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900"
                   }`}
+                  onClick={() => {
+                    if (weekTotal > 0) {
+                      // Collecter toutes les dépenses de la semaine
+                      const weekExpenses: ExpenseEntry[] = []
+                      week.forEach((day) => {
+                        const dateKey = format(day, "yyyy-MM-dd")
+                        const dayExpenses = dailyExpenses[dateKey] || []
+                        weekExpenses.push(...dayExpenses)
+                      })
+                      
+                      if (weekExpenses.length > 0) {
+                        openModal(week[0], weekExpenses, weekTotal)
+                      }
+                    }
+                  }}
                 >
                   <div className="flex items-center justify-between mb-1 md:mb-2">
                     <span className="text-xs md:text-sm font-medium text-zinc-600 dark:text-zinc-400">
@@ -212,7 +227,23 @@ export function ExpensesCalendar({ expenses }: ExpensesCalendarProps) {
         onOpenChange={closeModal}
         selectedDate={selectedDay?.date || null}
         data={selectedDay?.items || null}
-        formatTitle={(date) => `Dépenses du ${format(date, "d MMMM yyyy", { locale: fr })}`}
+        formatTitle={(date) => {
+          // Vérifier si c'est une vue de semaine
+          if (selectedDay && selectedDay.items.length > 1) {
+            const dates = selectedDay.items.map((expense) => format(new Date(expense.createdAt), "yyyy-MM-dd"))
+            const uniqueDates = [...new Set(dates)]
+            
+            if (uniqueDates.length > 1) {
+              // C'est une semaine complète
+              const firstDay = new Date(Math.min(...selectedDay.items.map((e) => new Date(e.createdAt).getTime())))
+              const lastDay = new Date(Math.max(...selectedDay.items.map((e) => new Date(e.createdAt).getTime())))
+              
+              return `Dépenses du ${format(firstDay, "d", { locale: fr })} au ${format(lastDay, "d MMMM yyyy", { locale: fr })}`
+            }
+          }
+          
+          return `Dépenses du ${format(date, "d MMMM yyyy", { locale: fr })}`
+        }}
         formatDescription={(items) => {
           const total = items.reduce((sum, item) => sum + item.pricePaid, 0)
           return `Total: ${formatCurrency(total)} (${formatCurrencyEUR(total * USD_TO_EUR)})`

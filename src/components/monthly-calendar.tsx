@@ -272,7 +272,25 @@ export function MonthlyCalendar({ pnlEntries }: MonthlyCalendarProps) {
                       : weekData.amount < 0
                       ? "border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950"
                       : "border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900"
+                  } ${
+                    weekData.count > 0 ? "cursor-pointer hover:opacity-80 transition-opacity" : ""
                   }`}
+                  onClick={() => {
+                    if (weekData.count > 0 && weekData.days.length > 0) {
+                      // Collecter toutes les entrées de la semaine
+                      const weekEntries: PnlEntry[] = []
+                      weekData.days.forEach((day) => {
+                        const dateKey = format(day, "yyyy-MM-dd")
+                        const dayEntries = entriesByDate[dateKey] || []
+                        weekEntries.push(...dayEntries)
+                      })
+                      
+                      // Utiliser le premier jour de la semaine comme date de référence
+                      if (weekEntries.length > 0) {
+                        openModal(weekData.days[0], weekEntries, weekData.amount)
+                      }
+                    }
+                  }}
                 >
                   <div className="flex items-center justify-between mb-1 sm:mb-2">
                     <span className="text-[10px] sm:text-xs md:text-sm font-medium text-zinc-600 dark:text-zinc-400">
@@ -300,7 +318,24 @@ export function MonthlyCalendar({ pnlEntries }: MonthlyCalendarProps) {
         onOpenChange={closeModal}
         selectedDate={selectedDay?.date || null}
         data={selectedDay?.items || null}
-        formatTitle={(date) => `PnL du ${format(date, "d MMMM yyyy", { locale: fr })}`}
+        formatTitle={(date) => {
+          // Vérifier si c'est une vue de semaine (plusieurs entrées sur plusieurs jours)
+          if (selectedDay && selectedDay.items.length > 1) {
+            const dates = selectedDay.items.map((entry) => format(new Date(entry.date), "yyyy-MM-dd"))
+            const uniqueDates = [...new Set(dates)]
+            
+            if (uniqueDates.length > 1) {
+              // C'est une semaine complète
+              const firstDay = new Date(Math.min(...selectedDay.items.map((e) => new Date(e.date).getTime())))
+              const lastDay = new Date(Math.max(...selectedDay.items.map((e) => new Date(e.date).getTime())))
+              
+              return `PnL du ${format(firstDay, "d", { locale: fr })} au ${format(lastDay, "d MMMM yyyy", { locale: fr })}`
+            }
+          }
+          
+          // Vue d'un jour simple
+          return `PnL du ${format(date, "d MMMM yyyy", { locale: fr })}`
+        }}
         formatDescription={(items) => {
           const total = items.reduce((sum, item) => sum + item.amount, 0)
           return `Total: ${total >= 0 ? "+" : ""}${formatCurrency(total)} (${items.length} trade${items.length > 1 ? "s" : ""})`
