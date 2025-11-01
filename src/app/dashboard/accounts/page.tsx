@@ -103,12 +103,17 @@ export default function AccountsPage() {
       if (filterPropfirm !== "all" && account.propfirm !== filterPropfirm) {
         return false
       }
-      
+
       // Filtre pour cacher les comptes inactifs (validés ou cramés)
-      if (hideInactive && (account.status === "VALIDATED" || account.status === "FAILED" || account.status === "ARCHIVED")) {
+      if (
+        hideInactive &&
+        (account.status === "VALIDATED" ||
+          account.status === "FAILED" ||
+          account.status === "ARCHIVED")
+      ) {
         return false
       }
-      
+
       return true
     })
     .sort((a: { createdAt: string; status: string }, b: { createdAt: string; status: string }) => {
@@ -119,14 +124,14 @@ export default function AccountsPage() {
         FAILED: 2,
         ARCHIVED: 3,
       }
-      
+
       const aPriority = statusPriority[a.status] ?? 999
       const bPriority = statusPriority[b.status] ?? 999
-      
+
       if (aPriority !== bPriority) {
         return aPriority - bPriority
       }
-      
+
       // Puis trier par date
       if (sortBy === "date-desc") {
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
@@ -202,7 +207,7 @@ export default function AccountsPage() {
               </Select>
             </div>
           </div>
-          
+
           {/* Toggle pour cacher les comptes inactifs */}
           <div className="flex items-center gap-2 px-1">
             <input

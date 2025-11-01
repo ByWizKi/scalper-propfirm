@@ -135,7 +135,7 @@ export function StatCard({
         <CardContent>
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className={`${sizes.value} font-bold ${styles.value} break-words leading-tight cursor-help`}>
+              <div className={`${sizes.value} font-bold ${styles.value} truncate leading-tight cursor-help`}>
                 {value}
               </div>
             </TooltipTrigger>
@@ -147,7 +147,7 @@ export function StatCard({
           {secondaryText && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <p className={`${sizes.secondary} ${styles.value} mt-0.5 sm:mt-1 break-words cursor-help`}>
+                <p className={`${sizes.secondary} ${styles.value} mt-0.5 sm:mt-1 truncate cursor-help`}>
                   {secondaryText}
                 </p>
               </TooltipTrigger>
@@ -160,7 +160,7 @@ export function StatCard({
           {description && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <p className={`${sizes.description} text-zinc-500 dark:text-zinc-400 mt-0.5 sm:mt-1 cursor-help`}>
+                <p className={`${sizes.description} text-zinc-500 dark:text-zinc-400 mt-0.5 sm:mt-1 truncate cursor-help`}>
                   {description}
                 </p>
               </TooltipTrigger>
