@@ -153,23 +153,16 @@ export function AccountRulesTracker({
   const biggestDay = Math.max(...Object.values(dailyPnl), 0)
   const consistencyPercentage = totalPnl > 0 ? (biggestDay / totalPnl) * 100 : 0
 
+  if (!rules) {
+    return null
+  }
+
   // Statuts
   const profitTargetStatus = totalPnl >= rules.profitTarget
   const drawdownStatus = currentDrawdownLevel >= startingBalance
   const dailyLossStatus = todayPnl > -rules.dailyLossLimit
   const consistencyStatus = consistencyPercentage <= rules.consistencyRule || totalPnl <= 0
   const minTradingDaysStatus = rules.minTradingDays ? tradingDays >= rules.minTradingDays : true
-
-  // Notifier le parent du changement d&apos;éligibilité
-  React.useEffect(() => {
-    if (rules) {
-      onEligibilityChange?.(isEligible)
-    }
-  }, [isEligible, onEligibilityChange, rules])
-
-  if (!rules) {
-    return null
-  }
 
   // Le compte est éligible à la validation si toutes les règles sont respectées
   const isEligible =
@@ -180,9 +173,9 @@ export function AccountRulesTracker({
     minTradingDaysStatus
 
   // Notifier le parent du changement d&apos;éligibilité
-  if (!rules) {
-    return null
-  }
+  React.useEffect(() => {
+    onEligibilityChange?.(isEligible)
+  }, [isEligible, onEligibilityChange])
 
   // Calculs pour les barres de progression
   const profitProgress = Math.min((totalPnl / rules.profitTarget) * 100, 100)

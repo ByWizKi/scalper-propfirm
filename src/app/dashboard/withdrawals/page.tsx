@@ -58,7 +58,7 @@ export default function WithdrawalsPage() {
         setAccounts(accountsData)
       }
     } catch (_error) {
-      console.error("Erreur lors du chargement des données:", error)
+      console.error("Error:", _error)
       toast({
         title: "Erreur",
         description: "Impossible de charger les données",

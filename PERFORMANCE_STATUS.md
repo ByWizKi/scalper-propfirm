@@ -1,6 +1,6 @@
 # 🚧 ÉTAT DES OPTIMISATIONS PERFORMANCE
 
-**Date:** 1er novembre 2024  
+**Date:** 1er novembre 2024
 **Status:** EN COURS
 
 ---
@@ -144,5 +144,5 @@ OU
 
 ---
 
-**Status:** Attente décision utilisateur  
+**Status:** Attente décision utilisateur
 **Travail sauvegardé:** Commit `wip: tentative fix build (en cours)`

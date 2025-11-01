@@ -162,10 +162,10 @@ export function BulkWithdrawalFormDialog({
       onOpenChange(false)
       onSuccess()
     } catch (_error) {
-      console.error("Erreur:", error)
+      console.error("Error:", _error)
       toast({
         title: "Erreur",
-        description: error instanceof Error ? error.message : "Une erreur est survenue",
+        description: _error instanceof Error ? _error.message : "Une erreur est survenue",
         variant: "destructive",
       })
     } finally {

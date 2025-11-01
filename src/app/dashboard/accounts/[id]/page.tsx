@@ -479,7 +479,13 @@ export default function AccountDetailPage() {
                               variant="ghost"
                               size="icon"
                               onClick={() => {
-                                setSelectedPnl({ ...entry, accountId: account.id })
+                                setSelectedPnl({
+                                  id: entry.id,
+                                  date: entry.date,
+                                  amount: entry.amount,
+                                  notes: entry.notes || undefined,
+                                  accountId: account.id || "",
+                                })
                                 setPnlDialogOpen(true)
                               }}
                               className="h-8 w-8"
@@ -593,17 +599,23 @@ export default function AccountDetailPage() {
                                 </p>
                               </div>
                               <div className="flex gap-1">
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => {
-                                    setSelectedWithdrawal({ ...withdrawal, accountId: account.id })
-                                    setWithdrawalDialogOpen(true)
-                                  }}
-                                  className="h-8 w-8"
-                                >
-                                  <Edit className="h-3.5 w-3.5" />
-                                </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => {
+                                setSelectedWithdrawal({
+                                  id: withdrawal.id,
+                                  date: withdrawal.date,
+                                  amount: withdrawal.amount,
+                                  notes: withdrawal.notes || undefined,
+                                  accountId: account.id || "",
+                                })
+                                setWithdrawalDialogOpen(true)
+                              }}
+                              className="h-8 w-8"
+                            >
+                              <Edit className="h-3.5 w-3.5" />
+                            </Button>
                                 <Button
                                   variant="ghost"
                                   size="icon"
