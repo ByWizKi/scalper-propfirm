@@ -1,5 +1,6 @@
 "use client"
 
+import { useMemo, useCallback } from "react"
 import { StatCard, useStatVariant } from "@/components/stat-card"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Wallet, TrendingUp, DollarSign, Target } from "lucide-react"
@@ -13,31 +14,36 @@ export default function DashboardPage() {
   const { data, isLoading } = useDashboardStatsCache()
 
   const stats = data?.stats
-  const accounts = data?.accounts || []
-  const withdrawals = data?.withdrawals || []
 
-  // Calculer le total net des retraits (après taxes)
-  const totalNetWithdrawals = calculateTotalNetWithdrawals(withdrawals)
+  // ⚡ MEMOIZATION: Memoize arrays
+  const accounts = useMemo(() => data?.accounts || [], [data?.accounts])
+  const withdrawals = useMemo(() => data?.withdrawals || [], [data?.withdrawals])
 
-  // Calculer le variant toujours (avant toute condition)
+  // Taux de change USD vers EUR
+  const USD_TO_EUR = 0.92
+
+  // ⚡ MEMOIZATION: Calculer le total net des retraits (après taxes)
+  const totalNetWithdrawals = useMemo(() => {
+    return calculateTotalNetWithdrawals(withdrawals)
+  }, [withdrawals])
+
+  // ⚡ MEMOIZATION: Calculer le variant
   const differenceVariant = useStatVariant(totalNetWithdrawals - (stats?.totalInvested || 0))
 
-  const formatCurrency = (amount: number) => {
+  // ⚡ MEMOIZATION: Fonctions de formatage
+  const formatCurrency = useCallback((amount: number) => {
     return new Intl.NumberFormat("fr-FR", {
       style: "currency",
       currency: "USD",
     }).format(amount)
-  }
+  }, [])
 
-  const formatCurrencyEUR = (amount: number) => {
+  const formatCurrencyEUR = useCallback((amount: number) => {
     return new Intl.NumberFormat("fr-FR", {
       style: "currency",
       currency: "EUR",
     }).format(amount)
-  }
-
-  // Taux de change USD vers EUR
-  const USD_TO_EUR = 0.92
+  }, [])
 
   if (isLoading) {
     return (
