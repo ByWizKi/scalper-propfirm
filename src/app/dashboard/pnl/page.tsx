@@ -34,6 +34,7 @@ export default function PnlPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [selectedEntry, setSelectedEntry] = useState<PnlEntry | null>(null)
+  const [hideEvalAccounts, setHideEvalAccounts] = useState(false)
 
   useEffect(() => {
     fetchData()
