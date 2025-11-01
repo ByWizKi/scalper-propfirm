@@ -129,25 +129,40 @@ export default function WithdrawalsPage() {
   }, 0)
 
   // Regrouper les retraits par compte
-  const withdrawalsByAccount = withdrawals.reduce((acc, withdrawal) => {
-    const accountId = withdrawal.accountId
-    if (!acc[accountId]) {
-      acc[accountId] = {
-        accountName: withdrawal.account.name,
-        propfirm: withdrawal.account.propfirm,
-        withdrawals: [],
-        totalGross: 0,
-        totalNet: 0,
+  const withdrawalsByAccount = withdrawals.reduce(
+    (acc, withdrawal) => {
+      const accountId = withdrawal.accountId
+      if (!acc[accountId]) {
+        acc[accountId] = {
+          accountName: withdrawal.account.name,
+          propfirm: withdrawal.account.propfirm,
+          withdrawals: [],
+          totalGross: 0,
+          totalNet: 0,
+        }
       }
-    }
-    acc[accountId].withdrawals.push(withdrawal)
-    acc[accountId].totalGross += withdrawal.amount
-    acc[accountId].totalNet += getNetWithdrawalAmount(withdrawal.amount, withdrawal.account.propfirm)
-    return acc
-  }, {} as Record<string, { accountName: string; propfirm: string; withdrawals: Withdrawal[]; totalGross: number; totalNet: number }>)
+      acc[accountId].withdrawals.push(withdrawal)
+      acc[accountId].totalGross += withdrawal.amount
+      acc[accountId].totalNet += getNetWithdrawalAmount(
+        withdrawal.amount,
+        withdrawal.account.propfirm
+      )
+      return acc
+    },
+    {} as Record<
+      string,
+      {
+        accountName: string
+        propfirm: string
+        withdrawals: Withdrawal[]
+        totalGross: number
+        totalNet: number
+      }
+    >
+  )
 
   // Trier les retraits dans chaque compte par date (plus récent en premier)
-  Object.values(withdrawalsByAccount).forEach(account => {
+  Object.values(withdrawalsByAccount).forEach((account) => {
     account.withdrawals.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
   })
 
@@ -156,7 +171,9 @@ export default function WithdrawalsPage() {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-zinc-900 dark:border-zinc-50 mx-auto"></div>
-          <p className="mt-4 text-sm text-zinc-600 dark:text-zinc-400">Chargement des retraits...</p>
+          <p className="mt-4 text-sm text-zinc-600 dark:text-zinc-400">
+            Chargement des retraits...
+          </p>
         </div>
       </div>
     )
@@ -166,7 +183,9 @@ export default function WithdrawalsPage() {
     <div className="p-4 sm:p-6 lg:p-8">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-zinc-900 dark:text-zinc-50">Retraits</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-zinc-900 dark:text-zinc-50">
+            Retraits
+          </h1>
           <p className="text-sm sm:text-base text-zinc-600 dark:text-zinc-400 mt-1 sm:mt-2">
             Suivez vos retraits de fonds
           </p>
@@ -247,7 +266,8 @@ export default function WithdrawalsPage() {
                           {accountData.accountName}
                         </h3>
                         <p className="text-xs sm:text-sm text-zinc-500">
-                          {accountData.withdrawals.length} retrait{accountData.withdrawals.length > 1 ? "s" : ""}
+                          {accountData.withdrawals.length} retrait
+                          {accountData.withdrawals.length > 1 ? "s" : ""}
                         </p>
                       </div>
                       <div className="text-right min-w-0">
@@ -269,7 +289,10 @@ export default function WithdrawalsPage() {
                     {/* Retraits du compte */}
                     <div className="divide-y divide-zinc-200 dark:divide-zinc-800">
                       {accountData.withdrawals.map((withdrawal) => {
-                        const taxInfo = calculateWithdrawalTax(withdrawal.amount, accountData.propfirm)
+                        const taxInfo = calculateWithdrawalTax(
+                          withdrawal.amount,
+                          accountData.propfirm
+                        )
 
                         return (
                           <div
@@ -298,7 +321,8 @@ export default function WithdrawalsPage() {
                                 </p>
                                 {taxInfo.hasTax && (
                                   <p className="text-[10px] sm:text-xs text-orange-600 dark:text-orange-400 truncate">
-                                    Net: {formatCurrency(taxInfo.netAmount)} ({(taxInfo.taxRate * 100).toFixed(0)}% taxe)
+                                    Net: {formatCurrency(taxInfo.netAmount)} (
+                                    {(taxInfo.taxRate * 100).toFixed(0)}% taxe)
                                   </p>
                                 )}
                                 <p className="text-[10px] sm:text-xs text-green-600 truncate">
@@ -346,4 +370,3 @@ export default function WithdrawalsPage() {
     </div>
   )
 }
-
