@@ -52,10 +52,10 @@ export function BulkWithdrawalFormDialog({
 }: BulkWithdrawalFormDialogProps) {
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
-  
+
   // Filtrer uniquement les comptes financés
   const eligibleAccounts = accounts.filter(account => account.accountType === "FUNDED")
-  
+
   // Initialiser avec une ligne vide
   const [rows, setRows] = useState<WithdrawalRow[]>([
     {
