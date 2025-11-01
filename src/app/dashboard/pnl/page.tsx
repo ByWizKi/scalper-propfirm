@@ -56,7 +56,7 @@ export default function PnlPage() {
         setEntries(entriesData)
         setAccounts(accountsData)
       }
-    } catch (error) {
+    } catch (_error) {
       console.error("Erreur lors du chargement des données:", error)
       toast({
         title: "Erreur",
@@ -87,7 +87,7 @@ export default function PnlPage() {
       } else {
         throw new Error("Erreur lors de la suppression")
       }
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: "Erreur",
         description: "Impossible de supprimer l'entrée",

@@ -8,8 +8,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { format } from "date-fns"
-import { fr } from "date-fns/locale"
+// import { format } from "date-fns"
+// import { fr } from "date-fns/locale"
 
 /**
  * Props génériques pour le dialogue de détails d'un jour

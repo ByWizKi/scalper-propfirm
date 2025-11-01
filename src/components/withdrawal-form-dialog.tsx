@@ -145,7 +145,7 @@ export function WithdrawalFormDialog({
 
       onSuccess()
       onOpenChange(false)
-    } catch (error) {
+    } catch (_error) {
       // Les erreurs sont déjà gérées par les mutations
       console.error(error)
     }

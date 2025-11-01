@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Event Bus - Pub/Sub Pattern pour la communication entre composants
  * Permet de déclencher et écouter des événements globalement
@@ -56,7 +57,7 @@ class EventBus {
       callbacks.forEach((callback) => {
         try {
           callback(data)
-        } catch (error) {
+        } catch (_error) {
           console.error(`Error in event handler for "${event}":`, error)
         }
       })

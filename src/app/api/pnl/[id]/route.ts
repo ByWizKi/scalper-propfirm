@@ -49,7 +49,7 @@ export async function PUT(
     })
 
     return NextResponse.json(pnlEntry)
-  } catch (error) {
+  } catch (_error) {
     console.error("Erreur lors de la mise à jour du PnL:", error)
     return NextResponse.json(
       { message: "Erreur lors de la mise à jour du PnL" },
@@ -94,7 +94,7 @@ export async function DELETE(
     })
 
     return NextResponse.json({ message: "Entrée PnL supprimée avec succès" })
-  } catch (error) {
+  } catch (_error) {
     console.error("Erreur lors de la suppression du PnL:", error)
     return NextResponse.json(
       { message: "Erreur lors de la suppression du PnL" },

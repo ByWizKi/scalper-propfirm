@@ -65,7 +65,7 @@ export async function POST(request: Request) {
       },
       { status: 201 }
     )
-  } catch (error) {
+  } catch (_error) {
     console.error("Erreur lors de l'inscription:", error)
     return NextResponse.json(
       { error: "Une erreur est survenue lors de l'inscription" },

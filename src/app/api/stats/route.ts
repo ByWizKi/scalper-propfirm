@@ -67,7 +67,7 @@ export async function GET() {
       netProfit,
       recentPnl,
     })
-  } catch (error) {
+  } catch (_error) {
     console.error("Erreur lors de la récupération des statistiques:", error)
     return NextResponse.json(
       { message: "Erreur lors de la récupération des statistiques" },

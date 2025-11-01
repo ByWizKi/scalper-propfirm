@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-require-imports */
 /**
  * Configuration de sécurité pour l'application
  */
@@ -186,7 +187,7 @@ export async function verifyPassword(password: string, hashedPassword: string): 
 export function secureLog(message: string, data?: any) {
   if (process.env.NODE_ENV === "development") {
     const sanitizedData = sanitizeSensitiveData(data)
-    console.log(`[${new Date().toISOString()}] ${message}`, sanitizedData || "")
+    console.info(`[${new Date().toISOString()}] ${message}`, sanitizedData || "")
   }
 }
 

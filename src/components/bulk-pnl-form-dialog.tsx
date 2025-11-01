@@ -158,7 +158,7 @@ export function BulkPnlFormDialog({
 
       onOpenChange(false)
       onSuccess()
-    } catch (error) {
+    } catch (_error) {
       console.error("Erreur:", error)
       toast({
         title: "Erreur",

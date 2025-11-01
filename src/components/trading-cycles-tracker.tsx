@@ -117,7 +117,7 @@ export function TradingCyclesTracker({ pnlEntries, withdrawals, accountSize, pro
   } else {
     // TopStep: Système de cycles
     // Un retrait réinitialise le cycle
-    let withdrawalPercentage = 0.5 // 50%
+    const withdrawalPercentage = 0.5 // 50%
     let additionalMultiplier = 1.0 // 100%
 
     if (totalWithdrawals >= 10000) {

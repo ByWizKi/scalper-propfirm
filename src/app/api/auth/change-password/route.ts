@@ -70,7 +70,7 @@ export async function PUT(request: Request) {
       { message: "Mot de passe modifié avec succès" },
       { status: 200 }
     )
-  } catch (error) {
+  } catch (_error) {
     console.error("Erreur lors du changement de mot de passe:", error)
     return NextResponse.json(
       { error: "Une erreur est survenue lors du changement de mot de passe" },

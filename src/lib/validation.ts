@@ -82,7 +82,7 @@ export const idSchema = z.string().uuid("ID invalide")
 export function validateData<T>(schema: z.ZodSchema<T>, data: unknown): T {
   try {
     return schema.parse(data)
-  } catch (error) {
+  } catch (_error) {
     if (error instanceof z.ZodError) {
       const messages = error.issues.map((e) => e.message).join(", ")
       throw new Error(`Validation échouée: ${messages}`)
@@ -101,7 +101,7 @@ export async function validateDataAsync<T>(
   try {
     const validatedData = schema.parse(data)
     return { success: true, data: validatedData }
-  } catch (error) {
+  } catch (_error) {
     if (error instanceof z.ZodError) {
       const messages = error.issues.map((e) => e.message).join(", ")
       return { success: false, error: `Validation échouée: ${messages}` }

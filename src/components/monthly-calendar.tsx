@@ -4,7 +4,8 @@ import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight, TrendingUp, TrendingDown } from "lucide-react"
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, isToday, startOfWeek, endOfWeek, addMonths, subMonths } from "date-fns"
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth } from "date-fns"
+// import { isSameDay, isToday, startOfWeek, endOfWeek, addMonths, subMonths } from "date-fns"
 import { fr } from "date-fns/locale"
 import { useCalendarModal } from "@/hooks/use-calendar-modal"
 import { CalendarDayDetailsDialog } from "@/components/calendar-day-details-dialog"
@@ -113,7 +114,7 @@ export function MonthlyCalendar({ pnlEntries }: MonthlyCalendarProps) {
   const weekRows: Date[][] = []
   let currentWeek: Date[] = []
 
-  calendarDays.forEach((day, index) => {
+  calendarDays.forEach((day, _index) => {
     currentWeek.push(day)
 
     // Si c'est vendredi ou le dernier jour, commencer une nouvelle semaine

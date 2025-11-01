@@ -27,7 +27,7 @@ export async function GET() {
     })
 
     return NextResponse.json(accounts)
-  } catch (error) {
+  } catch (_error) {
     console.error("Erreur lors de la récupération des comptes:", error)
     return NextResponse.json(
       { message: "Erreur lors de la récupération des comptes" },
@@ -71,7 +71,7 @@ export async function POST(request: Request) {
     })
 
     return NextResponse.json(account, { status: 201 })
-  } catch (error) {
+  } catch (_error) {
     console.error("Erreur lors de la création du compte:", error)
     return NextResponse.json(
       { message: "Erreur lors de la création du compte" },

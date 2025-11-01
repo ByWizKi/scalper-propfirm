@@ -31,7 +31,7 @@ export async function GET(request: Request) {
     })
 
     return NextResponse.json(withdrawals)
-  } catch (error) {
+  } catch (_error) {
     console.error("Erreur lors de la récupération des retraits:", error)
     return NextResponse.json(
       { message: "Erreur lors de la récupération des retraits" },
@@ -89,7 +89,7 @@ export async function POST(request: Request) {
     })
 
     return NextResponse.json(withdrawal, { status: 201 })
-  } catch (error) {
+  } catch (_error) {
     console.error("Erreur lors de la création du retrait:", error)
     return NextResponse.json(
       { message: "Erreur lors de la création du retrait" },

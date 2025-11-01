@@ -8,33 +8,8 @@ import { StatCard, useStatVariant } from "@/components/stat-card"
 import { useDashboardStatsCache } from "@/hooks/use-data-cache"
 import { calculateTotalNetWithdrawals } from "@/lib/withdrawal-utils"
 
-interface Stats {
-  totalAccounts: number
-  activeAccounts: number
-  fundedAccounts: number
-  totalInvested: number
-  totalPnl: number
-  totalWithdrawals: number
-  netProfit: number
-  recentPnl: Array<{ date: string; amount: number }>
-}
 
-interface Account {
-  id: string
-  name: string
-  createdAt: string
-  pricePaid: number
-}
 
-interface Withdrawal {
-  id: string
-  date: string
-  amount: number
-  notes?: string
-  account: {
-    propfirm: string
-  }
-}
 
 export default function DashboardPage() {
   // Utilisation du hook de cache avec invalidation automatique

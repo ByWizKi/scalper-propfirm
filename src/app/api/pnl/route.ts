@@ -31,7 +31,7 @@ export async function GET(request: Request) {
     })
 
     return NextResponse.json(pnlEntries)
-  } catch (error) {
+  } catch (_error) {
     console.error("Erreur lors de la récupération des PnL:", error)
     return NextResponse.json(
       { message: "Erreur lors de la récupération des PnL" },
@@ -89,7 +89,7 @@ export async function POST(request: Request) {
     })
 
     return NextResponse.json(pnlEntry, { status: 201 })
-  } catch (error) {
+  } catch (_error) {
     console.error("Erreur lors de la création du PnL:", error)
     return NextResponse.json(
       { message: "Erreur lors de la création du PnL" },

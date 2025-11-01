@@ -133,7 +133,7 @@ export function WithdrawalsCalendar({ withdrawals }: WithdrawalsCalendarProps) {
               return sum + dayWithdrawals.reduce((s, w) => s + getNetWithdrawalAmount(w.amount, w.account.propfirm), 0)
             }, 0)
 
-            const weekNumber = Math.floor((weekIdx * 5) / 7) + 1
+            const weekNum = Math.floor((weekIdx * 5) / 7) + 1
 
             return (
               <div key={weekIdx} className="grid grid-cols-6 gap-1 md:gap-2"> {/* 5 days + 1 for "Semaine" */}

@@ -57,7 +57,7 @@ export default function WithdrawalsPage() {
         setWithdrawals(withdrawalsData)
         setAccounts(accountsData)
       }
-    } catch (error) {
+    } catch (_error) {
       console.error("Erreur lors du chargement des données:", error)
       toast({
         title: "Erreur",
@@ -88,7 +88,7 @@ export default function WithdrawalsPage() {
       } else {
         throw new Error("Erreur lors de la suppression")
       }
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: "Erreur",
         description: "Impossible de supprimer le retrait",

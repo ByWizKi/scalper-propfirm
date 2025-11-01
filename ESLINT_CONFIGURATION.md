@@ -87,7 +87,7 @@ catch (error) {
 // ❌ Avant
 <p>Aucun retrait pour le moment</p>
 
-// ✅ Après  
+// ✅ Après
 <p>Aucun retrait pour le moment</p>  // Utiliser &apos; ou enlever l'apostrophe
 ```
 

@@ -80,7 +80,7 @@ export class TopStepStrategy implements PropfirmStrategy {
     // PnL réalisé (profit uniquement)
     const realizedPnl = Math.max(0, totalPnl)
 
-    let withdrawalPercentage = 0.5 // 50%
+    const withdrawalPercentage = 0.5 // 50%
     let additionalMultiplier = 1.0
 
     // Si plus de $10,000 de retraits, passer à 90%
@@ -101,7 +101,7 @@ export class TopStepStrategy implements PropfirmStrategy {
     accountSize: number,
     pnlEntries: Array<{ date: Date; amount: number }>
   ): boolean {
-    const rules = this.getAccountRules(accountSize)
+    const rules = this.getAccountRules(_accountSize)
     if (!rules) return false
 
     const totalPnl = pnlEntries.reduce((sum, entry) => sum + entry.amount, 0)

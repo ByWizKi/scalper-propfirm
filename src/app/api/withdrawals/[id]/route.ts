@@ -49,7 +49,7 @@ export async function PUT(
     })
 
     return NextResponse.json(withdrawal)
-  } catch (error) {
+  } catch (_error) {
     console.error("Erreur lors de la mise à jour du retrait:", error)
     return NextResponse.json(
       { message: "Erreur lors de la mise à jour du retrait" },
@@ -94,7 +94,7 @@ export async function DELETE(
     })
 
     return NextResponse.json({ message: "Retrait supprimé avec succès" })
-  } catch (error) {
+  } catch (_error) {
     console.error("Erreur lors de la suppression du retrait:", error)
     return NextResponse.json(
       { message: "Erreur lors de la suppression du retrait" },

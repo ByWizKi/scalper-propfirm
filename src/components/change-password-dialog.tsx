@@ -82,7 +82,7 @@ export function ChangePasswordDialog() {
         confirmPassword: "",
       })
       setOpen(false)
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: "Erreur",
         description: "Une erreur est survenue",

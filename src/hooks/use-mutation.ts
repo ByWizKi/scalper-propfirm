@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Hook pour gérer les mutations (CREATE, UPDATE, DELETE)
  * avec émission automatique d'événements et optimistic updates

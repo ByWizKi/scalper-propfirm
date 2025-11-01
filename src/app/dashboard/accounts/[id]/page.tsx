@@ -26,35 +26,6 @@ import { useDeleteAccountMutation, useUpdateAccountMutation } from "@/hooks/use-
 import { format } from "date-fns"
 import { fr } from "date-fns/locale"
 
-interface PropfirmAccount {
-  id: string
-  name: string
-  propfirm: string
-  size: number
-  accountType: string
-  status: string
-  pricePaid: number
-  notes?: string
-  createdAt: string
-  linkedEvalId?: string
-  linkedEval?: {
-    id: string
-    name: string
-    pricePaid: number
-  }
-  pnlEntries: Array<{
-    id: string
-    date: string
-    amount: number
-    notes?: string
-  }>
-  withdrawals: Array<{
-    id: string
-    date: string
-    amount: number
-    notes?: string
-  }>
-}
 
 const PROPFIRM_LABELS: Record<string, string> = {
   TOPSTEP: "TopStep",
@@ -98,9 +69,21 @@ export default function AccountDetailPage() {
 
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [pnlDialogOpen, setPnlDialogOpen] = useState(false)
-  const [selectedPnl, setSelectedPnl] = useState<any>(null)
+  const [selectedPnl, setSelectedPnl] = useState<{
+    id: string
+    date: string
+    amount: number
+    notes?: string
+    accountId: string
+  } | null>(null)
   const [withdrawalDialogOpen, setWithdrawalDialogOpen] = useState(false)
-  const [selectedWithdrawal, setSelectedWithdrawal] = useState<any>(null)
+  const [selectedWithdrawal, setSelectedWithdrawal] = useState<{
+    id: string
+    date: string
+    amount: number
+    notes?: string
+    accountId: string
+  } | null>(null)
   const [isEligibleForValidation, setIsEligibleForValidation] = useState(false)
 
   const handleDelete = async () => {
@@ -111,7 +94,7 @@ export default function AccountDetailPage() {
     try {
       await deleteAccount(accountId)
       router.push("/dashboard/accounts")
-    } catch (error) {
+    } catch (_error) {
       // L'erreur est déjà gérée par la mutation
     }
   }
@@ -131,7 +114,7 @@ export default function AccountDetailPage() {
           status: "VALIDATED",
         },
       })
-    } catch (error) {
+    } catch (_error) {
       // L'erreur est déjà gérée par la mutation
     }
   }
@@ -245,7 +228,7 @@ export default function AccountDetailPage() {
   ).sort((a, b) => b.month.localeCompare(a.month))
 
   // Obtenir les 6 derniers mois
-  const last6Months = monthlyPnlArray.slice(0, 6)
+  const _last6Months = monthlyPnlArray.slice(0, 6)
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
@@ -381,9 +364,6 @@ export default function AccountDetailPage() {
             description={`${account.withdrawals.length} retrait${account.withdrawals.length > 1 ? "s" : ""}`}
           />
         )}
-
-        <StatCard
-          title="Meilleur Jour"
           value={formatCurrency(bestDay)}
           icon={TrendingUp}
           variant="success"
@@ -514,7 +494,7 @@ export default function AccountDetailPage() {
                                     })
                                     if (!res.ok) throw new Error("Erreur lors de la suppression")
                                     window.location.reload()
-                                  } catch (error) {
+                                  } catch (_error) {
                                     alert("Erreur lors de la suppression de l'entrée PnL")
                                   }
                                 }
@@ -638,7 +618,7 @@ export default function AccountDetailPage() {
                                         if (!res.ok)
                                           throw new Error("Erreur lors de la suppression")
                                         window.location.reload()
-                                      } catch (error) {
+                                      } catch (_error) {
                                         alert("Erreur lors de la suppression du retrait")
                                       }
                                     }

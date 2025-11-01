@@ -42,7 +42,7 @@ export async function GET(
     }
 
     return NextResponse.json(account)
-  } catch (error) {
+  } catch (_error) {
     console.error("Erreur lors de la récupération du compte:", error)
     return NextResponse.json(
       { message: "Erreur lors de la récupération du compte" },
@@ -99,7 +99,7 @@ export async function PUT(
     })
 
     return NextResponse.json(account)
-  } catch (error) {
+  } catch (_error) {
     console.error("Erreur lors de la mise à jour du compte:", error)
     return NextResponse.json(
       { message: "Erreur lors de la mise à jour du compte" },
@@ -144,7 +144,7 @@ export async function DELETE(
     })
 
     return NextResponse.json({ message: "Compte supprimé avec succès" })
-  } catch (error) {
+  } catch (_error) {
     console.error("Erreur lors de la suppression du compte:", error)
     return NextResponse.json(
       { message: "Erreur lors de la suppression du compte" },

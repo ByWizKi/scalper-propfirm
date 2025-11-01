@@ -42,16 +42,13 @@ const RULES_CONFIG: Record<string, Record<number, {
 }
 
 export function AccountRulesTracker({ accountSize, accountType, propfirm, pnlEntries, onEligibilityChange }: AccountRulesTrackerProps) {
-  // Seulement pour les comptes d'évaluation
+  // Seulement pour les comptes d&apos;évaluation
   if (accountType !== "EVAL") {
     return null
   }
 
   const rules = RULES_CONFIG[propfirm]?.[accountSize]
 
-  if (!rules) {
-    return null
-  }
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("fr-FR", {
@@ -67,7 +64,7 @@ export function AccountRulesTracker({ accountSize, accountType, propfirm, pnlEnt
   const startingBalance = accountSize - rules.maxDrawdown
   const currentDrawdownLevel = startingBalance + totalPnl
 
-  // Calculer le PnL du jour (aujourd'hui)
+  // Calculer le PnL du jour (aujourd&apos;hui)
   const today = new Date().toISOString().split('T')[0]
   const todayPnl = pnlEntries
     .filter(entry => entry.date.split('T')[0] === today)
@@ -94,7 +91,11 @@ export function AccountRulesTracker({ accountSize, accountType, propfirm, pnlEnt
   // Le compte est éligible à la validation si toutes les règles sont respectées
   const isEligible = profitTargetStatus && drawdownStatus && dailyLossStatus && consistencyStatus && minTradingDaysStatus
 
-  // Notifier le parent du changement d'éligibilité
+  // Notifier le parent du changement d&apos;éligibilité
+  if (!rules) {
+    return null
+  }
+
   React.useEffect(() => {
     onEligibilityChange?.(isEligible)
   }, [isEligible, onEligibilityChange])
@@ -244,13 +245,13 @@ export function AccountRulesTracker({ accountSize, accountType, propfirm, pnlEnt
           <div className="flex items-center gap-1 mt-1">
             {todayPnl >= 0 ? (
               <p className="text-xs text-green-600">
-                Aujourd'hui : {formatCurrency(todayPnl)}
+                Aujourd&apos;hui : {formatCurrency(todayPnl)}
               </p>
             ) : dailyLossStatus ? (
               <>
                 <AlertTriangle className="h-3 w-3 text-orange-600" />
                 <p className="text-xs text-zinc-500">
-                  Aujourd'hui : {formatCurrency(todayPnl)} ({formatCurrency(rules.dailyLossLimit - dailyLossUsed)} disponible)
+                  Aujourd&apos;hui : {formatCurrency(todayPnl)} ({formatCurrency(rules.dailyLossLimit - dailyLossUsed)} disponible)
                 </p>
               </>
             ) : (

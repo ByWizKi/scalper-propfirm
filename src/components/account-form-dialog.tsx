@@ -122,13 +122,7 @@ export function AccountFormDialog({
     }
   }, [account, open])
 
-  // Charger les comptes d'évaluation pour la liaison
-  useEffect(() => {
-    if (open && formData.accountType === "FUNDED") {
-      fetchEvalAccounts()
-    }
-  }, [open, formData.accountType, formData.propfirm, formData.size])
-
+  // Charger les comptes d&apos;évaluation pour la liaison
   const fetchEvalAccounts = async () => {
     try {
       const response = await fetch("/api/accounts")
@@ -143,10 +137,17 @@ export function AccountFormDialog({
         )
         setEvalAccounts(evalOnly)
       }
-    } catch (error) {
-      console.error("Erreur lors du chargement des comptes d'évaluation:", error)
+    } catch (_error) {
+      console.error("Erreur lors du chargement des comptes d&apos;évaluation:")
     }
   }
+
+  useEffect(() => {
+    if (open && formData.accountType === "FUNDED") {
+      fetchEvalAccounts()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, formData.accountType, formData.propfirm, formData.size])
 
   // Récupérer les tailles disponibles pour la propfirm sélectionnée
   const availableSizes = ACCOUNT_SIZES_BY_PROPFIRM[formData.propfirm] || []
@@ -180,7 +181,7 @@ export function AccountFormDialog({
 
       onSuccess()
       onOpenChange(false)
-    } catch (error) {
+    } catch (_error) {
       // Les erreurs sont déjà gérées par les mutations
       console.error(error)
     }
@@ -292,10 +293,10 @@ export function AccountFormDialog({
               </div>
             </div>
 
-            {/* Compte d'évaluation lié (seulement pour FUNDED) */}
+            {/* Compte d&apos;évaluation lié (seulement pour FUNDED) */}
             {formData.accountType === "FUNDED" && (
               <div className="grid gap-2">
-                <Label htmlFor="linkedEvalId" className="text-xs sm:text-sm">Compte d'évaluation lié (optionnel)</Label>
+                <Label htmlFor="linkedEvalId" className="text-xs sm:text-sm">Compte d&apos;évaluation lié (optionnel)</Label>
                 <Select
                   value={formData.linkedEvalId || "none"}
                   onValueChange={(value) => setFormData({ ...formData, linkedEvalId: value === "none" ? "" : value })}
@@ -367,4 +368,5 @@ export function AccountFormDialog({
     </Dialog>
   )
 }
+
 
