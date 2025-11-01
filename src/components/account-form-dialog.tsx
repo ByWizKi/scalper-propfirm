@@ -344,16 +344,21 @@ export function AccountFormDialog({
             </div>
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
+              className="w-full sm:w-auto text-sm"
             >
               Annuler
             </Button>
-            <Button type="submit" disabled={isLoading}>
+            <Button
+              type="submit"
+              disabled={isLoading}
+              className="w-full sm:w-auto text-sm"
+            >
               {isLoading ? "En cours..." : account ? "Mettre à jour" : "Créer"}
             </Button>
           </DialogFooter>
