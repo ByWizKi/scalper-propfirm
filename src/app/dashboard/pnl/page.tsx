@@ -4,7 +4,8 @@ import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { PnlFormDialog } from "@/components/pnl-form-dialog"
-import { Plus, Edit, Trash2, TrendingUp, TrendingDown } from "lucide-react"
+import { BulkPnlFormDialog } from "@/components/bulk-pnl-form-dialog"
+import { Plus, Edit, Trash2, TrendingUp, TrendingDown, Table } from "lucide-react"
 import { toast } from "@/hooks/use-toast"
 import { format } from "date-fns"
 import { fr } from "date-fns/locale"
@@ -33,6 +34,7 @@ export default function PnlPage() {
   const [accounts, setAccounts] = useState<PropfirmAccount[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [bulkDialogOpen, setBulkDialogOpen] = useState(false)
   const [selectedEntry, setSelectedEntry] = useState<PnlEntry | null>(null)
   const [hideEvalAccounts, setHideEvalAccounts] = useState(false)
 
@@ -331,6 +333,13 @@ export default function PnlPage() {
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         entry={selectedEntry}
+        accounts={accounts}
+        onSuccess={fetchData}
+      />
+
+      <BulkPnlFormDialog
+        open={bulkDialogOpen}
+        onOpenChange={setBulkDialogOpen}
         accounts={accounts}
         onSuccess={fetchData}
       />
