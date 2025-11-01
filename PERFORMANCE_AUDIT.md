@@ -1,7 +1,7 @@
 # ⚡ AUDIT PERFORMANCE - Scalper Propfirm
 
-**Date:** 1er novembre 2024  
-**Auditeur:** Assistant IA  
+**Date:** 1er novembre 2024
+**Auditeur:** Assistant IA
 **Version:** 1.0.0
 
 ---
@@ -458,7 +458,7 @@ const totalPnl = accounts.reduce((sum, acc) => {
 ```typescript
 // ✅ OPTIMISÉ - Aggregation PostgreSQL
 const stats = await prisma.$queryRaw`
-  SELECT 
+  SELECT
     COUNT(DISTINCT pa.id) as "totalAccounts",
     COUNT(DISTINCT CASE WHEN pa.status = 'ACTIVE' THEN pa.id END) as "activeAccounts",
     COUNT(DISTINCT CASE WHEN pa."accountType" = 'FUNDED' THEN pa.id END) as "fundedAccounts",
@@ -1035,7 +1035,7 @@ const Dashboard = () => {
 
 ---
 
-**Statut:** ⚠️ Nécessite optimisations critiques  
-**Priorité:** 🔴 HAUTE - Bloquer build résolu, puis optimisations Sprint 1  
-**Date:** 1er novembre 2024  
+**Statut:** ⚠️ Nécessite optimisations critiques
+**Priorité:** 🔴 HAUTE - Bloquer build résolu, puis optimisations Sprint 1
+**Date:** 1er novembre 2024
 **Version:** 1.0.0

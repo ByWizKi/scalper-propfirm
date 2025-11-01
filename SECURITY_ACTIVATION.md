@@ -458,6 +458,6 @@ Détails :
 
 ---
 
-**Status :** ✅ Base de données prête | ⏳ Clé de chiffrement à ajouter manuellement  
-**Date :** 1er novembre 2024  
+**Status :** ✅ Base de données prête | ⏳ Clé de chiffrement à ajouter manuellement
+**Date :** 1er novembre 2024
 **Version :** 1.0.0
