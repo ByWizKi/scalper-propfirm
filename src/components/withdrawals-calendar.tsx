@@ -196,7 +196,7 @@ export function WithdrawalsCalendar({ withdrawals }: WithdrawalsCalendarProps) {
                         const dayWithdrawals = dailyWithdrawals[dateKey] || []
                         weekWithdrawals.push(...dayWithdrawals)
                       })
-                      
+
                       if (weekWithdrawals.length > 0) {
                         openModal(week[0], weekWithdrawals, weekTotal)
                       }
@@ -236,16 +236,16 @@ export function WithdrawalsCalendar({ withdrawals }: WithdrawalsCalendarProps) {
           if (selectedDay && selectedDay.items.length > 1) {
             const dates = selectedDay.items.map((withdrawal) => format(new Date(withdrawal.date), "yyyy-MM-dd"))
             const uniqueDates = [...new Set(dates)]
-            
+
             if (uniqueDates.length > 1) {
               // C'est une semaine complète
               const firstDay = new Date(Math.min(...selectedDay.items.map((w) => new Date(w.date).getTime())))
               const lastDay = new Date(Math.max(...selectedDay.items.map((w) => new Date(w.date).getTime())))
-              
+
               return `Retraits du ${format(firstDay, "d", { locale: fr })} au ${format(lastDay, "d MMMM yyyy", { locale: fr })}`
             }
           }
-          
+
           return `Retraits du ${format(date, "d MMMM yyyy", { locale: fr })}`
         }}
         formatDescription={(items) => {

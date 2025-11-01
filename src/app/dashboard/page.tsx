@@ -1,9 +1,9 @@
 "use client"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Wallet, TrendingUp, DollarSign, Target } from "lucide-react"
 import { ExpensesCalendar } from "@/components/expenses-calendar"
 import { WithdrawalsCalendar } from "@/components/withdrawals-calendar"
+import { StatCard, useStatVariant } from "@/components/stat-card"
 import { useDashboardStatsCache } from "@/hooks/use-data-cache"
 import { calculateTotalNetWithdrawals } from "@/lib/withdrawal-utils"
 
@@ -88,82 +88,40 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-4 mb-6 sm:mb-8">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs sm:text-sm font-medium truncate pr-2">
-              Total Comptes
-            </CardTitle>
-            <Wallet className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-zinc-500 flex-shrink-0" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-xl sm:text-2xl font-bold">{stats?.totalAccounts || 0}</div>
-            <p className="text-[10px] sm:text-xs text-zinc-500 mt-1 truncate">
-              {stats?.activeAccounts || 0} actifs • {stats?.fundedAccounts || 0} financés
-            </p>
-          </CardContent>
-        </Card>
+        <StatCard
+          title="Total Comptes"
+          value={stats?.totalAccounts || 0}
+          icon={Wallet}
+          variant="neutral"
+          description={`${stats?.activeAccounts || 0} actifs • ${stats?.fundedAccounts || 0} financés`}
+        />
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs sm:text-sm font-medium truncate pr-2">
-              Investi Total
-            </CardTitle>
-            <Target className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-zinc-500 flex-shrink-0" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-lg sm:text-2xl font-bold truncate">
-              {formatCurrency(stats?.totalInvested || 0)}
-            </div>
-            <p className="text-[10px] sm:text-xs text-zinc-500 mt-1 truncate">
-              {formatCurrencyEUR((stats?.totalInvested || 0) * USD_TO_EUR)}
-            </p>
-            <p className="text-[10px] sm:text-xs text-zinc-500 mt-1 hidden sm:block">
-              Coût des comptes
-            </p>
-          </CardContent>
-        </Card>
+        <StatCard
+          title="Investi Total"
+          value={formatCurrency(stats?.totalInvested || 0)}
+          icon={Target}
+          variant="neutral"
+          secondaryText={formatCurrencyEUR((stats?.totalInvested || 0) * USD_TO_EUR)}
+          description="Coût des comptes"
+        />
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs sm:text-sm font-medium truncate pr-2">
-              Retraits Nets
-            </CardTitle>
-            <DollarSign className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-zinc-500 flex-shrink-0" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-lg sm:text-2xl font-bold text-green-600 truncate">
-              {formatCurrency(totalNetWithdrawals)}
-            </div>
-            <p className="text-[10px] sm:text-xs text-green-600 mt-1 truncate">
-              {formatCurrencyEUR(totalNetWithdrawals * USD_TO_EUR)}
-            </p>
-            <p className="text-[10px] sm:text-xs text-zinc-500 mt-1 hidden sm:block">
-              Retraits nets après taxes
-            </p>
-          </CardContent>
-        </Card>
+        <StatCard
+          title="Retraits Nets"
+          value={formatCurrency(totalNetWithdrawals)}
+          icon={DollarSign}
+          variant="success"
+          secondaryText={formatCurrencyEUR(totalNetWithdrawals * USD_TO_EUR)}
+          description="Retraits nets après taxes"
+        />
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs sm:text-sm font-medium truncate pr-2">Bilan</CardTitle>
-            <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-zinc-500 flex-shrink-0" />
-          </CardHeader>
-          <CardContent>
-            <div
-              className={`text-lg sm:text-2xl font-bold truncate ${totalNetWithdrawals - (stats?.totalInvested || 0) >= 0 ? "text-green-600" : "text-red-600"}`}
-            >
-              {formatCurrency(totalNetWithdrawals - (stats?.totalInvested || 0))}
-            </div>
-            <p
-              className={`text-[10px] sm:text-xs mt-1 truncate ${totalNetWithdrawals - (stats?.totalInvested || 0) >= 0 ? "text-green-600" : "text-red-600"}`}
-            >
-              {formatCurrencyEUR((totalNetWithdrawals - (stats?.totalInvested || 0)) * USD_TO_EUR)}
-            </p>
-            <p className="text-[10px] sm:text-xs text-zinc-500 mt-1 hidden sm:block">
-              Retraits nets - Investi
-            </p>
-          </CardContent>
-        </Card>
+        <StatCard
+          title="Bilan"
+          value={formatCurrency(totalNetWithdrawals - (stats?.totalInvested || 0))}
+          icon={TrendingUp}
+          variant={useStatVariant(totalNetWithdrawals - (stats?.totalInvested || 0))}
+          secondaryText={formatCurrencyEUR((totalNetWithdrawals - (stats?.totalInvested || 0)) * USD_TO_EUR)}
+          description="Retraits nets - Investi"
+        />
       </div>
 
       <div className="grid gap-4 sm:gap-6 md:grid-cols-1 mb-6 sm:mb-8">

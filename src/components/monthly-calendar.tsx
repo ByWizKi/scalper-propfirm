@@ -284,7 +284,7 @@ export function MonthlyCalendar({ pnlEntries }: MonthlyCalendarProps) {
                         const dayEntries = entriesByDate[dateKey] || []
                         weekEntries.push(...dayEntries)
                       })
-                      
+
                       // Utiliser le premier jour de la semaine comme date de référence
                       if (weekEntries.length > 0) {
                         openModal(weekData.days[0], weekEntries, weekData.amount)
@@ -323,16 +323,16 @@ export function MonthlyCalendar({ pnlEntries }: MonthlyCalendarProps) {
           if (selectedDay && selectedDay.items.length > 1) {
             const dates = selectedDay.items.map((entry) => format(new Date(entry.date), "yyyy-MM-dd"))
             const uniqueDates = [...new Set(dates)]
-            
+
             if (uniqueDates.length > 1) {
               // C'est une semaine complète
               const firstDay = new Date(Math.min(...selectedDay.items.map((e) => new Date(e.date).getTime())))
               const lastDay = new Date(Math.max(...selectedDay.items.map((e) => new Date(e.date).getTime())))
-              
+
               return `PnL du ${format(firstDay, "d", { locale: fr })} au ${format(lastDay, "d MMMM yyyy", { locale: fr })}`
             }
           }
-          
+
           // Vue d'un jour simple
           return `PnL du ${format(date, "d MMMM yyyy", { locale: fr })}`
         }}
