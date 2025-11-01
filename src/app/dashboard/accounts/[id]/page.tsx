@@ -21,8 +21,11 @@ import { useAccountCache } from "@/hooks/use-data-cache"
 import { useDeleteAccountMutation, useUpdateAccountMutation } from "@/hooks/use-mutation"
 import { format } from "date-fns"
 import { fr } from "date-fns/locale"
+import { MonthlyCalendar } from "@/components/monthly-calendar"
+import { AccountRulesTracker } from "@/components/account-rules-tracker"
+import { TradingCyclesTracker } from "@/components/trading-cycles-tracker"
 
-// ⚡ CODE SPLITTING: Lazy load dialogs (opened on user action)
+// ⚡ CODE SPLITTING: Lazy load dialogs only (opened on user action)
 const AccountFormDialog = dynamic(() =>
   import("@/components/account-form-dialog").then((m) => ({ default: m.AccountFormDialog }))
 )
@@ -31,17 +34,6 @@ const PnlFormDialog = dynamic(() =>
 )
 const WithdrawalFormDialog = dynamic(() =>
   import("@/components/withdrawal-form-dialog").then((m) => ({ default: m.WithdrawalFormDialog }))
-)
-
-// ⚡ CODE SPLITTING: Lazy load heavy components
-const MonthlyCalendar = dynamic(() =>
-  import("@/components/monthly-calendar").then((m) => ({ default: m.MonthlyCalendar }))
-)
-const AccountRulesTracker = dynamic(() =>
-  import("@/components/account-rules-tracker").then((m) => ({ default: m.AccountRulesTracker }))
-)
-const TradingCyclesTracker = dynamic(() =>
-  import("@/components/trading-cycles-tracker").then((m) => ({ default: m.TradingCyclesTracker }))
 )
 
 const PROPFIRM_LABELS: Record<string, string> = {
