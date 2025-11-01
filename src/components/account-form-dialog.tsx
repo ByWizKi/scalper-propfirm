@@ -188,12 +188,12 @@ export function AccountFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
-          <DialogTitle>
+          <DialogTitle className="text-lg sm:text-xl">
             {account ? "Modifier le compte" : "Ajouter un compte"}
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-xs sm:text-sm">
             {account
               ? "Modifiez les informations du compte propfirm"
               : "Ajoutez un nouveau compte propfirm à votre portfolio"}
@@ -201,20 +201,21 @@ export function AccountFormDialog({
         </DialogHeader>
 
         <form onSubmit={handleSubmit}>
-          <div className="grid gap-4 py-4">
+          <div className="grid gap-3 sm:gap-4 py-3 sm:py-4">
             <div className="grid gap-2">
-              <Label htmlFor="name">Nom du compte *</Label>
+              <Label htmlFor="name" className="text-xs sm:text-sm">Nom du compte *</Label>
               <Input
                 id="name"
                 placeholder="Mon compte TopStep 50K"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 required
+                className="text-sm"
               />
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="propfirm">Propfirm *</Label>
+              <Label htmlFor="propfirm" className="text-xs sm:text-sm">Propfirm *</Label>
               <Select
                 value={formData.propfirm}
                 onValueChange={handlePropfirmChange}
@@ -233,7 +234,7 @@ export function AccountFormDialog({
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="size">Taille du compte *</Label>
+              <Label htmlFor="size" className="text-xs sm:text-sm">Taille du compte *</Label>
               <Select
                 value={formData.size}
                 onValueChange={(value) => setFormData({ ...formData, size: value })}
@@ -251,9 +252,9 @@ export function AccountFormDialog({
               </Select>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="accountType">Type de compte *</Label>
+                <Label htmlFor="accountType" className="text-xs sm:text-sm">Type de compte *</Label>
                 <Select
                   value={formData.accountType}
                   onValueChange={(value) => setFormData({ ...formData, accountType: value })}
@@ -272,7 +273,7 @@ export function AccountFormDialog({
               </div>
 
               <div className="grid gap-2">
-                <Label htmlFor="status">Statut *</Label>
+                <Label htmlFor="status" className="text-xs sm:text-sm">Statut *</Label>
                 <Select
                   value={formData.status}
                   onValueChange={(value) => setFormData({ ...formData, status: value })}
@@ -294,7 +295,7 @@ export function AccountFormDialog({
             {/* Compte d'évaluation lié (seulement pour FUNDED) */}
             {formData.accountType === "FUNDED" && (
               <div className="grid gap-2">
-                <Label htmlFor="linkedEvalId">Compte d'évaluation lié (optionnel)</Label>
+                <Label htmlFor="linkedEvalId" className="text-xs sm:text-sm">Compte d'évaluation lié (optionnel)</Label>
                 <Select
                   value={formData.linkedEvalId || "none"}
                   onValueChange={(value) => setFormData({ ...formData, linkedEvalId: value === "none" ? "" : value })}
@@ -319,7 +320,7 @@ export function AccountFormDialog({
             )}
 
             <div className="grid gap-2">
-              <Label htmlFor="pricePaid">Prix payé (USD) *</Label>
+              <Label htmlFor="pricePaid" className="text-xs sm:text-sm">Prix payé (USD) *</Label>
               <Input
                 id="pricePaid"
                 type="number"
@@ -332,7 +333,7 @@ export function AccountFormDialog({
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="notes">Notes</Label>
+              <Label htmlFor="notes" className="text-xs sm:text-sm">Notes</Label>
               <textarea
                 id="notes"
                 className="flex min-h-[80px] w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-800 dark:bg-zinc-950 dark:placeholder:text-zinc-400 dark:focus-visible:ring-zinc-300"
