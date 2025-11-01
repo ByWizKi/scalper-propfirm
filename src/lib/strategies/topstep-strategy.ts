@@ -101,7 +101,7 @@ export class TopStepStrategy implements PropfirmStrategy {
     accountSize: number,
     pnlEntries: Array<{ date: Date; amount: number }>
   ): boolean {
-    const rules = this.getAccountRules(_accountSize)
+    const rules = this.getAccountRules(accountSize)
     if (!rules) return false
 
     const totalPnl = pnlEntries.reduce((sum, entry) => sum + entry.amount, 0)

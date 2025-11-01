@@ -83,11 +83,11 @@ export function validateData<T>(schema: z.ZodSchema<T>, data: unknown): T {
   try {
     return schema.parse(data)
   } catch (_error) {
-    if (error instanceof z.ZodError) {
-      const messages = error.issues.map((e) => e.message).join(", ")
+    if (_error instanceof z.ZodError) {
+      const messages = _error.issues.map((e) => e.message).join(", ")
       throw new Error(`Validation échouée: ${messages}`)
     }
-    throw error
+    throw _error
   }
 }
 
@@ -102,8 +102,8 @@ export async function validateDataAsync<T>(
     const validatedData = schema.parse(data)
     return { success: true, data: validatedData }
   } catch (_error) {
-    if (error instanceof z.ZodError) {
-      const messages = error.issues.map((e) => e.message).join(", ")
+    if (_error instanceof z.ZodError) {
+      const messages = _error.issues.map((e) => e.message).join(", ")
       return { success: false, error: `Validation échouée: ${messages}` }
     }
     return { success: false, error: "Erreur de validation" }

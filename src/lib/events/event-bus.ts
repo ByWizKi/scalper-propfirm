@@ -58,7 +58,7 @@ class EventBus {
         try {
           callback(data)
         } catch (_error) {
-          console.error(`Error in event handler for "${event}":`, error)
+          console.error(`Error in event handler for "${event}":`, _error)
         }
       })
     }
