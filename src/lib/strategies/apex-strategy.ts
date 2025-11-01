@@ -4,7 +4,8 @@
  * Règles principales :
  * - Trailing Drawdown (suit le point le plus haut)
  * - Validation possible dès 1 jour de trading
- * - Pas de système de cycles ou de buffer
+ * - Buffer = Balance initiale + Max Drawdown (comme TakeProfitTrader)
+ * - Cycles de 8 jours pour les retraits (comme TopStep mais 8 jours)
  * - Pas de taxes sur les retraits
  */
 
@@ -75,23 +76,54 @@ export class ApexStrategy implements PropfirmStrategy {
   getWithdrawalRules(): WithdrawalRules {
     return {
       taxRate: 0, // Pas de taxe chez Apex
-      requiresCycles: false, // Pas de système de cycles
-      hasBuffer: false, // Pas de buffer
+      requiresCycles: true, // Système de cycles de 8 jours
+      cycleRequirements: {
+        daysPerCycle: 8, // 8 jours par cycle (au lieu de 5 pour TopStep)
+        minDailyProfit: 0, // Pas de minimum journalier requis
+        withdrawalPercentage: 1.0, // 100% du montant au-dessus du buffer
+      },
+      hasBuffer: true, // Buffer comme TakeProfitTrader
     }
   }
 
-  calculateBuffer(_accountSize: number): number {
-    return 0 // Apex n'a pas de buffer
+  calculateBuffer(accountSize: number): number {
+    // Buffer = Balance initiale + Max Drawdown (comme TakeProfitTrader)
+    const rules = this.getAccountRules(accountSize)
+    if (!rules) return 0
+    return accountSize + rules.maxDrawdown
   }
 
   calculateAvailableForWithdrawal(
-    _accountSize: number,
+    accountSize: number,
     totalPnl: number,
-    _totalWithdrawals: number,
-    _pnlEntries: Array<{ date: Date; amount: number }>
+    totalWithdrawals: number,
+    pnlEntries: Array<{ date: Date; amount: number }>
   ): number {
-    // Apex : simple retrait du profit net sans restrictions
-    return Math.max(0, totalPnl)
+    const buffer = this.calculateBuffer(accountSize)
+    const currentBalance = accountSize + totalPnl - totalWithdrawals
+
+    // 1. Vérifier si le buffer est atteint
+    if (currentBalance < buffer) {
+      return 0 // Pas de retrait possible avant d'atteindre le buffer
+    }
+
+    // 2. Calculer le nombre de jours de trading (cycles de 8 jours)
+    const tradingDays = new Set(
+      pnlEntries.map((entry) => format(new Date(entry.date), "yyyy-MM-dd"))
+    ).size
+
+    // 3. Calculer le nombre de cycles complétés (8 jours = 1 cycle)
+    const completedCycles = Math.floor(tradingDays / 8)
+
+    // 4. Pas de retrait possible avant d'avoir complété au moins 1 cycle
+    if (completedCycles === 0) {
+      return 0
+    }
+
+    // 5. Montant disponible = tout ce qui est au-dessus du buffer
+    const availableAmount = currentBalance - buffer
+
+    return Math.max(0, availableAmount)
   }
 
   isEligibleForValidation(

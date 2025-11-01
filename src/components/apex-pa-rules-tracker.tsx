@@ -113,7 +113,18 @@ export function ApexPaRulesTracker({ accountSize, pnlEntries }: ApexPaRulesTrack
   // Règle 5: Retraits - Buffer et cycles de 8 jours
   const buffer = accountSize + maxDrawdown
   const hasReachedBuffer = currentBalance >= buffer
-  const availableForWithdrawal = Math.max(0, currentBalance - buffer)
+
+  // Calculer les jours de trading et cycles complétés
+  const tradingDays = React.useMemo(() => {
+    return new Set(pnlEntries.map((entry) => entry.date.split("T")[0])).size
+  }, [pnlEntries])
+
+  const completedCycles = Math.floor(tradingDays / 8)
+  const daysUntilNextCycle = 8 - (tradingDays % 8)
+
+  // Montant disponible = au-dessus du buffer SI buffer atteint ET au moins 1 cycle complété
+  const availableForWithdrawal =
+    hasReachedBuffer && completedCycles > 0 ? Math.max(0, currentBalance - buffer) : 0
 
   return (
     <Card>
@@ -272,51 +283,103 @@ export function ApexPaRulesTracker({ accountSize, pnlEntries }: ApexPaRulesTrack
           </div>
         </div>
 
-        {/* 5. Règles de Retrait (Cycles de 8 jours) */}
+        {/* 5. Règles de Retrait (Buffer + Cycles de 8 jours) */}
         <div>
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
               <DollarSign
-                className={`h-4 w-4 ${hasReachedBuffer ? "text-green-600" : "text-orange-600"}`}
+                className={`h-4 w-4 ${hasReachedBuffer && completedCycles > 0 ? "text-green-600" : "text-orange-600"}`}
               />
-              <span className="text-sm font-medium">5. Règles de Retrait</span>
-              {hasReachedBuffer && <CheckCircle2 className="h-4 w-4 text-green-600" />}
+              <span className="text-sm font-medium">5. Règles de Retrait (Buffer + Cycles)</span>
+              {hasReachedBuffer && completedCycles > 0 && (
+                <CheckCircle2 className="h-4 w-4 text-green-600" />
+              )}
             </div>
           </div>
-          <div className="bg-zinc-50 dark:bg-zinc-900 p-3 sm:p-4 rounded-lg space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-zinc-600 dark:text-zinc-400">
-                Buffer (Balance initiale + DD) :
-              </span>
-              <span className="font-medium">{formatCurrency(buffer)}</span>
+          <div className="bg-zinc-50 dark:bg-zinc-900 p-3 sm:p-4 rounded-lg space-y-3">
+            {/* Section Buffer */}
+            <div className="space-y-2">
+              <h4 className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 flex items-center gap-1">
+                <Shield className="h-3 w-3" />
+                Buffer de Sécurité
+              </h4>
+              <div className="flex justify-between text-sm">
+                <span className="text-zinc-600 dark:text-zinc-400">
+                  Buffer (Balance initiale + DD) :
+                </span>
+                <span className="font-medium">{formatCurrency(buffer)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-zinc-600 dark:text-zinc-400">Solde actuel :</span>
+                <span
+                  className={`font-medium ${currentBalance >= buffer ? "text-green-600" : "text-zinc-900 dark:text-zinc-100"}`}
+                >
+                  {formatCurrency(currentBalance)}
+                </span>
+              </div>
+              {!hasReachedBuffer && (
+                <p className="text-xs text-orange-600 dark:text-orange-400 flex items-start gap-1">
+                  <AlertTriangle className="h-3 w-3 flex-shrink-0 mt-0.5" />
+                  <span>
+                    Vous devez atteindre le buffer de {formatCurrency(buffer)} avant de pouvoir
+                    effectuer des retraits.
+                  </span>
+                </p>
+              )}
             </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-zinc-600 dark:text-zinc-400">Solde actuel :</span>
-              <span
-                className={`font-medium ${currentBalance >= buffer ? "text-green-600" : "text-zinc-900 dark:text-zinc-100"}`}
-              >
-                {formatCurrency(currentBalance)}
-              </span>
+
+            {/* Section Cycles */}
+            <div className="space-y-2 border-t pt-2">
+              <h4 className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 flex items-center gap-1">
+                <Calendar className="h-3 w-3" />
+                Cycles de Trading (8 jours)
+              </h4>
+              <div className="flex justify-between text-sm">
+                <span className="text-zinc-600 dark:text-zinc-400">Jours de trading :</span>
+                <span className="font-medium">
+                  {tradingDays} jour{tradingDays > 1 ? "s" : ""}
+                </span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-zinc-600 dark:text-zinc-400">Cycles complétés :</span>
+                <span
+                  className={`font-medium ${completedCycles > 0 ? "text-green-600" : "text-zinc-900 dark:text-zinc-100"}`}
+                >
+                  {completedCycles} cycle{completedCycles > 1 ? "s" : ""}
+                </span>
+              </div>
+              {completedCycles === 0 && tradingDays > 0 && (
+                <p className="text-xs text-blue-600 dark:text-blue-400">
+                  Encore {daysUntilNextCycle} jour{daysUntilNextCycle > 1 ? "s" : ""} avant le
+                  prochain cycle
+                </p>
+              )}
+              {completedCycles === 0 && (
+                <p className="text-xs text-orange-600 dark:text-orange-400 flex items-start gap-1">
+                  <AlertTriangle className="h-3 w-3 flex-shrink-0 mt-0.5" />
+                  <span>
+                    Vous devez compléter au moins 1 cycle (8 jours) pour effectuer des retraits.
+                  </span>
+                </p>
+              )}
             </div>
-            <div className="flex justify-between text-sm border-t pt-2 mt-2">
-              <span className="text-zinc-600 dark:text-zinc-400">Montant retirable :</span>
-              <span className="font-bold text-green-600">
+
+            {/* Montant disponible */}
+            <div className="flex justify-between text-sm border-t pt-2 font-bold">
+              <span className="text-zinc-900 dark:text-zinc-100">Montant retirable :</span>
+              <span className={availableForWithdrawal > 0 ? "text-green-600" : "text-zinc-500"}>
                 {formatCurrency(availableForWithdrawal)}
               </span>
             </div>
-            <div className="flex items-start gap-2 mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded">
-              <Calendar className="h-4 w-4 text-blue-600 flex-shrink-0 mt-0.5" />
-              <p className="text-xs text-blue-700 dark:text-blue-400">
-                <strong>Cycles de 8 jours :</strong> Vous pouvez retirer tout montant au-dessus du
-                buffer tous les 8 jours. Le buffer protège votre compte contre les pertes.
-              </p>
+
+            {/* Info générale */}
+            <div className="flex items-start gap-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-xs text-blue-700 dark:text-blue-400">
+              <Info className="h-3 w-3 flex-shrink-0 mt-0.5" />
+              <span>
+                Vous pouvez retirer <strong>100%</strong> du montant au-dessus du buffer tous les{" "}
+                <strong>8 jours</strong> (1 cycle complété minimum).
+              </span>
             </div>
-            {!hasReachedBuffer && (
-              <p className="text-xs text-orange-600 dark:text-orange-400 mt-2">
-                ⚠️ Vous devez d&apos;abord atteindre le buffer de {formatCurrency(buffer)} avant de
-                pouvoir effectuer des retraits.
-              </p>
-            )}
           </div>
         </div>
 
