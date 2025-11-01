@@ -4,7 +4,8 @@ import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { WithdrawalFormDialog } from "@/components/withdrawal-form-dialog"
-import { Plus, Edit, Trash2, DollarSign } from "lucide-react"
+import { BulkWithdrawalFormDialog } from "@/components/bulk-withdrawal-form-dialog"
+import { Plus, Edit, Trash2, DollarSign, Table } from "lucide-react"
 import { toast } from "@/hooks/use-toast"
 import { format } from "date-fns"
 import { fr } from "date-fns/locale"
@@ -35,6 +36,7 @@ export default function WithdrawalsPage() {
   const [accounts, setAccounts] = useState<PropfirmAccount[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [bulkDialogOpen, setBulkDialogOpen] = useState(false)
   const [selectedWithdrawal, setSelectedWithdrawal] = useState<Withdrawal | null>(null)
 
   useEffect(() => {
@@ -364,6 +366,13 @@ export default function WithdrawalsPage() {
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         withdrawal={selectedWithdrawal}
+        accounts={accounts}
+        onSuccess={fetchData}
+      />
+
+      <BulkWithdrawalFormDialog
+        open={bulkDialogOpen}
+        onOpenChange={setBulkDialogOpen}
         accounts={accounts}
         onSuccess={fetchData}
       />
