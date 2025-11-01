@@ -69,6 +69,7 @@ export default function AccountsPage() {
   const [selectedAccount, setSelectedAccount] = useState<PropfirmAccount | null>(null)
   const [sortBy, setSortBy] = useState<"date-desc" | "date-asc">("date-desc")
   const [filterPropfirm, setFilterPropfirm] = useState<string>("all")
+  const [hideInactive, setHideInactive] = useState(false)
 
   const handleDelete = async (id: string) => {
     if (!confirm("Êtes-vous sûr de vouloir supprimer ce compte ?")) {
@@ -97,11 +98,36 @@ export default function AccountsPage() {
 
   // Filtrer et trier les comptes
   const filteredAndSortedAccounts = accounts
-    .filter((account: { propfirm: string }) => {
-      if (filterPropfirm === "all") return true
-      return account.propfirm === filterPropfirm
+    .filter((account: { propfirm: string; status: string }) => {
+      // Filtre par propfirm
+      if (filterPropfirm !== "all" && account.propfirm !== filterPropfirm) {
+        return false
+      }
+      
+      // Filtre pour cacher les comptes inactifs (validés ou cramés)
+      if (hideInactive && (account.status === "VALIDATED" || account.status === "FAILED" || account.status === "ARCHIVED")) {
+        return false
+      }
+      
+      return true
     })
-    .sort((a: { createdAt: string }, b: { createdAt: string }) => {
+    .sort((a: { createdAt: string; status: string }, b: { createdAt: string; status: string }) => {
+      // Trier d'abord par statut (actifs en premier)
+      const statusPriority: Record<string, number> = {
+        ACTIVE: 0,
+        VALIDATED: 1,
+        FAILED: 2,
+        ARCHIVED: 3,
+      }
+      
+      const aPriority = statusPriority[a.status] ?? 999
+      const bPriority = statusPriority[b.status] ?? 999
+      
+      if (aPriority !== bPriority) {
+        return aPriority - bPriority
+      }
+      
+      // Puis trier par date
       if (sortBy === "date-desc") {
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       } else {
@@ -144,35 +170,54 @@ export default function AccountsPage() {
 
       {/* Filtres et tri */}
       {accounts.length > 0 && (
-        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6">
-          <div className="flex-1">
-            <Select value={filterPropfirm} onValueChange={setFilterPropfirm}>
-              <SelectTrigger>
-                <SelectValue placeholder="Toutes les propfirms" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Toutes les propfirms</SelectItem>
-                {availablePropfirms.map((propfirm) => (
-                  <SelectItem key={propfirm} value={propfirm}>
-                    {PROPFIRM_LABELS[propfirm as keyof typeof PROPFIRM_LABELS]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+        <div className="space-y-3 sm:space-y-4 mb-6">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+            <div className="flex-1">
+              <Select value={filterPropfirm} onValueChange={setFilterPropfirm}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Toutes les propfirms" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Toutes les propfirms</SelectItem>
+                  {availablePropfirms.map((propfirm) => (
+                    <SelectItem key={propfirm} value={propfirm}>
+                      {PROPFIRM_LABELS[propfirm as keyof typeof PROPFIRM_LABELS]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex-1">
+              <Select
+                value={sortBy}
+                onValueChange={(value) => setSortBy(value as "date-desc" | "date-asc")}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="date-desc">Plus récents d&apos;abord</SelectItem>
+                  <SelectItem value="date-asc">Plus anciens d&apos;abord</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-          <div className="flex-1">
-            <Select
-              value={sortBy}
-              onValueChange={(value) => setSortBy(value as "date-desc" | "date-asc")}
+          
+          {/* Toggle pour cacher les comptes inactifs */}
+          <div className="flex items-center gap-2 px-1">
+            <input
+              type="checkbox"
+              id="hide-inactive"
+              checked={hideInactive}
+              onChange={(e) => setHideInactive(e.target.checked)}
+              className="h-4 w-4 rounded border-zinc-300 text-blue-600 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-900 cursor-pointer"
+            />
+            <label
+              htmlFor="hide-inactive"
+              className="text-sm text-zinc-700 dark:text-zinc-300 cursor-pointer select-none"
             >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="date-desc">Plus récents d&apos;abord</SelectItem>
-                <SelectItem value="date-asc">Plus anciens d&apos;abord</SelectItem>
-              </SelectContent>
-            </Select>
+              Masquer les comptes validés, cramés et archivés
+            </label>
           </div>
         </div>
       )}
