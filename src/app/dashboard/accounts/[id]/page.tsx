@@ -43,6 +43,7 @@ const PROPFIRM_LABELS: Record<string, string> = {
   APEX: "Apex",
   FTMO: "FTMO",
   MYFUNDEDFUTURES: "My Funded Futures",
+  BULENOX: "Bulenox",
   OTHER: "Autre",
 }
 

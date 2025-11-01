@@ -34,6 +34,7 @@ const PROPFIRM_LABELS: Record<string, string> = {
   APEX: "Apex",
   FTMO: "FTMO",
   MYFUNDEDFUTURES: "My Funded Futures",
+  BULENOX: "Bulenox",
   OTHER: "Autre",
 }
 
@@ -287,7 +288,10 @@ export default function AccountsPage() {
                         className="h-8 w-8"
                         onClick={(e) => {
                           e.stopPropagation()
-                          handleEdit({ ...account, notes: account.notes ?? undefined } as PropfirmAccount)
+                          handleEdit({
+                            ...account,
+                            notes: account.notes ?? undefined,
+                          } as PropfirmAccount)
                         }}
                       >
                         <Edit className="h-3.5 w-3.5" />
