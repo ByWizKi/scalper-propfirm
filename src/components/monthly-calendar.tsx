@@ -429,3 +429,6 @@ export function MonthlyCalendar({ pnlEntries }: MonthlyCalendarProps) {
     </Card>
   )
 }
+
+// ⚡ REACT.MEMO: Export memoized version
+export const MonthlyCalendar = memo(MonthlyCalendarComponent)

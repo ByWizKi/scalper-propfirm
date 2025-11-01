@@ -4,7 +4,17 @@ import * as React from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight } from "lucide-react"
-import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, format, isSameMonth, addMonths, subMonths } from "date-fns"
+import {
+  startOfMonth,
+  endOfMonth,
+  startOfWeek,
+  endOfWeek,
+  eachDayOfInterval,
+  format,
+  isSameMonth,
+  addMonths,
+  subMonths,
+} from "date-fns"
 import { fr } from "date-fns/locale"
 import { getNetWithdrawalAmount } from "@/lib/withdrawal-utils"
 import { useCalendarModal } from "@/hooks/use-calendar-modal"
@@ -53,7 +63,7 @@ export function WithdrawalsCalendar({ withdrawals }: WithdrawalsCalendarProps) {
   const allDays = eachDayOfInterval({ start: calendarStart, end: calendarEnd })
 
   // Filter to keep only weekdays (Monday to Friday)
-  const calendarDays = allDays.filter(day => {
+  const calendarDays = allDays.filter((day) => {
     const dayOfWeek = day.getDay()
     return dayOfWeek >= 1 && dayOfWeek <= 5 // 1 = Monday, 5 = Friday
   })
@@ -61,7 +71,7 @@ export function WithdrawalsCalendar({ withdrawals }: WithdrawalsCalendarProps) {
   // Group withdrawals by day
   const dailyWithdrawals: Record<string, Withdrawal[]> = {}
   withdrawals.forEach((withdrawal) => {
-    const dateKey = withdrawal.date.split('T')[0]
+    const dateKey = withdrawal.date.split("T")[0]
     if (!dailyWithdrawals[dateKey]) {
       dailyWithdrawals[dateKey] = []
     }
@@ -82,7 +92,9 @@ export function WithdrawalsCalendar({ withdrawals }: WithdrawalsCalendarProps) {
       <CardHeader className="p-4 sm:p-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
           <div className="flex-1 min-w-0">
-            <CardTitle className="text-base sm:text-lg truncate">Calendrier des Retraits Nets</CardTitle>
+            <CardTitle className="text-base sm:text-lg truncate">
+              Calendrier des Retraits Nets
+            </CardTitle>
             <CardDescription className="text-xs sm:text-sm truncate">
               Montants après taxes (20% pour TakeProfitTrader)
             </CardDescription>
@@ -112,7 +124,9 @@ export function WithdrawalsCalendar({ withdrawals }: WithdrawalsCalendarProps) {
       </CardHeader>
       <CardContent>
         {/* Header days */}
-        <div className="grid grid-cols-6 gap-1 md:gap-2 mb-2"> {/* 5 days + 1 for "Semaine" */}
+        <div className="grid grid-cols-6 gap-1 md:gap-2 mb-2">
+          {" "}
+          {/* 5 days + 1 for "Semaine" */}
           {["Lun", "Mar", "Mer", "Jeu", "Ven", "Sem."].map((day) => (
             <div
               key={day}
@@ -130,18 +144,29 @@ export function WithdrawalsCalendar({ withdrawals }: WithdrawalsCalendarProps) {
             const weekTotal = week.reduce((sum, day) => {
               const dateKey = format(day, "yyyy-MM-dd")
               const dayWithdrawals = dailyWithdrawals[dateKey] || []
-              return sum + dayWithdrawals.reduce((s, w) => s + getNetWithdrawalAmount(w.amount, w.account.propfirm), 0)
+              return (
+                sum +
+                dayWithdrawals.reduce(
+                  (s, w) => s + getNetWithdrawalAmount(w.amount, w.account.propfirm),
+                  0
+                )
+              )
             }, 0)
 
             const _weekNum = Math.floor((weekIdx * 5) / 7) + 1
 
             return (
-              <div key={weekIdx} className="grid grid-cols-6 gap-1 md:gap-2"> {/* 5 days + 1 for "Semaine" */}
+              <div key={weekIdx} className="grid grid-cols-6 gap-1 md:gap-2">
+                {" "}
+                {/* 5 days + 1 for "Semaine" */}
                 {/* The 5 weekdays */}
                 {week.map((day, dayIdx) => {
                   const dateKey = format(day, "yyyy-MM-dd")
                   const dayWithdrawals = dailyWithdrawals[dateKey] || []
-                  const dayTotal = dayWithdrawals.reduce((sum, w) => sum + getNetWithdrawalAmount(w.amount, w.account.propfirm), 0)
+                  const dayTotal = dayWithdrawals.reduce(
+                    (sum, w) => sum + getNetWithdrawalAmount(w.amount, w.account.propfirm),
+                    0
+                  )
                   const isCurrentMonth = isSameMonth(day, currentMonth)
 
                   return (
@@ -151,8 +176,8 @@ export function WithdrawalsCalendar({ withdrawals }: WithdrawalsCalendarProps) {
                         !isCurrentMonth
                           ? "bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800"
                           : dayTotal > 0
-                          ? "border-green-300 bg-green-50 dark:border-green-900 dark:bg-green-950 cursor-pointer hover:bg-green-100 dark:hover:bg-green-900 hover:scale-105 hover:shadow-md"
-                          : "border-zinc-200 dark:border-zinc-800"
+                            ? "border-green-300 bg-green-50 dark:border-green-900 dark:bg-green-950 cursor-pointer hover:bg-green-100 dark:hover:bg-green-900 hover:scale-105 hover:shadow-md"
+                            : "border-zinc-200 dark:border-zinc-800"
                       }`}
                       onClick={() => {
                         // Ne rien faire si le jour n'est pas dans le mois courant
@@ -182,7 +207,6 @@ export function WithdrawalsCalendar({ withdrawals }: WithdrawalsCalendarProps) {
                     </div>
                   )
                 })}
-
                 {/* Weekly summary column */}
                 <div
                   className={`min-h-[80px] md:min-h-[100px] p-1.5 md:p-3 rounded-lg border-2 transition-all duration-200 ${
@@ -237,13 +261,19 @@ export function WithdrawalsCalendar({ withdrawals }: WithdrawalsCalendarProps) {
         formatTitle={(date) => {
           // Vérifier si c'est une vue de semaine
           if (selectedDay && selectedDay.items.length > 1) {
-            const dates = selectedDay.items.map((withdrawal) => format(new Date(withdrawal.date), "yyyy-MM-dd"))
+            const dates = selectedDay.items.map((withdrawal) =>
+              format(new Date(withdrawal.date), "yyyy-MM-dd")
+            )
             const uniqueDates = [...new Set(dates)]
 
             if (uniqueDates.length > 1) {
               // C'est une semaine complète
-              const firstDay = new Date(Math.min(...selectedDay.items.map((w) => new Date(w.date).getTime())))
-              const lastDay = new Date(Math.max(...selectedDay.items.map((w) => new Date(w.date).getTime())))
+              const firstDay = new Date(
+                Math.min(...selectedDay.items.map((w) => new Date(w.date).getTime()))
+              )
+              const lastDay = new Date(
+                Math.max(...selectedDay.items.map((w) => new Date(w.date).getTime()))
+              )
 
               return `Retraits du ${format(firstDay, "d", { locale: fr })} au ${format(lastDay, "d MMMM yyyy", { locale: fr })}`
             }
@@ -252,7 +282,10 @@ export function WithdrawalsCalendar({ withdrawals }: WithdrawalsCalendarProps) {
           return `Retraits du ${format(date, "d MMMM yyyy", { locale: fr })}`
         }}
         formatDescription={(items) => {
-          const total = items.reduce((sum, item) => sum + getNetWithdrawalAmount(item.amount, item.account.propfirm), 0)
+          const total = items.reduce(
+            (sum, item) => sum + getNetWithdrawalAmount(item.amount, item.account.propfirm),
+            0
+          )
           return `Total net: ${formatCurrency(total)} (${formatCurrencyEUR(total * USD_TO_EUR)})`
         }}
         renderItem={(withdrawal) => {
@@ -297,3 +330,5 @@ export function WithdrawalsCalendar({ withdrawals }: WithdrawalsCalendarProps) {
   )
 }
 
+// ⚡ REACT.MEMO: Export memoized version
+export const WithdrawalsCalendar = memo(WithdrawalsCalendarComponent)

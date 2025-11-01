@@ -4,7 +4,17 @@ import * as React from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight } from "lucide-react"
-import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, format, isSameMonth, addMonths, subMonths } from "date-fns"
+import {
+  startOfMonth,
+  endOfMonth,
+  startOfWeek,
+  endOfWeek,
+  eachDayOfInterval,
+  format,
+  isSameMonth,
+  addMonths,
+  subMonths,
+} from "date-fns"
 import { fr } from "date-fns/locale"
 import { useCalendarModal } from "@/hooks/use-calendar-modal"
 import { CalendarDayDetailsDialog } from "@/components/calendar-day-details-dialog"
@@ -49,7 +59,7 @@ export function ExpensesCalendar({ expenses }: ExpensesCalendarProps) {
   const allDays = eachDayOfInterval({ start: calendarStart, end: calendarEnd })
 
   // Filter to keep only weekdays (Monday to Friday)
-  const calendarDays = allDays.filter(day => {
+  const calendarDays = allDays.filter((day) => {
     const dayOfWeek = day.getDay()
     return dayOfWeek >= 1 && dayOfWeek <= 5 // 1 = Monday, 5 = Friday
   })
@@ -57,7 +67,7 @@ export function ExpensesCalendar({ expenses }: ExpensesCalendarProps) {
   // Group expenses by day
   const dailyExpenses: Record<string, ExpenseEntry[]> = {}
   expenses.forEach((expense) => {
-    const dateKey = expense.createdAt.split('T')[0]
+    const dateKey = expense.createdAt.split("T")[0]
     if (!dailyExpenses[dateKey]) {
       dailyExpenses[dateKey] = []
     }
@@ -108,7 +118,9 @@ export function ExpensesCalendar({ expenses }: ExpensesCalendarProps) {
       </CardHeader>
       <CardContent>
         {/* Header days */}
-        <div className="grid grid-cols-6 gap-1 md:gap-2 mb-2"> {/* 5 days + 1 for "Semaine" */}
+        <div className="grid grid-cols-6 gap-1 md:gap-2 mb-2">
+          {" "}
+          {/* 5 days + 1 for "Semaine" */}
           {["Lun", "Mar", "Mer", "Jeu", "Ven", "Sem."].map((day) => (
             <div
               key={day}
@@ -132,7 +144,9 @@ export function ExpensesCalendar({ expenses }: ExpensesCalendarProps) {
             const _weekNum = Math.floor((weekIdx * 5) / 7) + 1
 
             return (
-              <div key={weekIdx} className="grid grid-cols-6 gap-1 md:gap-2"> {/* 5 days + 1 for "Semaine" */}
+              <div key={weekIdx} className="grid grid-cols-6 gap-1 md:gap-2">
+                {" "}
+                {/* 5 days + 1 for "Semaine" */}
                 {/* The 5 weekdays */}
                 {week.map((day, dayIdx) => {
                   const dateKey = format(day, "yyyy-MM-dd")
@@ -147,8 +161,8 @@ export function ExpensesCalendar({ expenses }: ExpensesCalendarProps) {
                         !isCurrentMonth
                           ? "bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800"
                           : dayTotal > 0
-                          ? "border-red-300 bg-red-50 dark:border-red-900 dark:bg-red-950 cursor-pointer hover:bg-red-100 dark:hover:bg-red-900 hover:scale-105 hover:shadow-md"
-                          : "border-zinc-200 dark:border-zinc-800"
+                            ? "border-red-300 bg-red-50 dark:border-red-900 dark:bg-red-950 cursor-pointer hover:bg-red-100 dark:hover:bg-red-900 hover:scale-105 hover:shadow-md"
+                            : "border-zinc-200 dark:border-zinc-800"
                       }`}
                       onClick={() => {
                         // Ne rien faire si le jour n'est pas dans le mois courant
@@ -178,7 +192,6 @@ export function ExpensesCalendar({ expenses }: ExpensesCalendarProps) {
                     </div>
                   )
                 })}
-
                 {/* Weekly summary column */}
                 <div
                   className={`min-h-[80px] md:min-h-[100px] p-1.5 md:p-3 rounded-lg border-2 transition-all duration-200 ${
@@ -233,13 +246,19 @@ export function ExpensesCalendar({ expenses }: ExpensesCalendarProps) {
         formatTitle={(date) => {
           // Vérifier si c'est une vue de semaine
           if (selectedDay && selectedDay.items.length > 1) {
-            const dates = selectedDay.items.map((expense) => format(new Date(expense.createdAt), "yyyy-MM-dd"))
+            const dates = selectedDay.items.map((expense) =>
+              format(new Date(expense.createdAt), "yyyy-MM-dd")
+            )
             const uniqueDates = [...new Set(dates)]
 
             if (uniqueDates.length > 1) {
               // C'est une semaine complète
-              const firstDay = new Date(Math.min(...selectedDay.items.map((e) => new Date(e.createdAt).getTime())))
-              const lastDay = new Date(Math.max(...selectedDay.items.map((e) => new Date(e.createdAt).getTime())))
+              const firstDay = new Date(
+                Math.min(...selectedDay.items.map((e) => new Date(e.createdAt).getTime()))
+              )
+              const lastDay = new Date(
+                Math.max(...selectedDay.items.map((e) => new Date(e.createdAt).getTime()))
+              )
 
               return `Dépenses du ${format(firstDay, "d", { locale: fr })} au ${format(lastDay, "d MMMM yyyy", { locale: fr })}`
             }
@@ -277,3 +296,5 @@ export function ExpensesCalendar({ expenses }: ExpensesCalendarProps) {
   )
 }
 
+// ⚡ REACT.MEMO: Export memoized version
+export const ExpensesCalendar = memo(ExpensesCalendarComponent)
