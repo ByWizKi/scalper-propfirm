@@ -144,84 +144,84 @@ export function TradingCyclesTracker({ pnlEntries, withdrawals, accountSize, pro
       <CardContent className="space-y-6">
         {/* Résumé */}
         {isTakeProfitTrader ? (
-          <div className="grid grid-cols-3 gap-4">
-            <div className="bg-blue-50 dark:bg-blue-950 rounded-lg p-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+            <div className="bg-blue-50 dark:bg-blue-950 rounded-lg p-3 sm:p-4">
               <div className="flex items-center gap-2 mb-1">
-                <Shield className="h-4 w-4 text-blue-600" />
-                <p className="text-xs text-zinc-600 dark:text-zinc-400">Buffer requis</p>
+                <Shield className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-600 flex-shrink-0" />
+                <p className="text-[10px] sm:text-xs text-zinc-600 dark:text-zinc-400 truncate">Buffer requis</p>
               </div>
-              <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+              <p className="text-lg sm:text-xl lg:text-2xl font-bold text-blue-600 dark:text-blue-400 truncate">
                 {formatCurrency(buffer)}
               </p>
-              <p className="text-xs text-zinc-500 mt-1">
+              <p className="text-[10px] sm:text-xs text-zinc-500 mt-1 truncate">
                 Balance initiale + DD
               </p>
             </div>
 
-            <div className="bg-green-50 dark:bg-green-950 rounded-lg p-4">
+            <div className="bg-green-50 dark:bg-green-950 rounded-lg p-3 sm:p-4">
               <div className="flex items-center gap-2 mb-1">
-                <TrendingUp className="h-4 w-4 text-green-600" />
-                <p className="text-xs text-zinc-600 dark:text-zinc-400">Balance actuelle</p>
+                <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-600 flex-shrink-0" />
+                <p className="text-[10px] sm:text-xs text-zinc-600 dark:text-zinc-400 truncate">Balance actuelle</p>
               </div>
-              <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+              <p className="text-lg sm:text-xl lg:text-2xl font-bold text-green-600 dark:text-green-400 truncate">
                 {formatCurrency(currentBalance)}
               </p>
-              <p className="text-xs text-zinc-500 mt-1">
+              <p className="text-[10px] sm:text-xs text-zinc-500 mt-1 truncate">
                 {bufferReached ? "✓ Buffer atteint" : `Reste ${formatCurrency(buffer - currentBalance)}`}
               </p>
             </div>
 
-            <div className="bg-purple-50 dark:bg-purple-950 rounded-lg p-4">
+            <div className="bg-purple-50 dark:bg-purple-950 rounded-lg p-3 sm:p-4">
               <div className="flex items-center gap-2 mb-1">
-                <DollarSign className="h-4 w-4 text-purple-600" />
-                <p className="text-xs text-zinc-600 dark:text-zinc-400">Disponible (net)</p>
+                <DollarSign className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-purple-600 flex-shrink-0" />
+                <p className="text-[10px] sm:text-xs text-zinc-600 dark:text-zinc-400 truncate">Disponible (net)</p>
               </div>
-              <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+              <p className="text-lg sm:text-xl lg:text-2xl font-bold text-purple-600 dark:text-purple-400 truncate">
                 {formatCurrency(Math.max(0, availableForWithdrawal * (1 - taxRate)))}
               </p>
-              <p className="text-xs text-zinc-500 mt-1">
+              <p className="text-[10px] sm:text-xs text-zinc-500 mt-1 truncate">
                 Après taxe de 20%
               </p>
             </div>
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-3 gap-4">
-              <div className="bg-blue-50 dark:bg-blue-950 rounded-lg p-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+              <div className="bg-blue-50 dark:bg-blue-950 rounded-lg p-3 sm:p-4">
                 <div className="flex items-center gap-2 mb-1">
-                  <Calendar className="h-4 w-4 text-blue-600" />
-                  <p className="text-xs text-zinc-600 dark:text-zinc-400">Cycles complétés</p>
+                  <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-600 flex-shrink-0" />
+                  <p className="text-[10px] sm:text-xs text-zinc-600 dark:text-zinc-400 truncate">Cycles complétés</p>
                 </div>
-                <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                <p className="text-lg sm:text-xl lg:text-2xl font-bold text-blue-600 dark:text-blue-400">
                   {completedCycles}
                 </p>
-                <p className="text-xs text-zinc-500 mt-1">
+                <p className="text-[10px] sm:text-xs text-zinc-500 mt-1 truncate">
                   {lastWithdrawalDate ? "Depuis le dernier retrait" : "Total"}
                 </p>
               </div>
 
-              <div className="bg-green-50 dark:bg-green-950 rounded-lg p-4">
+              <div className="bg-green-50 dark:bg-green-950 rounded-lg p-3 sm:p-4">
                 <div className="flex items-center gap-2 mb-1">
-                  <DollarSign className="h-4 w-4 text-green-600" />
-                  <p className="text-xs text-zinc-600 dark:text-zinc-400">Retraits effectués</p>
+                  <DollarSign className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-600 flex-shrink-0" />
+                  <p className="text-[10px] sm:text-xs text-zinc-600 dark:text-zinc-400 truncate">Retraits effectués</p>
                 </div>
-                <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+                <p className="text-lg sm:text-xl lg:text-2xl font-bold text-green-600 dark:text-green-400 truncate">
                   {formatCurrency(totalWithdrawals)}
                 </p>
-                <p className="text-xs text-zinc-500 mt-1">
+                <p className="text-[10px] sm:text-xs text-zinc-500 mt-1 truncate">
                   {withdrawals.length} retrait{withdrawals.length > 1 ? "s" : ""}
                 </p>
               </div>
 
-              <div className="bg-purple-50 dark:bg-purple-950 rounded-lg p-4">
+              <div className="bg-purple-50 dark:bg-purple-950 rounded-lg p-3 sm:p-4">
                 <div className="flex items-center gap-2 mb-1">
-                  <TrendingUp className="h-4 w-4 text-purple-600" />
-                  <p className="text-xs text-zinc-600 dark:text-zinc-400">Retrait disponible</p>
+                  <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-purple-600 flex-shrink-0" />
+                  <p className="text-[10px] sm:text-xs text-zinc-600 dark:text-zinc-400 truncate">Retrait disponible</p>
                 </div>
-                <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                <p className="text-lg sm:text-xl lg:text-2xl font-bold text-purple-600 dark:text-purple-400 truncate">
                   {formatCurrency(Math.max(0, availableForWithdrawal))}
                 </p>
-                <p className="text-xs text-zinc-500 mt-1">
+                <p className="text-[10px] sm:text-xs text-zinc-500 mt-1 truncate">
                   {completedCycles > 0 ? "Cycle complété ✓" : "Complétez un cycle"}
                 </p>
               </div>
@@ -229,8 +229,8 @@ export function TradingCyclesTracker({ pnlEntries, withdrawals, accountSize, pro
 
             {/* Message si dernier retrait */}
             {lastWithdrawalDate && (
-              <div className="mt-3 p-3 bg-orange-50 dark:bg-orange-950 rounded-lg border border-orange-200 dark:border-orange-800">
-                <p className="text-xs text-orange-800 dark:text-orange-200">
+              <div className="mt-3 p-2 sm:p-3 bg-orange-50 dark:bg-orange-950 rounded-lg border border-orange-200 dark:border-orange-800">
+                <p className="text-[10px] sm:text-xs text-orange-800 dark:text-orange-200">
                   <span className="font-medium">Dernier retrait :</span> {new Date(lastWithdrawalDate).toLocaleDateString("fr-FR")}
                   {" • "}Le cycle a été réinitialisé
                 </p>
@@ -240,41 +240,41 @@ export function TradingCyclesTracker({ pnlEntries, withdrawals, accountSize, pro
         )}
 
         {/* Règles de retrait */}
-        <div className="border-t border-zinc-200 dark:border-zinc-800 pt-4">
-          <div className="flex items-start gap-2 mb-3">
-            <Info className="h-4 w-4 text-blue-600 mt-0.5" />
-            <div className="flex-1">
-              <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100 mb-2">
+        <div className="border-t border-zinc-200 dark:border-zinc-800 pt-3 sm:pt-4">
+          <div className="flex items-start gap-2 mb-2 sm:mb-3">
+            <Info className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-xs sm:text-sm font-medium text-zinc-900 dark:text-zinc-100 mb-1 sm:mb-2">
                 Règles de retrait
               </p>
               {isTakeProfitTrader ? (
-                <ul className="space-y-1 text-xs text-zinc-600 dark:text-zinc-400">
+                <ul className="space-y-1 text-[10px] sm:text-xs text-zinc-600 dark:text-zinc-400">
                   <li className="flex items-start gap-2">
-                    <span className="text-blue-600 mt-0.5">•</span>
-                    <span>Buffer = Balance initiale ({formatCurrency(accountSize)}) + Drawdown max ({formatCurrency(maxDrawdown || 0)})</span>
+                    <span className="text-blue-600 mt-0.5 flex-shrink-0">•</span>
+                    <span className="break-words">Buffer = Balance initiale ({formatCurrency(accountSize)}) + Drawdown max ({formatCurrency(maxDrawdown || 0)})</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-blue-600 mt-0.5">•</span>
-                    <span>Vous pouvez retirer tout montant au-dessus du buffer une fois qu'il est atteint</span>
+                    <span className="text-blue-600 mt-0.5 flex-shrink-0">•</span>
+                    <span className="break-words">Vous pouvez retirer tout montant au-dessus du buffer une fois qu'il est atteint</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-blue-600 mt-0.5">•</span>
-                    <span>Taxe de 20% : si vous retirez $100, vous recevez $80 (le compte est débité de $100)</span>
+                    <span className="text-blue-600 mt-0.5 flex-shrink-0">•</span>
+                    <span className="break-words">Taxe de 20% : si vous retirez $100, vous recevez $80 (le compte est débité de $100)</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-blue-600 mt-0.5">•</span>
-                    <span>Le montant affiché est déjà net de la taxe</span>
+                    <span className="text-blue-600 mt-0.5 flex-shrink-0">•</span>
+                    <span className="break-words">Le montant affiché est déjà net de la taxe</span>
                   </li>
                 </ul>
               ) : (
-                <ul className="space-y-1 text-xs text-zinc-600 dark:text-zinc-400">
+                <ul className="space-y-1 text-[10px] sm:text-xs text-zinc-600 dark:text-zinc-400">
                   <li className="flex items-start gap-2">
-                    <span className="text-blue-600 mt-0.5">•</span>
-                    <span>Un cycle = 5 jours consécutifs avec minimum $150 de profit par jour</span>
+                    <span className="text-blue-600 mt-0.5 flex-shrink-0">•</span>
+                    <span className="break-words">Un cycle = 5 jours consécutifs avec minimum $150 de profit par jour</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-blue-600 mt-0.5">•</span>
-                    <span>
+                    <span className="text-blue-600 mt-0.5 flex-shrink-0">•</span>
+                    <span className="break-words">
                       {totalWithdrawals < 10000
                         ? "Avant $10,000 de retraits : 50% du PnL réalisé depuis le dernier retrait"
                         : "Après $10,000 de retraits : 50% du PnL réalisé depuis le dernier retrait × 90%"
@@ -282,12 +282,12 @@ export function TradingCyclesTracker({ pnlEntries, withdrawals, accountSize, pro
                     </span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-blue-600 mt-0.5">•</span>
-                    <span>Vous devez avoir au moins 1 cycle complété pour retirer</span>
+                    <span className="text-blue-600 mt-0.5 flex-shrink-0">•</span>
+                    <span className="break-words">Vous devez avoir au moins 1 cycle complété pour retirer</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-orange-600 mt-0.5">•</span>
-                    <span className="font-medium text-orange-600">Chaque retrait réinitialise le cycle - vous ne pouvez faire qu'un retrait par cycle</span>
+                    <span className="text-orange-600 mt-0.5 flex-shrink-0">•</span>
+                    <span className="font-medium text-orange-600 break-words">Chaque retrait réinitialise le cycle - vous ne pouvez faire qu'un retrait par cycle</span>
                   </li>
                 </ul>
               )}

@@ -157,7 +157,7 @@ export function WithdrawalsCalendar({ withdrawals }: WithdrawalsCalendarProps) {
                       onClick={() => {
                         // Ne rien faire si le jour n'est pas dans le mois courant
                         if (!isCurrentMonth) return
-                        
+
                         if (dayWithdrawals.length > 0) {
                           openModal(day, dayWithdrawals, dayTotal)
                         }

@@ -225,7 +225,7 @@ export function MonthlyCalendar({ pnlEntries }: MonthlyCalendarProps) {
                       onClick={() => {
                         // Ne rien faire si le jour n'est pas dans le mois courant
                         if (!isCurrentMonth) return
-                        
+
                         if (dayPnl) {
                           const dayEntries = entriesByDate[dateKey] || []
                           openModal(day, dayEntries, dayPnl.amount)
