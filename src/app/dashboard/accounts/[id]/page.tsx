@@ -558,18 +558,53 @@ export default function AccountDetailPage() {
                                 )}
                               </div>
                             </div>
-                            <div className="text-right">
-                              <p className="font-bold text-green-600">
-                                {formatCurrency(withdrawal.amount)}
-                              </p>
-                              {isTakeProfitTrader && (
-                                <p className="text-xs text-orange-600 dark:text-orange-400">
-                                  Net: {formatCurrency(netAmount)} (20% taxe)
+                            <div className="flex items-center gap-3">
+                              <div className="text-right">
+                                <p className="font-bold text-green-600">
+                                  {formatCurrency(withdrawal.amount)}
                                 </p>
-                              )}
-                              <p className="text-xs text-green-600">
-                                {formatCurrencyEUR(netAmount * USD_TO_EUR)}
-                              </p>
+                                {isTakeProfitTrader && (
+                                  <p className="text-xs text-orange-600 dark:text-orange-400">
+                                    Net: {formatCurrency(netAmount)} (20% taxe)
+                                  </p>
+                                )}
+                                <p className="text-xs text-green-600">
+                                  {formatCurrencyEUR(netAmount * USD_TO_EUR)}
+                                </p>
+                              </div>
+                              <div className="flex gap-1">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => {
+                                    setSelectedWithdrawal({ ...withdrawal, accountId: account.id })
+                                    setWithdrawalDialogOpen(true)
+                                  }}
+                                  className="h-8 w-8"
+                                >
+                                  <Edit className="h-3.5 w-3.5" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={async () => {
+                                    if (confirm("Êtes-vous sûr de vouloir supprimer ce retrait ?")) {
+                                      try {
+                                        const res = await fetch(`/api/withdrawals/${withdrawal.id}`, {
+                                          method: "DELETE",
+                                        })
+                                        if (!res.ok) throw new Error("Erreur lors de la suppression")
+                                        window.location.reload()
+                                      } catch (error) {
+                                        alert("Erreur lors de la suppression du retrait")
+                                      }
+                                    }
+                                  }}
+                                  className="h-8 w-8"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </Button>
+                              </div>
                             </div>
                           </div>
                         )
@@ -615,9 +650,32 @@ export default function AccountDetailPage() {
         onSuccess={() => {}}
       />
 
+      <PnlFormDialog
+        open={pnlDialogOpen}
+        onOpenChange={(open) => {
+          setPnlDialogOpen(open)
+          if (!open) setSelectedPnl(null)
+        }}
+        entry={selectedPnl}
+        accounts={[
+          {
+            id: account.id,
+            name: account.name,
+            accountType: account.accountType,
+            propfirm: account.propfirm,
+            size: account.size,
+          },
+        ]}
+        onSuccess={() => {}}
+      />
+
       <WithdrawalFormDialog
         open={withdrawalDialogOpen}
-        onOpenChange={setWithdrawalDialogOpen}
+        onOpenChange={(open) => {
+          setWithdrawalDialogOpen(open)
+          if (!open) setSelectedWithdrawal(null)
+        }}
+        withdrawal={selectedWithdrawal}
         accounts={[
           {
             id: account.id,
