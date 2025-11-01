@@ -71,7 +71,7 @@ export class TakeProfitTraderStrategy implements PropfirmStrategy {
     accountSize: number,
     totalPnl: number,
     totalWithdrawals: number,
-    pnlEntries: Array<{ date: Date; amount: number }>
+    _pnlEntries: Array<{ date: Date; amount: number }>
   ): number {
     const buffer = this.calculateBuffer(accountSize)
     const currentBalance = accountSize + totalPnl - totalWithdrawals

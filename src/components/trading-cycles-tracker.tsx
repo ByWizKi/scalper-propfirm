@@ -255,7 +255,7 @@ export function TradingCyclesTracker({ pnlEntries, withdrawals, accountSize, pro
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-blue-600 mt-0.5 flex-shrink-0">•</span>
-                    <span className="break-words">Vous pouvez retirer tout montant au-dessus du buffer une fois qu'il est atteint</span>
+                    <span className="break-words">Vous pouvez retirer tout montant au-dessus du buffer une fois qu&apos;il est atteint</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-blue-600 mt-0.5 flex-shrink-0">•</span>
@@ -287,7 +287,7 @@ export function TradingCyclesTracker({ pnlEntries, withdrawals, accountSize, pro
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-orange-600 mt-0.5 flex-shrink-0">•</span>
-                    <span className="font-medium text-orange-600 break-words">Chaque retrait réinitialise le cycle - vous ne pouvez faire qu'un retrait par cycle</span>
+                    <span className="font-medium text-orange-600 break-words">Chaque retrait réinitialise le cycle - vous ne pouvez faire qu&apos;un retrait par cycle</span>
                   </li>
                 </ul>
               )}

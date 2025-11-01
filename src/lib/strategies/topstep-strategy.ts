@@ -52,7 +52,7 @@ export class TopStepStrategy implements PropfirmStrategy {
     }
   }
 
-  calculateBuffer(accountSize: number): number {
+  calculateBuffer(_accountSize: number): number {
     return 0 // TopStep n'a pas de buffer
   }
 

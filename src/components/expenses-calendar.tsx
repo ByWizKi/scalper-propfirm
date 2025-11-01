@@ -129,7 +129,7 @@ export function ExpensesCalendar({ expenses }: ExpensesCalendarProps) {
               return sum + dayExpenses.reduce((s, e) => s + e.pricePaid, 0)
             }, 0)
 
-            const weekNum = Math.floor((weekIdx * 5) / 7) + 1
+            const _weekNum = Math.floor((weekIdx * 5) / 7) + 1
 
             return (
               <div key={weekIdx} className="grid grid-cols-6 gap-1 md:gap-2"> {/* 5 days + 1 for "Semaine" */}

@@ -344,7 +344,7 @@ export function MonthlyCalendar({ pnlEntries }: MonthlyCalendarProps) {
           const total = items.reduce((sum, item) => sum + item.amount, 0)
           return `Total: ${total >= 0 ? "+" : ""}${formatCurrency(total)} (${items.length} trade${items.length > 1 ? "s" : ""})`
         }}
-        renderItem={(entry, index) => (
+        renderItem={(entry, _index) => (
           <div
             key={entry.id}
             className={`flex items-center justify-between p-2 sm:p-3 rounded-lg border ${

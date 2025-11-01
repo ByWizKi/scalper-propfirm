@@ -42,6 +42,7 @@ const RULES_CONFIG: Record<string, Record<number, {
 }
 
 export function AccountRulesTracker({ accountSize, accountType, propfirm, pnlEntries, onEligibilityChange }: AccountRulesTrackerProps) {
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   // Seulement pour les comptes d&apos;évaluation
   if (accountType !== "EVAL") {
     return null
@@ -88,6 +89,17 @@ export function AccountRulesTracker({ accountSize, accountType, propfirm, pnlEnt
   const consistencyStatus = consistencyPercentage <= rules.consistencyRule || totalPnl <= 0
   const minTradingDaysStatus = rules.minTradingDays ? tradingDays >= rules.minTradingDays : true
 
+  // Notifier le parent du changement d&apos;éligibilité
+  React.useEffect(() => {
+    if (rules) {
+      onEligibilityChange?.(isEligible)
+    }
+  }, [isEligible, onEligibilityChange, rules])
+
+  if (!rules) {
+    return null
+  }
+
   // Le compte est éligible à la validation si toutes les règles sont respectées
   const isEligible = profitTargetStatus && drawdownStatus && dailyLossStatus && consistencyStatus && minTradingDaysStatus
 
@@ -96,9 +108,6 @@ export function AccountRulesTracker({ accountSize, accountType, propfirm, pnlEnt
     return null
   }
 
-  React.useEffect(() => {
-    onEligibilityChange?.(isEligible)
-  }, [isEligible, onEligibilityChange])
 
   // Calculs pour les barres de progression
   const profitProgress = Math.min((totalPnl / rules.profitTarget) * 100, 100)

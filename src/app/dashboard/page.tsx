@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Wallet, TrendingUp, DollarSign, Target } from "lucide-react"
 import { ExpensesCalendar } from "@/components/expenses-calendar"
 import { WithdrawalsCalendar } from "@/components/withdrawals-calendar"
-import { StatCard, useStatVariant } from "@/components/stat-card"
 import { useDashboardStatsCache } from "@/hooks/use-data-cache"
 import { calculateTotalNetWithdrawals } from "@/lib/withdrawal-utils"
 
@@ -94,7 +93,7 @@ export default function DashboardPage() {
           title="Bilan"
           value={formatCurrency(totalNetWithdrawals - (stats?.totalInvested || 0))}
           icon={TrendingUp}
-          variant={useStatVariant(totalNetWithdrawals - (stats?.totalInvested || 0))}
+          variant={differenceVariant}
           secondaryText={formatCurrencyEUR(
             (totalNetWithdrawals - (stats?.totalInvested || 0)) * USD_TO_EUR
           )}

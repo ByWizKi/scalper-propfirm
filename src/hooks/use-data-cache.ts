@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Hook pour gérer le cache de données avec invalidation automatique
  * basée sur les événements
@@ -112,6 +113,7 @@ export function useDataCache<T>(
    */
   useEffect(() => {
     fetchData()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []) // On veut juste le premier fetch
 
   /**
