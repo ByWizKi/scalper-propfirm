@@ -202,9 +202,9 @@ export function ExpensesCalendar({ expenses }: ExpensesCalendarProps) {
                     }
                   }}
                 >
-                  <div className="flex items-center justify-between mb-1 md:mb-2">
-                    <span className="text-xs md:text-sm font-medium text-zinc-600 dark:text-zinc-400">
-                      S{weekNumber}
+                  <div className="flex items-center justify-center mb-1 md:mb-2">
+                    <span className="text-[9px] sm:text-[10px] md:text-xs font-medium text-zinc-600 dark:text-zinc-400 text-center">
+                      Total semaine
                     </span>
                   </div>
                   {weekTotal > 0 && (
