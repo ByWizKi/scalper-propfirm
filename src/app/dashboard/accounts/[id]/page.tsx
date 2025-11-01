@@ -146,6 +146,22 @@ export default function AccountDetailPage() {
   // Taux de change USD vers EUR (à ajuster selon vos besoins)
   const USD_TO_EUR = 0.92
 
+  // ⚡ MEMOIZATION: Heavy calculations (AVANT les early returns pour respecter les règles des Hooks)
+  const totalPnl = useMemo(
+    () =>
+      account?.pnlEntries?.reduce(
+        (sum: number, entry: { amount: number }) => sum + entry.amount,
+        0
+      ) || 0,
+    [account?.pnlEntries]
+  )
+
+  const totalWithdrawals = useMemo(
+    () =>
+      account?.withdrawals?.reduce((sum: number, w: { amount: number }) => sum + w.amount, 0) || 0,
+    [account?.withdrawals]
+  )
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -160,18 +176,6 @@ export default function AccountDetailPage() {
   if (!account) {
     return null
   }
-
-  // ⚡ MEMOIZATION: Heavy calculations
-  const totalPnl = useMemo(
-    () =>
-      account.pnlEntries.reduce((sum: number, entry: { amount: number }) => sum + entry.amount, 0),
-    [account.pnlEntries]
-  )
-
-  const totalWithdrawals = useMemo(
-    () => account.withdrawals.reduce((sum: number, w: { amount: number }) => sum + w.amount, 0),
-    [account.withdrawals]
-  )
 
   // Fonction pour obtenir le maxDrawdown selon la propfirm et la taille
   const getMaxDrawdown = (propfirm: string, size: number): number => {
