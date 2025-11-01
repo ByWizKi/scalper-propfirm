@@ -98,7 +98,9 @@ export default function AccountDetailPage() {
 
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [pnlDialogOpen, setPnlDialogOpen] = useState(false)
+  const [selectedPnl, setSelectedPnl] = useState<any>(null)
   const [withdrawalDialogOpen, setWithdrawalDialogOpen] = useState(false)
+  const [selectedWithdrawal, setSelectedWithdrawal] = useState<any>(null)
   const [isEligibleForValidation, setIsEligibleForValidation] = useState(false)
 
   const handleDelete = async () => {
@@ -588,12 +590,18 @@ export default function AccountDetailPage() {
                                   variant="ghost"
                                   size="icon"
                                   onClick={async () => {
-                                    if (confirm("Êtes-vous sûr de vouloir supprimer ce retrait ?")) {
+                                    if (
+                                      confirm("Êtes-vous sûr de vouloir supprimer ce retrait ?")
+                                    ) {
                                       try {
-                                        const res = await fetch(`/api/withdrawals/${withdrawal.id}`, {
-                                          method: "DELETE",
-                                        })
-                                        if (!res.ok) throw new Error("Erreur lors de la suppression")
+                                        const res = await fetch(
+                                          `/api/withdrawals/${withdrawal.id}`,
+                                          {
+                                            method: "DELETE",
+                                          }
+                                        )
+                                        if (!res.ok)
+                                          throw new Error("Erreur lors de la suppression")
                                         window.location.reload()
                                       } catch (error) {
                                         alert("Erreur lors de la suppression du retrait")
