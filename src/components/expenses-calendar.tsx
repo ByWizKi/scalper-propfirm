@@ -3,16 +3,11 @@
 import * as React from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { ChevronLeft, ChevronRight, X } from "lucide-react"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, format, isSameMonth, addMonths, subMonths } from "date-fns"
 import { fr } from "date-fns/locale"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import { useCalendarModal } from "@/hooks/use-calendar-modal"
+import { CalendarDayDetailsDialog } from "@/components/calendar-day-details-dialog"
 
 interface ExpenseEntry {
   id: string
@@ -27,11 +22,7 @@ interface ExpensesCalendarProps {
 
 export function ExpensesCalendar({ expenses }: ExpensesCalendarProps) {
   const [currentMonth, setCurrentMonth] = React.useState(new Date())
-  const [selectedDay, setSelectedDay] = React.useState<{
-    date: Date
-    expenses: ExpenseEntry[]
-    total: number
-  } | null>(null)
+  const { selectedDay, isOpen, openModal, closeModal } = useCalendarModal<ExpenseEntry>()
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("fr-FR", {
@@ -161,7 +152,7 @@ export function ExpensesCalendar({ expenses }: ExpensesCalendarProps) {
                       }`}
                       onClick={() => {
                         if (dayExpenses.length > 0) {
-                          setSelectedDay({ date: day, expenses: dayExpenses, total: dayTotal })
+                          openModal(day, dayExpenses, dayTotal)
                         }
                       }}
                     >
@@ -216,41 +207,38 @@ export function ExpensesCalendar({ expenses }: ExpensesCalendarProps) {
       </CardContent>
 
       {/* Modal de détails */}
-      <Dialog open={!!selectedDay} onOpenChange={() => setSelectedDay(null)}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>
-              Dépenses du {selectedDay && format(selectedDay.date, "d MMMM yyyy", { locale: fr })}
-            </DialogTitle>
-            <DialogDescription>
-              Total: {selectedDay && formatCurrency(selectedDay.total)} ({formatCurrencyEUR(selectedDay ? selectedDay.total * USD_TO_EUR : 0)})
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3 mt-4">
-            {selectedDay?.expenses.map((expense) => (
-              <div
-                key={expense.id}
-                className="flex items-center justify-between p-3 rounded-lg bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-900"
-              >
-                <div className="flex-1 min-w-0 mr-3">
-                  <p className="font-medium text-sm truncate">{expense.name}</p>
-                  <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                    {format(new Date(expense.createdAt), "HH:mm", { locale: fr })}
-                  </p>
-                </div>
-                <div className="text-right flex-shrink-0">
-                  <p className="font-bold text-red-600 dark:text-red-400">
-                    -{formatCurrency(expense.pricePaid)}
-                  </p>
-                  <p className="text-xs text-red-600 dark:text-red-400">
-                    {formatCurrencyEUR(expense.pricePaid * USD_TO_EUR)}
-                  </p>
-                </div>
-              </div>
-            ))}
+      <CalendarDayDetailsDialog
+        open={isOpen}
+        onOpenChange={closeModal}
+        selectedDate={selectedDay?.date || null}
+        data={selectedDay?.items || null}
+        formatTitle={(date) => `Dépenses du ${format(date, "d MMMM yyyy", { locale: fr })}`}
+        formatDescription={(items) => {
+          const total = items.reduce((sum, item) => sum + item.pricePaid, 0)
+          return `Total: ${formatCurrency(total)} (${formatCurrencyEUR(total * USD_TO_EUR)})`
+        }}
+        renderItem={(expense) => (
+          <div
+            key={expense.id}
+            className="flex items-center justify-between p-3 rounded-lg bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-900"
+          >
+            <div className="flex-1 min-w-0 mr-3">
+              <p className="font-medium text-sm truncate">{expense.name}</p>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                {format(new Date(expense.createdAt), "HH:mm", { locale: fr })}
+              </p>
+            </div>
+            <div className="text-right flex-shrink-0">
+              <p className="font-bold text-red-600 dark:text-red-400">
+                -{formatCurrency(expense.pricePaid)}
+              </p>
+              <p className="text-xs text-red-600 dark:text-red-400">
+                {formatCurrencyEUR(expense.pricePaid * USD_TO_EUR)}
+              </p>
+            </div>
           </div>
-        </DialogContent>
-      </Dialog>
+        )}
+      />
     </Card>
   )
 }

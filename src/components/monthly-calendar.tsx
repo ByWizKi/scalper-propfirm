@@ -3,9 +3,11 @@
 import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { ChevronLeft, ChevronRight } from "lucide-react"
+import { ChevronLeft, ChevronRight, TrendingUp, TrendingDown } from "lucide-react"
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, isToday, startOfWeek, endOfWeek, addMonths, subMonths } from "date-fns"
 import { fr } from "date-fns/locale"
+import { useCalendarModal } from "@/hooks/use-calendar-modal"
+import { CalendarDayDetailsDialog } from "@/components/calendar-day-details-dialog"
 
 interface PnlEntry {
   id: string
@@ -20,6 +22,7 @@ interface MonthlyCalendarProps {
 
 export function MonthlyCalendar({ pnlEntries }: MonthlyCalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date())
+  const { selectedDay, isOpen, openModal, closeModal } = useCalendarModal<PnlEntry>()
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("fr-FR", {
@@ -27,6 +30,16 @@ export function MonthlyCalendar({ pnlEntries }: MonthlyCalendarProps) {
       currency: "USD",
     }).format(amount)
   }
+
+  // Grouper les entrées PnL par date
+  const entriesByDate = pnlEntries.reduce((acc, entry) => {
+    const dateKey = format(new Date(entry.date), "yyyy-MM-dd")
+    if (!acc[dateKey]) {
+      acc[dateKey] = []
+    }
+    acc[dateKey].push(entry)
+    return acc
+  }, {} as Record<string, PnlEntry[]>)
 
   // Calculer le P/L par jour
   const dailyPnl = pnlEntries.reduce((acc, entry) => {
@@ -194,12 +207,18 @@ export function MonthlyCalendar({ pnlEntries }: MonthlyCalendarProps) {
                           ? "border-zinc-100 bg-zinc-50 dark:border-zinc-900 dark:bg-zinc-950 opacity-40"
                           : dayPnl
                           ? dayPnl.amount >= 0
-                            ? "border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950"
-                            : "border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950"
+                            ? "border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950 cursor-pointer hover:bg-green-100 dark:hover:bg-green-900"
+                            : "border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950 cursor-pointer hover:bg-red-100 dark:hover:bg-red-900"
                           : "border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900"
                       } ${
                         isCurrentDay ? "ring-2 ring-blue-500 dark:ring-blue-400" : ""
                       }`}
+                      onClick={() => {
+                        if (dayPnl && isCurrentMonth) {
+                          const dayEntries = entriesByDate[dateKey] || []
+                          openModal(day, dayEntries, dayPnl.amount)
+                        }
+                      }}
                     >
                       <div className="flex items-center justify-between mb-2">
                         <span
@@ -265,6 +284,67 @@ export function MonthlyCalendar({ pnlEntries }: MonthlyCalendarProps) {
           })}
         </div>
       </CardContent>
+
+      {/* Modal de détails */}
+      <CalendarDayDetailsDialog
+        open={isOpen}
+        onOpenChange={closeModal}
+        selectedDate={selectedDay?.date || null}
+        data={selectedDay?.items || null}
+        formatTitle={(date) => `PnL du ${format(date, "d MMMM yyyy", { locale: fr })}`}
+        formatDescription={(items) => {
+          const total = items.reduce((sum, item) => sum + item.amount, 0)
+          return `Total: ${total >= 0 ? "+" : ""}${formatCurrency(total)} (${items.length} trade${items.length > 1 ? "s" : ""})`
+        }}
+        renderItem={(entry, index) => (
+          <div
+            key={entry.id}
+            className={`flex items-center justify-between p-3 rounded-lg border ${
+              entry.amount >= 0
+                ? "bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-900"
+                : "bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-900"
+            }`}
+          >
+            <div className="flex items-center gap-3 flex-1 min-w-0 mr-3">
+              <div
+                className={`p-2 rounded-lg ${
+                  entry.amount >= 0
+                    ? "bg-green-100 dark:bg-green-900"
+                    : "bg-red-100 dark:bg-red-900"
+                }`}
+              >
+                {entry.amount >= 0 ? (
+                  <TrendingUp className="h-4 w-4 text-green-600 dark:text-green-400" />
+                ) : (
+                  <TrendingDown className="h-4 w-4 text-red-600 dark:text-red-400" />
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                  {format(new Date(entry.date), "HH:mm", { locale: fr })}
+                </p>
+                {entry.notes && (
+                  <p className="text-xs text-zinc-600 dark:text-zinc-300 mt-1 line-clamp-2">
+                    {entry.notes}
+                  </p>
+                )}
+              </div>
+            </div>
+            <div className="text-right flex-shrink-0">
+              <p
+                className={`font-bold ${
+                  entry.amount >= 0
+                    ? "text-green-600 dark:text-green-400"
+                    : "text-red-600 dark:text-red-400"
+                }`}
+              >
+                {entry.amount >= 0 ? "+" : ""}
+                {formatCurrency(entry.amount)}
+              </p>
+            </div>
+          </div>
+        )}
+      />
     </Card>
   )
 }
