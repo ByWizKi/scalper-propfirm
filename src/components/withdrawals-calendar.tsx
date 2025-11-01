@@ -76,23 +76,33 @@ export function WithdrawalsCalendar({ withdrawals }: WithdrawalsCalendarProps) {
 
   return (
     <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle>Calendrier des Retraits Nets</CardTitle>
-            <CardDescription>
+      <CardHeader className="p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
+          <div className="flex-1 min-w-0">
+            <CardTitle className="text-base sm:text-lg truncate">Calendrier des Retraits Nets</CardTitle>
+            <CardDescription className="text-xs sm:text-sm truncate">
               Montants après taxes (20% pour TakeProfitTrader)
             </CardDescription>
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="icon" onClick={previousMonth}>
-              <ChevronLeft className="h-4 w-4" />
+          <div className="flex items-center gap-1 sm:gap-2 justify-center sm:justify-end">
+            <Button 
+              variant="outline" 
+              size="icon" 
+              onClick={previousMonth}
+              className="h-7 w-7 sm:h-9 sm:w-9"
+            >
+              <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4" />
             </Button>
-            <div className="text-sm font-medium min-w-[140px] text-center">
+            <div className="text-xs sm:text-sm font-medium min-w-[100px] sm:min-w-[140px] text-center px-2">
               {format(currentMonth, "MMMM yyyy", { locale: fr })}
             </div>
-            <Button variant="outline" size="icon" onClick={nextMonth}>
-              <ChevronRight className="h-4 w-4" />
+            <Button 
+              variant="outline" 
+              size="icon" 
+              onClick={nextMonth}
+              className="h-7 w-7 sm:h-9 sm:w-9"
+            >
+              <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
             </Button>
           </div>
         </div>
