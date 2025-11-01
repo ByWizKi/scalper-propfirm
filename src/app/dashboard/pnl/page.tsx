@@ -111,10 +111,18 @@ export default function PnlPage() {
     }).format(amount)
   }
 
-  const totalPnl = entries.reduce((sum, entry) => sum + entry.amount, 0)
+  // Filtrer les entrées selon l'option "Masquer comptes d'évaluation"
+  const filteredEntries = hideEvalAccounts
+    ? entries.filter(entry => {
+        const account = accounts.find(acc => acc.id === entry.accountId)
+        return account?.accountType !== "EVAL"
+      })
+    : entries
+
+  const totalPnl = filteredEntries.reduce((sum, entry) => sum + entry.amount, 0)
 
   // Regrouper les entrées par compte
-  const entriesByAccount = entries.reduce(
+  const entriesByAccount = filteredEntries.reduce(
     (acc, entry) => {
       const accountId = entry.accountId
       if (!acc[accountId]) {
@@ -161,6 +169,25 @@ export default function PnlPage() {
           <span>Ajouter</span>
         </Button>
       </div>
+
+      {/* Filtre pour masquer les comptes d'évaluation */}
+      {accounts.length > 0 && (
+        <div className="flex items-center gap-2 mb-4 sm:mb-6 px-1">
+          <input
+            type="checkbox"
+            id="hide-eval"
+            checked={hideEvalAccounts}
+            onChange={(e) => setHideEvalAccounts(e.target.checked)}
+            className="h-4 w-4 rounded border-zinc-300 text-blue-600 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-900 cursor-pointer"
+          />
+          <label
+            htmlFor="hide-eval"
+            className="text-xs sm:text-sm text-zinc-700 dark:text-zinc-300 cursor-pointer select-none"
+          >
+            Masquer les PnL des comptes d&apos;évaluation
+          </label>
+        </div>
+      )}
 
       {accounts.length === 0 ? (
         <Card>
