@@ -163,17 +163,17 @@ export default function WithdrawalsPage() {
   }
 
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-8">
+    <div className="p-4 sm:p-6 lg:p-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-50">Retraits</h1>
-          <p className="text-zinc-600 dark:text-zinc-400 mt-2">
+          <h1 className="text-2xl sm:text-3xl font-bold text-zinc-900 dark:text-zinc-50">Retraits</h1>
+          <p className="text-sm sm:text-base text-zinc-600 dark:text-zinc-400 mt-1 sm:mt-2">
             Suivez vos retraits de fonds
           </p>
         </div>
-        <Button onClick={handleAdd} disabled={accounts.length === 0}>
+        <Button onClick={handleAdd} disabled={accounts.length === 0} className="w-full sm:w-auto">
           <Plus className="h-4 w-4 mr-2" />
-          Ajouter un retrait
+          <span>Ajouter</span>
         </Button>
       </div>
 
@@ -187,34 +187,36 @@ export default function WithdrawalsPage() {
         </Card>
       ) : (
         <>
-          <Card className="mb-6">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-1">Total des retraits</p>
-                  <div className="flex items-baseline gap-3">
-                    <div>
-                      <p className="text-3xl font-bold text-green-600">
+          <Card className="mb-4 sm:mb-6">
+            <CardContent className="pt-4 sm:pt-6">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 mb-1">
+                    Total des retraits
+                  </p>
+                  <div className="flex flex-col sm:flex-row sm:items-baseline gap-2 sm:gap-3">
+                    <div className="min-w-0">
+                      <p className="text-2xl sm:text-3xl font-bold text-green-600 truncate">
                         {formatCurrency(totalWithdrawals)}
                       </p>
-                      <p className="text-sm text-green-600 mt-1">
+                      <p className="text-xs sm:text-sm text-green-600 mt-1">
                         {formatCurrencyEUR(totalWithdrawals * USD_TO_EUR)}
                       </p>
                     </div>
                     {totalNetWithdrawals !== totalWithdrawals && (
-                      <div className="border-l border-zinc-300 dark:border-zinc-700 pl-3">
-                        <p className="text-xs text-zinc-500 mb-1">Net reçu</p>
-                        <p className="text-xl font-bold text-orange-600">
+                      <div className="border-t sm:border-t-0 sm:border-l border-zinc-300 dark:border-zinc-700 pt-2 sm:pt-0 sm:pl-3">
+                        <p className="text-[10px] sm:text-xs text-zinc-500 mb-1">Net reçu</p>
+                        <p className="text-lg sm:text-xl font-bold text-orange-600 truncate">
                           {formatCurrency(totalNetWithdrawals)}
                         </p>
-                        <p className="text-xs text-orange-600 mt-1">
+                        <p className="text-[10px] sm:text-xs text-orange-600 mt-1">
                           {formatCurrencyEUR(totalNetWithdrawals * USD_TO_EUR)}
                         </p>
                       </div>
                     )}
                   </div>
                 </div>
-                <DollarSign className="h-12 w-12 text-green-600" />
+                <DollarSign className="h-8 w-8 sm:h-12 sm:w-12 text-green-600 flex-shrink-0" />
               </div>
             </CardContent>
           </Card>
@@ -234,29 +236,31 @@ export default function WithdrawalsPage() {
               </CardContent>
             </Card>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {Object.entries(withdrawalsByAccount).map(([accountId, accountData]) => (
                 <Card key={accountId}>
                   <CardContent className="p-0">
                     {/* En-tête du compte */}
-                    <div className="flex items-center justify-between p-4 bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800">
-                      <div>
-                        <h3 className="font-semibold text-lg">{accountData.accountName}</h3>
-                        <p className="text-sm text-zinc-500">
+                    <div className="flex items-center justify-between gap-3 p-3 sm:p-4 bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800">
+                      <div className="min-w-0 flex-1">
+                        <h3 className="font-semibold text-base sm:text-lg truncate">
+                          {accountData.accountName}
+                        </h3>
+                        <p className="text-xs sm:text-sm text-zinc-500">
                           {accountData.withdrawals.length} retrait{accountData.withdrawals.length > 1 ? "s" : ""}
                         </p>
                       </div>
-                      <div className="text-right">
-                        <p className="text-xs text-zinc-500 mb-1">Total du compte</p>
-                        <p className="text-xl font-bold text-green-600">
+                      <div className="text-right min-w-0">
+                        <p className="text-[10px] sm:text-xs text-zinc-500 mb-1">Total</p>
+                        <p className="text-base sm:text-xl font-bold text-green-600 truncate">
                           +{formatCurrency(accountData.totalGross)}
                         </p>
                         {accountData.totalNet !== accountData.totalGross && (
-                          <p className="text-sm text-orange-600">
+                          <p className="text-xs sm:text-sm text-orange-600 truncate">
                             Net: {formatCurrency(accountData.totalNet)}
                           </p>
                         )}
-                        <p className="text-xs text-green-600">
+                        <p className="text-[10px] sm:text-xs text-green-600 truncate">
                           {formatCurrencyEUR(accountData.totalNet * USD_TO_EUR)}
                         </p>
                       </div>
@@ -270,51 +274,53 @@ export default function WithdrawalsPage() {
                         return (
                           <div
                             key={withdrawal.id}
-                            className="flex items-center justify-between p-4 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors"
+                            className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 sm:p-4 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors"
                           >
-                            <div className="flex-1">
-                              <div className="flex items-center gap-3">
-                                <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900">
-                                  <DollarSign className="h-4 w-4 text-green-600 dark:text-green-400" />
-                                </div>
-                                <div className="flex-1">
-                                  <p className="text-sm text-zinc-500">
-                                    {format(new Date(withdrawal.date), "d MMMM yyyy", { locale: fr })}
+                            <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+                              <div className="p-1.5 sm:p-2 rounded-lg bg-green-100 dark:bg-green-900 flex-shrink-0">
+                                <DollarSign className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-600 dark:text-green-400" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs sm:text-sm text-zinc-500 truncate">
+                                  {format(new Date(withdrawal.date), "d MMMM yyyy", { locale: fr })}
+                                </p>
+                                {withdrawal.notes && (
+                                  <p className="text-[10px] sm:text-xs text-zinc-500 mt-1 line-clamp-1">
+                                    {withdrawal.notes}
                                   </p>
-                                  {withdrawal.notes && (
-                                    <p className="text-xs text-zinc-500 mt-1">{withdrawal.notes}</p>
-                                  )}
-                                </div>
+                                )}
                               </div>
                             </div>
-                            <div className="flex items-center gap-4">
-                              <div className="text-right">
-                                <p className="text-lg font-bold text-green-600">
+                            <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-4">
+                              <div className="text-right min-w-0">
+                                <p className="text-base sm:text-lg font-bold text-green-600 truncate">
                                   {formatCurrency(withdrawal.amount)}
                                 </p>
                                 {taxInfo.hasTax && (
-                                  <p className="text-xs text-orange-600 dark:text-orange-400">
+                                  <p className="text-[10px] sm:text-xs text-orange-600 dark:text-orange-400 truncate">
                                     Net: {formatCurrency(taxInfo.netAmount)} ({(taxInfo.taxRate * 100).toFixed(0)}% taxe)
                                   </p>
                                 )}
-                                <p className="text-xs text-green-600">
+                                <p className="text-[10px] sm:text-xs text-green-600 truncate">
                                   {formatCurrencyEUR(taxInfo.netAmount * USD_TO_EUR)}
                                 </p>
                               </div>
-                              <div className="flex gap-2">
+                              <div className="flex gap-1 flex-shrink-0">
                                 <Button
                                   variant="ghost"
                                   size="icon"
+                                  className="h-8 w-8"
                                   onClick={() => handleEdit(withdrawal)}
                                 >
-                                  <Edit className="h-4 w-4" />
+                                  <Edit className="h-3.5 w-3.5" />
                                 </Button>
                                 <Button
                                   variant="ghost"
                                   size="icon"
+                                  className="h-8 w-8"
                                   onClick={() => handleDelete(withdrawal.id)}
                                 >
-                                  <Trash2 className="h-4 w-4" />
+                                  <Trash2 className="h-3.5 w-3.5" />
                                 </Button>
                               </div>
                             </div>
