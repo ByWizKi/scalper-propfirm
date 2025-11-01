@@ -155,6 +155,9 @@ export function WithdrawalsCalendar({ withdrawals }: WithdrawalsCalendarProps) {
                           : "border-zinc-200 dark:border-zinc-800"
                       }`}
                       onClick={() => {
+                        // Ne rien faire si le jour n'est pas dans le mois courant
+                        if (!isCurrentMonth) return
+                        
                         if (dayWithdrawals.length > 0) {
                           openModal(day, dayWithdrawals, dayTotal)
                         }

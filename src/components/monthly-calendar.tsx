@@ -223,7 +223,10 @@ export function MonthlyCalendar({ pnlEntries }: MonthlyCalendarProps) {
                         isCurrentDay ? "ring-2 ring-blue-500 dark:ring-blue-400" : ""
                       }`}
                       onClick={() => {
-                        if (dayPnl && isCurrentMonth) {
+                        // Ne rien faire si le jour n'est pas dans le mois courant
+                        if (!isCurrentMonth) return
+                        
+                        if (dayPnl) {
                           const dayEntries = entriesByDate[dateKey] || []
                           openModal(day, dayEntries, dayPnl.amount)
                         }

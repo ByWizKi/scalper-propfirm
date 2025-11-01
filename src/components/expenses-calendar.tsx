@@ -151,6 +151,9 @@ export function ExpensesCalendar({ expenses }: ExpensesCalendarProps) {
                           : "border-zinc-200 dark:border-zinc-800"
                       }`}
                       onClick={() => {
+                        // Ne rien faire si le jour n'est pas dans le mois courant
+                        if (!isCurrentMonth) return
+                        
                         if (dayExpenses.length > 0) {
                           openModal(day, dayExpenses, dayTotal)
                         }
