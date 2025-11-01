@@ -12,6 +12,7 @@ export const PROPFIRM_LABELS: Record<PropfirmType, string> = {
   [PropfirmType.APEX]: "Apex",
   [PropfirmType.FTMO]: "FTMO",
   [PropfirmType.MYFUNDEDFUTURES]: "My Funded Futures",
+  [PropfirmType.BULENOX]: "Bulenox",
   [PropfirmType.OTHER]: "Autre",
 }
 
@@ -64,5 +65,12 @@ export const ACCOUNT_SIZES_BY_PROPFIRM: Record<
   ],
   [PropfirmType.FTMO]: [],
   [PropfirmType.MYFUNDEDFUTURES]: [],
+  [PropfirmType.BULENOX]: [
+    { value: "25000", label: "25K" },
+    { value: "50000", label: "50K" },
+    { value: "100000", label: "100K" },
+    { value: "150000", label: "150K" },
+    { value: "250000", label: "250K" },
+  ],
   [PropfirmType.OTHER]: [],
 }

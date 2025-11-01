@@ -152,6 +152,48 @@ const RULES_CONFIG: Record<
       maxContracts: { mini: 35, micro: 350 },
     },
   },
+  BULENOX: {
+    25000: {
+      maxDrawdown: 1500,
+      dailyLossLimit: 0,
+      profitTarget: 1500,
+      consistencyRule: 0,
+      minTradingDays: 1,
+      maxContracts: { mini: 3, micro: 30 },
+    },
+    50000: {
+      maxDrawdown: 2500,
+      dailyLossLimit: 0,
+      profitTarget: 3000,
+      consistencyRule: 0,
+      minTradingDays: 1,
+      maxContracts: { mini: 7, micro: 70 },
+    },
+    100000: {
+      maxDrawdown: 3000,
+      dailyLossLimit: 0,
+      profitTarget: 6000,
+      consistencyRule: 0,
+      minTradingDays: 1,
+      maxContracts: { mini: 12, micro: 120 },
+    },
+    150000: {
+      maxDrawdown: 4500,
+      dailyLossLimit: 0,
+      profitTarget: 9000,
+      consistencyRule: 0,
+      minTradingDays: 1,
+      maxContracts: { mini: 15, micro: 150 },
+    },
+    250000: {
+      maxDrawdown: 5500,
+      dailyLossLimit: 0,
+      profitTarget: 15000,
+      consistencyRule: 0,
+      minTradingDays: 1,
+      maxContracts: { mini: 25, micro: 250 },
+    },
+  },
 }
 
 export function AccountRulesTracker({

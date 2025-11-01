@@ -8,6 +8,7 @@ export enum PropfirmType {
   APEX = "APEX",
   FTMO = "FTMO",
   MYFUNDEDFUTURES = "MYFUNDEDFUTURES",
+  BULENOX = "BULENOX",
   OTHER = "OTHER",
 }
 
@@ -73,4 +74,3 @@ export interface AccountStatsDTO {
   buffer?: number
   availableForWithdrawal?: number
 }
-

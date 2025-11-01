@@ -7,6 +7,7 @@ import { PropfirmStrategy } from "./propfirm-strategy.interface"
 import { TopStepStrategy } from "./topstep-strategy"
 import { TakeProfitTraderStrategy } from "./takeprofittrader-strategy"
 import { ApexStrategy } from "./apex-strategy"
+import { BulenoxStrategy } from "./bulenox-strategy"
 import { PropfirmType } from "@/types/account.types"
 
 /**
@@ -39,6 +40,9 @@ export class PropfirmStrategyFactory {
         break
       case PropfirmType.APEX:
         strategy = new ApexStrategy()
+        break
+      case PropfirmType.BULENOX:
+        strategy = new BulenoxStrategy()
         break
       // Ajouter d'autres propfirms ici
       default:
