@@ -4,12 +4,13 @@ import * as React from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   CheckCircle2,
-  TrendingUp,
   Shield,
   Info,
   Scale,
   Crosshair,
   AlertTriangle,
+  DollarSign,
+  Calendar,
 } from "lucide-react"
 
 interface PnlEntry {
@@ -32,7 +33,7 @@ interface ApexPaRulesTrackerProps {
  * 2. 30% Negative P&L Rule (MAE) - Maximum Adverse Excursion
  * 3. 5:1 Risk-Reward Ratio Rule
  * 4. Hedging Rule (interdit)
- * 5. One Direction Rule (une seule direction)
+ * 5. Règles de Retrait (cycles de 8 jours, buffer = balance initiale + DD)
  */
 export function ApexPaRulesTracker({ accountSize, pnlEntries }: ApexPaRulesTrackerProps) {
   const formatCurrency = (amount: number) => {
@@ -108,6 +109,11 @@ export function ApexPaRulesTracker({ accountSize, pnlEntries }: ApexPaRulesTrack
   const safetyNet = maxDrawdown
   const canUse50Percent = totalPnl >= safetyNet * 2
   const adjustedMaxLossPerTrade = canUse50Percent ? startOfDayProfit * 0.5 : maxLossPerTrade
+
+  // Règle 5: Retraits - Buffer et cycles de 8 jours
+  const buffer = accountSize + maxDrawdown
+  const hasReachedBuffer = currentBalance >= buffer
+  const availableForWithdrawal = Math.max(0, currentBalance - buffer)
 
   return (
     <Card>
@@ -266,23 +272,51 @@ export function ApexPaRulesTracker({ accountSize, pnlEntries }: ApexPaRulesTrack
           </div>
         </div>
 
-        {/* 5. One Direction Rule */}
+        {/* 5. Règles de Retrait (Cycles de 8 jours) */}
         <div>
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <TrendingUp className="h-4 w-4 text-indigo-600" />
-              <span className="text-sm font-medium">5. One Direction Rule</span>
+              <DollarSign
+                className={`h-4 w-4 ${hasReachedBuffer ? "text-green-600" : "text-orange-600"}`}
+              />
+              <span className="text-sm font-medium">5. Règles de Retrait</span>
+              {hasReachedBuffer && <CheckCircle2 className="h-4 w-4 text-green-600" />}
             </div>
           </div>
-          <div className="bg-indigo-50 dark:bg-indigo-900/20 p-3 sm:p-4 rounded-lg">
-            <p className="text-sm text-indigo-700 dark:text-indigo-400 font-medium">
-              ➡️ Vous ne pouvez tenir qu&apos;une position dans UNE direction à la fois : soit long
-              (achat), soit short (vente).
-            </p>
-            <p className="text-xs text-indigo-600 dark:text-indigo-500 mt-2">
-              Vous ne pouvez pas avoir d&apos;ordres en attente pour les deux côtés du marché
-              (stratégie non directionnelle interdite).
-            </p>
+          <div className="bg-zinc-50 dark:bg-zinc-900 p-3 sm:p-4 rounded-lg space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-zinc-600 dark:text-zinc-400">
+                Buffer (Balance initiale + DD) :
+              </span>
+              <span className="font-medium">{formatCurrency(buffer)}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-zinc-600 dark:text-zinc-400">Solde actuel :</span>
+              <span
+                className={`font-medium ${currentBalance >= buffer ? "text-green-600" : "text-zinc-900 dark:text-zinc-100"}`}
+              >
+                {formatCurrency(currentBalance)}
+              </span>
+            </div>
+            <div className="flex justify-between text-sm border-t pt-2 mt-2">
+              <span className="text-zinc-600 dark:text-zinc-400">Montant retirable :</span>
+              <span className="font-bold text-green-600">
+                {formatCurrency(availableForWithdrawal)}
+              </span>
+            </div>
+            <div className="flex items-start gap-2 mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded">
+              <Calendar className="h-4 w-4 text-blue-600 flex-shrink-0 mt-0.5" />
+              <p className="text-xs text-blue-700 dark:text-blue-400">
+                <strong>Cycles de 8 jours :</strong> Vous pouvez retirer tout montant au-dessus du
+                buffer tous les 8 jours. Le buffer protège votre compte contre les pertes.
+              </p>
+            </div>
+            {!hasReachedBuffer && (
+              <p className="text-xs text-orange-600 dark:text-orange-400 mt-2">
+                ⚠️ Vous devez d&apos;abord atteindre le buffer de {formatCurrency(buffer)} avant de
+                pouvoir effectuer des retraits.
+              </p>
+            )}
           </div>
         </div>
 
@@ -295,7 +329,7 @@ export function ApexPaRulesTracker({ accountSize, pnlEntries }: ApexPaRulesTrack
               <p>
                 Ces règles sont conçues pour créer un environnement de trading professionnel et
                 équitable. Respectez-les scrupuleusement pour maintenir votre compte PA actif et
-                recevoir vos payouts régulièrement.
+                recevoir vos payouts régulièrement tous les 8 jours.
               </p>
             </div>
           </div>
