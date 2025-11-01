@@ -1,8 +1,9 @@
 /* eslint-disable */
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo, useCallback } from "react"
 import { useRouter, useParams } from "next/navigation"
+import dynamic from "next/dynamic"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -15,17 +16,33 @@ import {
   Calendar,
   CheckCircle2,
 } from "lucide-react"
-import { AccountFormDialog } from "@/components/account-form-dialog"
-import { PnlFormDialog } from "@/components/pnl-form-dialog"
-import { WithdrawalFormDialog } from "@/components/withdrawal-form-dialog"
-import { MonthlyCalendar } from "@/components/monthly-calendar"
-import { AccountRulesTracker } from "@/components/account-rules-tracker"
-import { TradingCyclesTracker } from "@/components/trading-cycles-tracker"
 import { StatCard, useStatVariant } from "@/components/stat-card"
 import { useAccountCache } from "@/hooks/use-data-cache"
 import { useDeleteAccountMutation, useUpdateAccountMutation } from "@/hooks/use-mutation"
 import { format } from "date-fns"
 import { fr } from "date-fns/locale"
+
+// ⚡ CODE SPLITTING: Lazy load dialogs (opened on user action)
+const AccountFormDialog = dynamic(() =>
+  import("@/components/account-form-dialog").then((m) => ({ default: m.AccountFormDialog }))
+)
+const PnlFormDialog = dynamic(() =>
+  import("@/components/pnl-form-dialog").then((m) => ({ default: m.PnlFormDialog }))
+)
+const WithdrawalFormDialog = dynamic(() =>
+  import("@/components/withdrawal-form-dialog").then((m) => ({ default: m.WithdrawalFormDialog }))
+)
+
+// ⚡ CODE SPLITTING: Lazy load heavy components
+const MonthlyCalendar = dynamic(() =>
+  import("@/components/monthly-calendar").then((m) => ({ default: m.MonthlyCalendar }))
+)
+const AccountRulesTracker = dynamic(() =>
+  import("@/components/account-rules-tracker").then((m) => ({ default: m.AccountRulesTracker }))
+)
+const TradingCyclesTracker = dynamic(() =>
+  import("@/components/trading-cycles-tracker").then((m) => ({ default: m.TradingCyclesTracker }))
+)
 
 const PROPFIRM_LABELS: Record<string, string> = {
   TOPSTEP: "TopStep",
@@ -119,19 +136,20 @@ export default function AccountDetailPage() {
     }
   }
 
-  const formatCurrency = (amount: number) => {
+  // ⚡ MEMOIZATION: Format functions
+  const formatCurrency = useCallback((amount: number) => {
     return new Intl.NumberFormat("fr-FR", {
       style: "currency",
       currency: "USD",
     }).format(amount)
-  }
+  }, [])
 
-  const formatCurrencyEUR = (amount: number) => {
+  const formatCurrencyEUR = useCallback((amount: number) => {
     return new Intl.NumberFormat("fr-FR", {
       style: "currency",
       currency: "EUR",
     }).format(amount)
-  }
+  }, [])
 
   // Taux de change USD vers EUR (à ajuster selon vos besoins)
   const USD_TO_EUR = 0.92
@@ -151,13 +169,16 @@ export default function AccountDetailPage() {
     return null
   }
 
-  const totalPnl = account.pnlEntries.reduce(
-    (sum: number, entry: { amount: number }) => sum + entry.amount,
-    0
+  // ⚡ MEMOIZATION: Heavy calculations
+  const totalPnl = useMemo(
+    () =>
+      account.pnlEntries.reduce((sum: number, entry: { amount: number }) => sum + entry.amount, 0),
+    [account.pnlEntries]
   )
-  const totalWithdrawals = account.withdrawals.reduce(
-    (sum: number, w: { amount: number }) => sum + w.amount,
-    0
+
+  const totalWithdrawals = useMemo(
+    () => account.withdrawals.reduce((sum: number, w: { amount: number }) => sum + w.amount, 0),
+    [account.withdrawals]
   )
 
   // Fonction pour obtenir le maxDrawdown selon la propfirm et la taille
@@ -599,23 +620,23 @@ export default function AccountDetailPage() {
                                 </p>
                               </div>
                               <div className="flex gap-1">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => {
-                                setSelectedWithdrawal({
-                                  id: withdrawal.id,
-                                  date: withdrawal.date,
-                                  amount: withdrawal.amount,
-                                  notes: withdrawal.notes || undefined,
-                                  accountId: account.id || "",
-                                })
-                                setWithdrawalDialogOpen(true)
-                              }}
-                              className="h-8 w-8"
-                            >
-                              <Edit className="h-3.5 w-3.5" />
-                            </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => {
+                                    setSelectedWithdrawal({
+                                      id: withdrawal.id,
+                                      date: withdrawal.date,
+                                      amount: withdrawal.amount,
+                                      notes: withdrawal.notes || undefined,
+                                      accountId: account.id || "",
+                                    })
+                                    setWithdrawalDialogOpen(true)
+                                  }}
+                                  className="h-8 w-8"
+                                >
+                                  <Edit className="h-3.5 w-3.5" />
+                                </Button>
                                 <Button
                                   variant="ghost"
                                   size="icon"
