@@ -1,5 +1,6 @@
 "use client"
 
+import { StatCard } from "@/components/stat-card"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Wallet, TrendingUp, DollarSign, Target } from "lucide-react"
 import { ExpensesCalendar } from "@/components/expenses-calendar"
