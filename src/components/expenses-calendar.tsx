@@ -143,11 +143,11 @@ export function ExpensesCalendar({ expenses }: ExpensesCalendarProps) {
                   return (
                     <div
                       key={dayIdx}
-                      className={`min-h-[80px] md:min-h-[100px] p-1.5 md:p-3 rounded-lg border ${
+                      className={`min-h-[80px] md:min-h-[100px] p-1.5 md:p-3 rounded-lg border transition-all duration-200 ${
                         !isCurrentMonth
                           ? "bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800"
                           : dayTotal > 0
-                          ? "border-red-300 bg-red-50 dark:border-red-900 dark:bg-red-950 cursor-pointer hover:bg-red-100 dark:hover:bg-red-900 transition-colors"
+                          ? "border-red-300 bg-red-50 dark:border-red-900 dark:bg-red-950 cursor-pointer hover:bg-red-100 dark:hover:bg-red-900 hover:scale-105 hover:shadow-md"
                           : "border-zinc-200 dark:border-zinc-800"
                       }`}
                       onClick={() => {
@@ -178,9 +178,9 @@ export function ExpensesCalendar({ expenses }: ExpensesCalendarProps) {
 
                 {/* Weekly summary column */}
                 <div
-                  className={`min-h-[80px] md:min-h-[100px] p-1.5 md:p-3 rounded-lg border-2 ${
+                  className={`min-h-[80px] md:min-h-[100px] p-1.5 md:p-3 rounded-lg border-2 transition-all duration-200 ${
                     weekTotal > 0
-                      ? "border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950 cursor-pointer hover:bg-red-100 dark:hover:bg-red-900 transition-colors"
+                      ? "border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950 cursor-pointer hover:bg-red-100 dark:hover:bg-red-900 hover:scale-105 hover:shadow-md"
                       : "border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900"
                   }`}
                   onClick={() => {

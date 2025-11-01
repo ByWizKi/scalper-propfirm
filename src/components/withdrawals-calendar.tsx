@@ -147,11 +147,11 @@ export function WithdrawalsCalendar({ withdrawals }: WithdrawalsCalendarProps) {
                   return (
                     <div
                       key={dayIdx}
-                      className={`min-h-[80px] md:min-h-[100px] p-1.5 md:p-3 rounded-lg border ${
+                      className={`min-h-[80px] md:min-h-[100px] p-1.5 md:p-3 rounded-lg border transition-all duration-200 ${
                         !isCurrentMonth
                           ? "bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800"
                           : dayTotal > 0
-                          ? "border-green-300 bg-green-50 dark:border-green-900 dark:bg-green-950 cursor-pointer hover:bg-green-100 dark:hover:bg-green-900 transition-colors"
+                          ? "border-green-300 bg-green-50 dark:border-green-900 dark:bg-green-950 cursor-pointer hover:bg-green-100 dark:hover:bg-green-900 hover:scale-105 hover:shadow-md"
                           : "border-zinc-200 dark:border-zinc-800"
                       }`}
                       onClick={() => {
@@ -182,9 +182,9 @@ export function WithdrawalsCalendar({ withdrawals }: WithdrawalsCalendarProps) {
 
                 {/* Weekly summary column */}
                 <div
-                  className={`min-h-[80px] md:min-h-[100px] p-1.5 md:p-3 rounded-lg border-2 ${
+                  className={`min-h-[80px] md:min-h-[100px] p-1.5 md:p-3 rounded-lg border-2 transition-all duration-200 ${
                     weekTotal > 0
-                      ? "border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950 cursor-pointer hover:bg-green-100 dark:hover:bg-green-900 transition-colors"
+                      ? "border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950 cursor-pointer hover:bg-green-100 dark:hover:bg-green-900 hover:scale-105 hover:shadow-md"
                       : "border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900"
                   }`}
                   onClick={() => {

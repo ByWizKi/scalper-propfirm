@@ -211,13 +211,13 @@ export function MonthlyCalendar({ pnlEntries }: MonthlyCalendarProps) {
                   return (
                     <div
                       key={dayIdx}
-                      className={`min-h-[70px] sm:min-h-[80px] md:min-h-[100px] p-1.5 sm:p-2 md:p-3 rounded-lg border-2 transition-all ${
+                      className={`min-h-[70px] sm:min-h-[80px] md:min-h-[100px] p-1.5 sm:p-2 md:p-3 rounded-lg border-2 transition-all duration-200 ${
                         !isCurrentMonth
                           ? "border-zinc-100 bg-zinc-50 dark:border-zinc-900 dark:bg-zinc-950 opacity-40"
                           : dayPnl
                           ? dayPnl.amount >= 0
-                            ? "border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950 cursor-pointer hover:bg-green-100 dark:hover:bg-green-900"
-                            : "border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950 cursor-pointer hover:bg-red-100 dark:hover:bg-red-900"
+                            ? "border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950 cursor-pointer hover:bg-green-100 dark:hover:bg-green-900 hover:scale-105 hover:shadow-md"
+                            : "border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950 cursor-pointer hover:bg-red-100 dark:hover:bg-red-900 hover:scale-105 hover:shadow-md"
                           : "border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900"
                       } ${
                         isCurrentDay ? "ring-2 ring-blue-500 dark:ring-blue-400" : ""
@@ -266,14 +266,14 @@ export function MonthlyCalendar({ pnlEntries }: MonthlyCalendarProps) {
 
                 {/* Colonne résumé de la semaine */}
                 <div
-                  className={`min-h-[70px] sm:min-h-[80px] md:min-h-[100px] p-1.5 sm:p-2 md:p-3 rounded-lg border-2 ${
+                  className={`min-h-[70px] sm:min-h-[80px] md:min-h-[100px] p-1.5 sm:p-2 md:p-3 rounded-lg border-2 transition-all duration-200 ${
                     weekData.amount > 0
                       ? "border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950"
                       : weekData.amount < 0
                       ? "border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950"
                       : "border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900"
                   } ${
-                    weekData.count > 0 ? "cursor-pointer hover:opacity-80 transition-opacity" : ""
+                    weekData.count > 0 ? "cursor-pointer hover:scale-105 hover:shadow-md" : ""
                   }`}
                   onClick={() => {
                     if (weekData.count > 0 && weekData.days.length > 0) {
