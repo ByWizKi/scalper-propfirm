@@ -30,6 +30,7 @@ model User {
   pnlEntries       PnlEntry[]
   withdrawals      Withdrawal[]
   sessions         Session[]
+  auditLogs        AuditLog[]
 
   @@map("users")
 }
@@ -171,4 +172,44 @@ model ExchangeRate {
   updatedAt DateTime @updatedAt
 
   @@map("exchange_rates")
+}
+
+// ========================================
+// LOGS D'AUDIT
+// ========================================
+
+enum AuditAction {
+  LOGIN
+  LOGOUT
+  LOGIN_FAILED
+  REGISTER
+  PASSWORD_CHANGE
+  PASSWORD_CHANGE_FAILED
+  ACCOUNT_CREATE
+  ACCOUNT_UPDATE
+  ACCOUNT_DELETE
+  PNL_CREATE
+  PNL_UPDATE
+  PNL_DELETE
+  WITHDRAWAL_CREATE
+  WITHDRAWAL_UPDATE
+  WITHDRAWAL_DELETE
+  SUSPICIOUS_ACTIVITY
+}
+
+model AuditLog {
+  id        String      @id @default(cuid())
+  userId    String?
+  user      User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action    AuditAction
+  ipAddress String?
+  userAgent String?
+  metadata  Json?
+  createdAt DateTime    @default(now())
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+  @@index([ipAddress])
+  @@map("audit_logs")
 }
