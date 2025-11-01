@@ -113,8 +113,8 @@ export default function PnlPage() {
 
   // Filtrer les entrées selon l'option "Masquer comptes d'évaluation"
   const filteredEntries = hideEvalAccounts
-    ? entries.filter(entry => {
-        const account = accounts.find(acc => acc.id === entry.accountId)
+    ? entries.filter((entry) => {
+        const account = accounts.find((acc) => acc.id === entry.accountId)
         return account?.accountType !== "EVAL"
       })
     : entries

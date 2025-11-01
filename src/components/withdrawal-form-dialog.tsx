@@ -195,12 +195,12 @@ export function WithdrawalFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-[95vw] sm:max-w-3xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
-          <DialogTitle>
+          <DialogTitle className="text-lg sm:text-xl">
             {withdrawal ? "Modifier le retrait" : "Ajouter un retrait"}
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-xs sm:text-sm">
             {withdrawal
               ? "Modifiez le retrait"
               : "Ajoutez un nouveau retrait de fonds"}
@@ -208,16 +208,16 @@ export function WithdrawalFormDialog({
         </DialogHeader>
 
         <form onSubmit={handleSubmit}>
-          <div className="grid gap-4 py-4">
+          <div className="grid gap-3 sm:gap-4 py-3 sm:py-4">
             {/* Mode selector */}
             {!withdrawal && eligibleAccounts.length > 0 && (
-              <div className="flex gap-2 p-3 bg-zinc-50 dark:bg-zinc-900 rounded-lg">
+              <div className="flex gap-2 p-2 sm:p-3 bg-zinc-50 dark:bg-zinc-900 rounded-lg">
                 <Button
                   type="button"
                   variant={!multipleMode ? "default" : "outline"}
                   size="sm"
                   onClick={() => setMultipleMode(false)}
-                  className="flex-1"
+                  className="flex-1 text-xs sm:text-sm"
                 >
                   Compte unique
                 </Button>
@@ -226,7 +226,7 @@ export function WithdrawalFormDialog({
                   variant={multipleMode ? "default" : "outline"}
                   size="sm"
                   onClick={() => setMultipleMode(true)}
-                  className="flex-1"
+                  className="flex-1 text-xs sm:text-sm"
                 >
                   Plusieurs comptes
                 </Button>
@@ -236,7 +236,7 @@ export function WithdrawalFormDialog({
             {/* Single account selector */}
             {!withdrawal && !multipleMode && (
               <div className="grid gap-2">
-                <Label htmlFor="accountId">Compte *</Label>
+                <Label htmlFor="accountId" className="text-xs sm:text-sm">Compte *</Label>
                 <Select
                   value={formData.accountId}
                   onValueChange={(value) => setFormData({ ...formData, accountId: value })}
@@ -370,8 +370,8 @@ export function WithdrawalFormDialog({
               />
             </div>
 
-            <div className="grid gap-2">
-              <Label htmlFor="amount">Montant (USD) *</Label>
+              <div className="grid gap-2">
+                <Label htmlFor="amount" className="text-xs sm:text-sm">Montant (USD) *</Label>
               <Input
                 id="amount"
                 type="number"
@@ -384,7 +384,7 @@ export function WithdrawalFormDialog({
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="notes">Notes</Label>
+              <Label htmlFor="notes" className="text-xs sm:text-sm">Notes</Label>
               <textarea
                 id="notes"
                 className="flex min-h-[80px] w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-800 dark:bg-zinc-950 dark:placeholder:text-zinc-400 dark:focus-visible:ring-zinc-300"
