@@ -382,21 +382,6 @@ export function ApexPaRulesTracker({ accountSize, pnlEntries }: ApexPaRulesTrack
             </div>
           </div>
         </div>
-
-        {/* Résumé */}
-        <div className="border-t pt-4 mt-4">
-          <div className="flex items-start gap-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-            <Info className="h-4 w-4 text-blue-600 flex-shrink-0 mt-0.5" />
-            <div className="text-xs text-blue-700 dark:text-blue-400">
-              <p className="font-medium mb-1">Note importante :</p>
-              <p>
-                Ces règles sont conçues pour créer un environnement de trading professionnel et
-                équitable. Respectez-les scrupuleusement pour maintenir votre compte PA actif et
-                recevoir vos payouts régulièrement tous les 8 jours.
-              </p>
-            </div>
-          </div>
-        </div>
       </CardContent>
     </Card>
   )
