@@ -62,7 +62,7 @@ export function PnlFormDialog({
   const [filterPropfirm, setFilterPropfirm] = useState<string>("all")
   const [filterAccountType, setFilterAccountType] = useState<string>("all")
   const [formData, setFormData] = useState({
-    accountId: "",
+    accountId: "", // Pas de présélection par défaut
     date: new Date().toISOString().split("T")[0],
     amount: "",
     notes: "",
