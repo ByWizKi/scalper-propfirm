@@ -46,16 +46,16 @@ export function CalendarDayDetailsDialog<T>({
 }: CalendarDayDetailsDialogProps<T>) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>
+      <DialogContent className="max-w-[95vw] sm:max-w-md max-h-[90vh] overflow-y-auto">
+        <DialogHeader className="space-y-2 pb-4">
+          <DialogTitle className="text-base sm:text-lg font-bold leading-tight pr-8">
             {selectedDate && formatTitle(selectedDate)}
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-xs sm:text-sm leading-tight">
             {data && formatDescription(data)}
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-3 mt-4">
+        <div className="space-y-2 sm:space-y-3">
           {data?.map((item, index) => renderItem(item, index))}
         </div>
       </DialogContent>

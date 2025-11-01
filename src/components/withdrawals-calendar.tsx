@@ -224,7 +224,7 @@ export function WithdrawalsCalendar({ withdrawals }: WithdrawalsCalendarProps) {
         renderItem={(withdrawal) => {
           const netAmount = getNetWithdrawalAmount(withdrawal.amount, withdrawal.account.propfirm)
           const isTakeProfitTrader = withdrawal.account.propfirm === "TAKEPROFITTRADER"
-          
+
           return (
             <div
               key={withdrawal.id}
