@@ -484,12 +484,47 @@ export default function AccountDetailPage() {
                             {entry.notes && <p className="text-xs text-zinc-500">{entry.notes}</p>}
                           </div>
                         </div>
-                        <span
-                          className={`font-bold ${entry.amount >= 0 ? "text-green-600" : "text-red-600"}`}
-                        >
-                          {entry.amount >= 0 ? "+" : ""}
-                          {formatCurrency(entry.amount)}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`font-bold ${entry.amount >= 0 ? "text-green-600" : "text-red-600"}`}
+                          >
+                            {entry.amount >= 0 ? "+" : ""}
+                            {formatCurrency(entry.amount)}
+                          </span>
+                          <div className="flex gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => {
+                                setSelectedPnl({ ...entry, accountId: account.id })
+                                setPnlDialogOpen(true)
+                              }}
+                              className="h-8 w-8"
+                            >
+                              <Edit className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={async () => {
+                                if (confirm("Êtes-vous sûr de vouloir supprimer cette entrée ?")) {
+                                  try {
+                                    const res = await fetch(`/api/pnl/${entry.id}`, {
+                                      method: "DELETE",
+                                    })
+                                    if (!res.ok) throw new Error("Erreur lors de la suppression")
+                                    window.location.reload()
+                                  } catch (error) {
+                                    alert("Erreur lors de la suppression de l'entrée PnL")
+                                  }
+                                }
+                              }}
+                              className="h-8 w-8"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        </div>
                       </div>
                     )
                   )}
