@@ -20,6 +20,8 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useCreateAccountMutation, useUpdateAccountMutation } from "@/hooks/use-mutation"
+import { PROPFIRM_LABELS, ACCOUNT_SIZES_BY_PROPFIRM } from "@/lib/constants"
+import { PropfirmType } from "@/types/account.types"
 
 interface PropfirmAccount {
   id: string
@@ -40,25 +42,15 @@ interface AccountFormDialogProps {
   onSuccess: () => void
 }
 
-const PROPFIRM_TYPES = [
-  { value: "TOPSTEP", label: "TopStep" },
-  { value: "TAKEPROFITTRADER", label: "Take Profit Trader" },
-]
-
-const ACCOUNT_SIZES_BY_PROPFIRM: Record<string, Array<{ value: string, label: string }>> = {
-  TOPSTEP: [
-    { value: "50000", label: "50K" },
-    { value: "100000", label: "100K" },
-    { value: "150000", label: "150K" },
-  ],
-  TAKEPROFITTRADER: [
-    { value: "25000", label: "25K" },
-    { value: "50000", label: "50K" },
-    { value: "75000", label: "75K" },
-    { value: "100000", label: "100K" },
-    { value: "150000", label: "150K" },
-  ],
-}
+// Générer la liste des propfirms disponibles depuis les constantes
+const PROPFIRM_TYPES = Object.entries(PROPFIRM_LABELS)
+  .filter(
+    ([key]) =>
+      key !== PropfirmType.OTHER &&
+      key !== PropfirmType.FTMO &&
+      key !== PropfirmType.MYFUNDEDFUTURES
+  )
+  .map(([value, label]) => ({ value, label }))
 
 const ACCOUNT_TYPES = [
   { value: "EVAL", label: "Évaluation" },
@@ -129,11 +121,12 @@ export function AccountFormDialog({
       if (response.ok) {
         const data = await response.json()
         // Filtrer uniquement les comptes EVAL validés, de la même propfirm et de la même taille
-        const evalOnly = data.filter((acc: PropfirmAccount) =>
-          acc.accountType === "EVAL" &&
-          acc.status === "VALIDATED" &&
-          acc.propfirm === formData.propfirm &&
-          acc.size.toString() === formData.size
+        const evalOnly = data.filter(
+          (acc: PropfirmAccount) =>
+            acc.accountType === "EVAL" &&
+            acc.status === "VALIDATED" &&
+            acc.propfirm === formData.propfirm &&
+            acc.size.toString() === formData.size
         )
         setEvalAccounts(evalOnly)
       }
@@ -150,12 +143,12 @@ export function AccountFormDialog({
   }, [open, formData.accountType, formData.propfirm, formData.size])
 
   // Récupérer les tailles disponibles pour la propfirm sélectionnée
-  const availableSizes = ACCOUNT_SIZES_BY_PROPFIRM[formData.propfirm] || []
+  const availableSizes = ACCOUNT_SIZES_BY_PROPFIRM[formData.propfirm as PropfirmType] || []
 
   // Réinitialiser la taille si elle n'est pas disponible pour la propfirm sélectionnée
   const handlePropfirmChange = (value: string) => {
-    const newAvailableSizes = ACCOUNT_SIZES_BY_PROPFIRM[value] || []
-    const currentSizeAvailable = newAvailableSizes.some(s => s.value === formData.size)
+    const newAvailableSizes = ACCOUNT_SIZES_BY_PROPFIRM[value as PropfirmType] || []
+    const currentSizeAvailable = newAvailableSizes.some((s) => s.value === formData.size)
 
     setFormData({
       ...formData,
@@ -204,7 +197,9 @@ export function AccountFormDialog({
         <form onSubmit={handleSubmit}>
           <div className="grid gap-3 sm:gap-4 py-3 sm:py-4">
             <div className="grid gap-2">
-              <Label htmlFor="name" className="text-xs sm:text-sm">Nom du compte *</Label>
+              <Label htmlFor="name" className="text-xs sm:text-sm">
+                Nom du compte *
+              </Label>
               <Input
                 id="name"
                 placeholder="Mon compte TopStep 50K"
@@ -216,11 +211,10 @@ export function AccountFormDialog({
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="propfirm" className="text-xs sm:text-sm">Propfirm *</Label>
-              <Select
-                value={formData.propfirm}
-                onValueChange={handlePropfirmChange}
-              >
+              <Label htmlFor="propfirm" className="text-xs sm:text-sm">
+                Propfirm *
+              </Label>
+              <Select value={formData.propfirm} onValueChange={handlePropfirmChange}>
                 <SelectTrigger id="propfirm">
                   <SelectValue />
                 </SelectTrigger>
@@ -235,7 +229,9 @@ export function AccountFormDialog({
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="size" className="text-xs sm:text-sm">Taille du compte *</Label>
+              <Label htmlFor="size" className="text-xs sm:text-sm">
+                Taille du compte *
+              </Label>
               <Select
                 value={formData.size}
                 onValueChange={(value) => setFormData({ ...formData, size: value })}
@@ -255,7 +251,9 @@ export function AccountFormDialog({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="accountType" className="text-xs sm:text-sm">Type de compte *</Label>
+                <Label htmlFor="accountType" className="text-xs sm:text-sm">
+                  Type de compte *
+                </Label>
                 <Select
                   value={formData.accountType}
                   onValueChange={(value) => setFormData({ ...formData, accountType: value })}
@@ -274,7 +272,9 @@ export function AccountFormDialog({
               </div>
 
               <div className="grid gap-2">
-                <Label htmlFor="status" className="text-xs sm:text-sm">Statut *</Label>
+                <Label htmlFor="status" className="text-xs sm:text-sm">
+                  Statut *
+                </Label>
                 <Select
                   value={formData.status}
                   onValueChange={(value) => setFormData({ ...formData, status: value })}
@@ -296,10 +296,14 @@ export function AccountFormDialog({
             {/* Compte d&apos;évaluation lié (seulement pour FUNDED) */}
             {formData.accountType === "FUNDED" && (
               <div className="grid gap-2">
-                <Label htmlFor="linkedEvalId" className="text-xs sm:text-sm">Compte d&apos;évaluation lié (optionnel)</Label>
+                <Label htmlFor="linkedEvalId" className="text-xs sm:text-sm">
+                  Compte d&apos;évaluation lié (optionnel)
+                </Label>
                 <Select
                   value={formData.linkedEvalId || "none"}
-                  onValueChange={(value) => setFormData({ ...formData, linkedEvalId: value === "none" ? "" : value })}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, linkedEvalId: value === "none" ? "" : value })
+                  }
                 >
                   <SelectTrigger id="linkedEvalId">
                     <SelectValue placeholder="Aucun" />
@@ -312,7 +316,8 @@ export function AccountFormDialog({
                         {new Intl.NumberFormat("fr-FR", {
                           style: "currency",
                           currency: "USD",
-                        }).format(evalAcc.size)})
+                        }).format(evalAcc.size)}
+                        )
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -321,7 +326,9 @@ export function AccountFormDialog({
             )}
 
             <div className="grid gap-2">
-              <Label htmlFor="pricePaid" className="text-xs sm:text-sm">Prix payé (USD) *</Label>
+              <Label htmlFor="pricePaid" className="text-xs sm:text-sm">
+                Prix payé (USD) *
+              </Label>
               <Input
                 id="pricePaid"
                 type="number"
@@ -334,7 +341,9 @@ export function AccountFormDialog({
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="notes" className="text-xs sm:text-sm">Notes</Label>
+              <Label htmlFor="notes" className="text-xs sm:text-sm">
+                Notes
+              </Label>
               <textarea
                 id="notes"
                 className="flex min-h-[80px] w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-800 dark:bg-zinc-950 dark:placeholder:text-zinc-400 dark:focus-visible:ring-zinc-300"
@@ -355,11 +364,7 @@ export function AccountFormDialog({
             >
               Annuler
             </Button>
-            <Button
-              type="submit"
-              disabled={isLoading}
-              className="w-full sm:w-auto text-sm"
-            >
+            <Button type="submit" disabled={isLoading} className="w-full sm:w-auto text-sm">
               {isLoading ? "En cours..." : account ? "Mettre à jour" : "Créer"}
             </Button>
           </DialogFooter>
@@ -368,5 +373,3 @@ export function AccountFormDialog({
     </Dialog>
   )
 }
-
-
