@@ -52,7 +52,7 @@ export function BulkPnlFormDialog({
 }: BulkPnlFormDialogProps) {
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
-  
+
   // Initialiser avec une ligne vide
   const [rows, setRows] = useState<PnlRow[]>([
     {
@@ -183,26 +183,108 @@ export function BulkPnlFormDialog({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Tableau responsive */}
-          <div className="overflow-x-auto -mx-4 sm:mx-0">
+          {/* Vue mobile : cartes empilables */}
+          <div className="block md:hidden space-y-3">
+            {rows.map((row, index) => (
+              <div
+                key={row.id}
+                className="border rounded-lg p-3 space-y-3 bg-zinc-50 dark:bg-zinc-900"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                    Entrée #{index + 1}
+                  </span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => removeRow(row.id)}
+                    disabled={rows.length === 1}
+                    className="h-8 w-8"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs">Compte *</Label>
+                  <Select
+                    value={row.accountId}
+                    onValueChange={(value) => updateRow(row.id, "accountId", value)}
+                    required
+                  >
+                    <SelectTrigger className="w-full text-xs">
+                      <SelectValue placeholder="Sélectionner un compte" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {accounts.map((account) => (
+                        <SelectItem key={account.id} value={account.id}>
+                          <span className="text-xs">{account.name}</span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-2">
+                    <Label className="text-xs">Date *</Label>
+                    <Input
+                      type="date"
+                      value={row.date}
+                      onChange={(e) => updateRow(row.id, "date", e.target.value)}
+                      required
+                      className="text-xs"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs">Montant *</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={row.amount}
+                      onChange={(e) => updateRow(row.id, "amount", e.target.value)}
+                      placeholder="0.00"
+                      required
+                      className="text-xs"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs">Notes</Label>
+                  <Input
+                    type="text"
+                    value={row.notes}
+                    onChange={(e) => updateRow(row.id, "notes", e.target.value)}
+                    placeholder="Optionnel"
+                    className="text-xs"
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Vue desktop : tableau */}
+          <div className="hidden md:block overflow-x-auto">
             <div className="inline-block min-w-full align-middle">
               <div className="overflow-hidden border rounded-lg">
                 <table className="min-w-full divide-y divide-zinc-200 dark:divide-zinc-800">
                   <thead className="bg-zinc-50 dark:bg-zinc-900">
                     <tr>
-                      <th className="px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+                      <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
                         Compte
                       </th>
-                      <th className="px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+                      <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
                         Date
                       </th>
-                      <th className="px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+                      <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
                         Montant
                       </th>
-                      <th className="px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+                      <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
                         Notes
                       </th>
-                      <th className="px-2 sm:px-4 py-2 sm:py-3 text-center text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider w-16">
+                      <th className="px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider w-16">
                         Action
                       </th>
                     </tr>
@@ -210,36 +292,34 @@ export function BulkPnlFormDialog({
                   <tbody className="bg-white dark:bg-zinc-950 divide-y divide-zinc-200 dark:divide-zinc-800">
                     {rows.map((row) => (
                       <tr key={row.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-900">
-                        <td className="px-2 sm:px-4 py-2 whitespace-nowrap">
+                        <td className="px-4 py-2 whitespace-nowrap">
                           <Select
                             value={row.accountId}
                             onValueChange={(value) => updateRow(row.id, "accountId", value)}
                             required
                           >
-                            <SelectTrigger className="w-full min-w-[150px] text-xs sm:text-sm">
-                              <SelectValue placeholder="Choisir..." />
+                            <SelectTrigger className="w-full min-w-[180px] text-sm">
+                              <SelectValue placeholder="Sélectionner..." />
                             </SelectTrigger>
                             <SelectContent>
                               {accounts.map((account) => (
                                 <SelectItem key={account.id} value={account.id}>
-                                  <span className="text-xs sm:text-sm">
-                                    {account.name}
-                                  </span>
+                                  <span className="text-sm">{account.name}</span>
                                 </SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
                         </td>
-                        <td className="px-2 sm:px-4 py-2 whitespace-nowrap">
+                        <td className="px-4 py-2 whitespace-nowrap">
                           <Input
                             type="date"
                             value={row.date}
                             onChange={(e) => updateRow(row.id, "date", e.target.value)}
                             required
-                            className="w-full min-w-[130px] text-xs sm:text-sm"
+                            className="w-full min-w-[140px] text-sm"
                           />
                         </td>
-                        <td className="px-2 sm:px-4 py-2 whitespace-nowrap">
+                        <td className="px-4 py-2 whitespace-nowrap">
                           <Input
                             type="number"
                             step="0.01"
@@ -247,19 +327,19 @@ export function BulkPnlFormDialog({
                             onChange={(e) => updateRow(row.id, "amount", e.target.value)}
                             placeholder="0.00"
                             required
-                            className="w-full min-w-[100px] text-xs sm:text-sm"
+                            className="w-full min-w-[110px] text-sm"
                           />
                         </td>
-                        <td className="px-2 sm:px-4 py-2">
+                        <td className="px-4 py-2">
                           <Input
                             type="text"
                             value={row.notes}
                             onChange={(e) => updateRow(row.id, "notes", e.target.value)}
                             placeholder="Optionnel"
-                            className="w-full min-w-[120px] text-xs sm:text-sm"
+                            className="w-full min-w-[150px] text-sm"
                           />
                         </td>
-                        <td className="px-2 sm:px-4 py-2 text-center">
+                        <td className="px-4 py-2 text-center">
                           <Button
                             type="button"
                             variant="ghost"
