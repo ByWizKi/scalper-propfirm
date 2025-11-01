@@ -6,6 +6,7 @@
 import { PropfirmStrategy } from "./propfirm-strategy.interface"
 import { TopStepStrategy } from "./topstep-strategy"
 import { TakeProfitTraderStrategy } from "./takeprofittrader-strategy"
+import { ApexStrategy } from "./apex-strategy"
 import { PropfirmType } from "@/types/account.types"
 
 /**
@@ -19,9 +20,7 @@ export class PropfirmStrategyFactory {
    */
   static getStrategy(propfirm: PropfirmType | string): PropfirmStrategy {
     // Normaliser le type
-    const propfirmType = typeof propfirm === "string"
-      ? (propfirm as PropfirmType)
-      : propfirm
+    const propfirmType = typeof propfirm === "string" ? (propfirm as PropfirmType) : propfirm
 
     // Vérifier le cache
     if (this.strategies.has(propfirmType)) {
@@ -37,6 +36,9 @@ export class PropfirmStrategyFactory {
         break
       case PropfirmType.TAKEPROFITTRADER:
         strategy = new TakeProfitTraderStrategy()
+        break
+      case PropfirmType.APEX:
+        strategy = new ApexStrategy()
         break
       // Ajouter d'autres propfirms ici
       default:
@@ -90,4 +92,3 @@ class DefaultStrategy implements PropfirmStrategy {
     return false
   }
 }
-

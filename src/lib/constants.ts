@@ -38,7 +38,10 @@ export const STATUS_COLORS: Record<AccountStatus, string> = {
 export const USD_TO_EUR = 0.92
 
 // Tailles de compte disponibles par propfirm
-export const ACCOUNT_SIZES_BY_PROPFIRM: Record<PropfirmType, Array<{ value: string; label: string }>> = {
+export const ACCOUNT_SIZES_BY_PROPFIRM: Record<
+  PropfirmType,
+  Array<{ value: string; label: string }>
+> = {
   [PropfirmType.TOPSTEP]: [
     { value: "50000", label: "50K" },
     { value: "100000", label: "100K" },
@@ -51,9 +54,15 @@ export const ACCOUNT_SIZES_BY_PROPFIRM: Record<PropfirmType, Array<{ value: stri
     { value: "100000", label: "100K" },
     { value: "150000", label: "150K" },
   ],
-  [PropfirmType.APEX]: [],
+  [PropfirmType.APEX]: [
+    { value: "25000", label: "25K" },
+    { value: "50000", label: "50K" },
+    { value: "100000", label: "100K" },
+    { value: "150000", label: "150K" },
+    { value: "250000", label: "250K" },
+    { value: "300000", label: "300K" },
+  ],
   [PropfirmType.FTMO]: [],
   [PropfirmType.MYFUNDEDFUTURES]: [],
   [PropfirmType.OTHER]: [],
 }
-
