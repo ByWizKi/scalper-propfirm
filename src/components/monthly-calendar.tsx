@@ -295,9 +295,9 @@ export function MonthlyCalendar({ pnlEntries }: MonthlyCalendarProps) {
                     }
                   }}
                 >
-                  <div className="flex items-center justify-between mb-1 sm:mb-2">
-                    <span className="text-[10px] sm:text-xs md:text-sm font-medium text-zinc-600 dark:text-zinc-400">
-                      S{weekNumber}
+                  <div className="flex items-center justify-center mb-1 sm:mb-2">
+                    <span className="text-[9px] sm:text-[10px] md:text-xs font-medium text-zinc-600 dark:text-zinc-400 text-center">
+                      Total semaine
                     </span>
                   </div>
                   <div className={`text-xs sm:text-sm md:text-lg font-bold mb-0.5 sm:mb-1 truncate ${
