@@ -716,21 +716,6 @@ export default function AccountDetailPage() {
 
       <PnlFormDialog
         open={pnlDialogOpen}
-        onOpenChange={setPnlDialogOpen}
-        accounts={[
-          {
-            id: account.id,
-            name: account.name,
-            propfirm: account.propfirm,
-            accountType: account.accountType,
-            size: account.size,
-          },
-        ]}
-        onSuccess={() => {}}
-      />
-
-      <PnlFormDialog
-        open={pnlDialogOpen}
         onOpenChange={(open) => {
           setPnlDialogOpen(open)
           if (!open) setSelectedPnl(null)
@@ -740,12 +725,15 @@ export default function AccountDetailPage() {
           {
             id: account.id,
             name: account.name,
-            accountType: account.accountType,
             propfirm: account.propfirm,
+            accountType: account.accountType,
             size: account.size,
           },
         ]}
-        onSuccess={() => {}}
+        onSuccess={() => {
+          // Rafraîchir les données après modification/ajout
+          window.location.reload()
+        }}
       />
 
       <WithdrawalFormDialog

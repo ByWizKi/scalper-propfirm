@@ -12,6 +12,8 @@ import {
   Info,
   FileText,
 } from "lucide-react"
+import { PropfirmStrategyFactory } from "@/lib/strategies/propfirm-strategy.factory"
+import { PropfirmType } from "@/types/account.types"
 
 interface PnlEntry {
   id: string
@@ -257,13 +259,29 @@ export function AccountRulesTracker({
   const consistencyStatus = consistencyPercentage <= rules.consistencyRule || totalPnl <= 0
   const minTradingDaysStatus = rules.minTradingDays ? tradingDays >= rules.minTradingDays : true
 
-  // Le compte est éligible à la validation si toutes les règles sont respectées
-  const isEligible =
-    profitTargetStatus &&
-    drawdownStatus &&
-    dailyLossStatus &&
-    consistencyStatus &&
-    minTradingDaysStatus
+  // Pour Apex et Bulenox, utiliser la logique de trailing drawdown de la stratégie
+  // Pour les autres, utiliser la logique end-of-day
+  const useStrategyEligibility = propfirm === "APEX" || propfirm === "BULENOX"
+
+  // Calculer l'éligibilité selon la méthode appropriée
+  let isEligible: boolean
+  if (useStrategyEligibility) {
+    // Utiliser la stratégie pour calculer l'éligibilité avec trailing drawdown
+    const strategy = PropfirmStrategyFactory.getStrategy(propfirm as PropfirmType)
+    const normalizedPnlEntries = pnlEntries.map((entry) => ({
+      date: new Date(entry.date),
+      amount: entry.amount,
+    }))
+    isEligible = strategy.isEligibleForValidation(accountSize, normalizedPnlEntries)
+  } else {
+    // Logique end-of-day pour TopStep et TakeProfitTrader
+    isEligible =
+      profitTargetStatus &&
+      drawdownStatus &&
+      dailyLossStatus &&
+      consistencyStatus &&
+      minTradingDaysStatus
+  }
 
   // Notifier le parent du changement d&apos;éligibilité
   React.useEffect(() => {

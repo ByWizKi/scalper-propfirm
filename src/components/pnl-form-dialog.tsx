@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select"
 import { Check } from "lucide-react"
 import { useCreatePnlMutation, useCreateMultiplePnlMutation } from "@/hooks/use-mutation"
+import { toast } from "@/hooks/use-toast"
 
 interface PnlEntry {
   id: string
@@ -55,7 +56,8 @@ export function PnlFormDialog({
 }: PnlFormDialogProps) {
   // Utiliser les mutations
   const { mutate: createPnl, isLoading: isCreating } = useCreatePnlMutation()
-  const { mutate: createMultiplePnl, isLoading: isCreatingMultiple } = useCreateMultiplePnlMutation()
+  const { mutate: createMultiplePnl, isLoading: isCreatingMultiple } =
+    useCreateMultiplePnlMutation()
 
   const [multipleMode, setMultipleMode] = useState(false)
   const [selectedAccountIds, setSelectedAccountIds] = useState<string[]>([])
@@ -98,20 +100,32 @@ export function PnlFormDialog({
     e.preventDefault()
 
     try {
-      // Mode édition (pas encore supporté par les mutations, à faire plus tard)
+      // Mode édition
       if (entry) {
         const response = await fetch(`/api/pnl/${entry.id}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(formData),
+          body: JSON.stringify({
+            date: formData.date,
+            amount: formData.amount,
+            notes: formData.notes,
+          }),
         })
 
         if (!response.ok) {
           const data = await response.json()
-          throw new Error(data.message)
+          throw new Error(data.message || "Erreur lors de la modification")
         }
+
+        // Succès
+        toast({
+          title: "PnL modifié",
+          description: "L'entrée PnL a été modifiée avec succès",
+        })
+        onSuccess()
+        onOpenChange(false)
       }
       // Mode multiple
       else if (multipleMode && selectedAccountIds.length > 0) {
@@ -121,30 +135,34 @@ export function PnlFormDialog({
           amount: formData.amount,
           notes: formData.notes,
         })
+        onSuccess()
+        onOpenChange(false)
       }
       // Mode simple
       else {
         await createPnl(formData)
+        onSuccess()
+        onOpenChange(false)
       }
-
-      onSuccess()
-      onOpenChange(false)
     } catch (_error) {
-      // Les erreurs sont déjà gérées par les mutations
+      const error = _error instanceof Error ? _error : new Error("Erreur inconnue")
+      toast({
+        title: "Erreur",
+        description: error.message,
+        variant: "destructive",
+      })
       console.error(_error)
     }
   }
 
   const toggleAccountSelection = (accountId: string) => {
-    setSelectedAccountIds(prev =>
-      prev.includes(accountId)
-        ? prev.filter(id => id !== accountId)
-        : [...prev, accountId]
+    setSelectedAccountIds((prev) =>
+      prev.includes(accountId) ? prev.filter((id) => id !== accountId) : [...prev, accountId]
     )
   }
 
   const selectAllFiltered = () => {
-    setSelectedAccountIds(filteredAccounts.map(acc => acc.id))
+    setSelectedAccountIds(filteredAccounts.map((acc) => acc.id))
   }
 
   const deselectAll = () => {
@@ -152,25 +170,28 @@ export function PnlFormDialog({
   }
 
   // Get unique propfirms and account types
-  const uniquePropfirms = Array.from(new Set(accounts.map(acc => acc.propfirm)))
-  const uniqueAccountTypes = Array.from(new Set(accounts.map(acc => acc.accountType)))
+  const uniquePropfirms = Array.from(new Set(accounts.map((acc) => acc.propfirm)))
+  const uniqueAccountTypes = Array.from(new Set(accounts.map((acc) => acc.accountType)))
 
   // Filter accounts
-  const filteredAccounts = accounts.filter(account => {
+  const filteredAccounts = accounts.filter((account) => {
     if (filterPropfirm !== "all" && account.propfirm !== filterPropfirm) return false
     if (filterAccountType !== "all" && account.accountType !== filterAccountType) return false
     return true
   })
 
   // Group accounts by propfirm and type
-  const groupedAccounts = filteredAccounts.reduce((acc, account) => {
-    const key = `${account.propfirm}-${account.accountType}`
-    if (!acc[key]) {
-      acc[key] = []
-    }
-    acc[key].push(account)
-    return acc
-  }, {} as Record<string, PropfirmAccount[]>)
+  const groupedAccounts = filteredAccounts.reduce(
+    (acc, account) => {
+      const key = `${account.propfirm}-${account.accountType}`
+      if (!acc[key]) {
+        acc[key] = []
+      }
+      acc[key].push(account)
+      return acc
+    },
+    {} as Record<string, PropfirmAccount[]>
+  )
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("fr-FR", {
@@ -187,9 +208,7 @@ export function PnlFormDialog({
             {entry ? "Modifier le PnL" : "Ajouter un PnL"}
           </DialogTitle>
           <DialogDescription className="text-xs sm:text-sm">
-            {entry
-              ? "Modifiez l'entrée PnL"
-              : "Ajoutez une nouvelle entrée de profit ou perte"}
+            {entry ? "Modifiez l'entrée PnL" : "Ajoutez une nouvelle entrée de profit ou perte"}
           </DialogDescription>
         </DialogHeader>
 
@@ -222,7 +241,9 @@ export function PnlFormDialog({
             {/* Single account selector */}
             {!entry && !multipleMode && (
               <div className="grid gap-2">
-                <Label htmlFor="accountId" className="text-xs sm:text-sm">Compte *</Label>
+                <Label htmlFor="accountId" className="text-xs sm:text-sm">
+                  Compte *
+                </Label>
                 <Select
                   value={formData.accountId}
                   onValueChange={(value) => setFormData({ ...formData, accountId: value })}
@@ -272,14 +293,16 @@ export function PnlFormDialog({
                 {/* Filters */}
                 <div className="grid grid-cols-2 gap-2">
                   <div className="grid gap-1.5">
-                    <Label htmlFor="filterPropfirm" className="text-xs">Propfirm</Label>
+                    <Label htmlFor="filterPropfirm" className="text-xs">
+                      Propfirm
+                    </Label>
                     <Select value={filterPropfirm} onValueChange={setFilterPropfirm}>
                       <SelectTrigger id="filterPropfirm" className="h-9">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">Toutes</SelectItem>
-                        {uniquePropfirms.map(propfirm => (
+                        {uniquePropfirms.map((propfirm) => (
                           <SelectItem key={propfirm} value={propfirm}>
                             {propfirm}
                           </SelectItem>
@@ -288,14 +311,16 @@ export function PnlFormDialog({
                     </Select>
                   </div>
                   <div className="grid gap-1.5">
-                    <Label htmlFor="filterAccountType" className="text-xs">Type</Label>
+                    <Label htmlFor="filterAccountType" className="text-xs">
+                      Type
+                    </Label>
                     <Select value={filterAccountType} onValueChange={setFilterAccountType}>
                       <SelectTrigger id="filterAccountType" className="h-9">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">Tous</SelectItem>
-                        {uniqueAccountTypes.map(type => (
+                        {uniqueAccountTypes.map((type) => (
                           <SelectItem key={type} value={type}>
                             {type === "EVAL" ? "Évaluation" : type === "FUNDED" ? "Financé" : type}
                           </SelectItem>
@@ -308,9 +333,7 @@ export function PnlFormDialog({
                 {/* Account list */}
                 <div className="border border-zinc-200 dark:border-zinc-800 rounded-lg max-h-[200px] overflow-y-auto">
                   {filteredAccounts.length === 0 ? (
-                    <div className="p-4 text-center text-sm text-zinc-500">
-                      Aucun compte trouvé
-                    </div>
+                    <div className="p-4 text-center text-sm text-zinc-500">Aucun compte trouvé</div>
                   ) : (
                     <div className="divide-y divide-zinc-200 dark:divide-zinc-800">
                       {Object.entries(groupedAccounts).map(([groupKey, groupAccounts]) => {
@@ -320,24 +343,28 @@ export function PnlFormDialog({
                             <div className="px-3 py-2 bg-zinc-50 dark:bg-zinc-900 text-xs font-medium text-zinc-600 dark:text-zinc-400 sticky top-0">
                               {propfirm} - {accountType === "EVAL" ? "Évaluation" : "Financé"}
                             </div>
-                            {groupAccounts.map(account => (
+                            {groupAccounts.map((account) => (
                               <div
                                 key={account.id}
                                 className="flex items-center gap-3 px-3 py-2 hover:bg-zinc-50 dark:hover:bg-zinc-900 cursor-pointer"
                                 onClick={() => toggleAccountSelection(account.id)}
                               >
-                                <div className={`w-5 h-5 rounded border flex items-center justify-center ${
-                                  selectedAccountIds.includes(account.id)
-                                    ? "bg-zinc-900 dark:bg-zinc-50 border-zinc-900 dark:border-zinc-50"
-                                    : "border-zinc-300 dark:border-zinc-700"
-                                }`}>
+                                <div
+                                  className={`w-5 h-5 rounded border flex items-center justify-center ${
+                                    selectedAccountIds.includes(account.id)
+                                      ? "bg-zinc-900 dark:bg-zinc-50 border-zinc-900 dark:border-zinc-50"
+                                      : "border-zinc-300 dark:border-zinc-700"
+                                  }`}
+                                >
                                   {selectedAccountIds.includes(account.id) && (
                                     <Check className="h-3 w-3 text-white dark:text-zinc-900" />
                                   )}
                                 </div>
                                 <div className="flex-1">
                                   <p className="text-sm font-medium">{account.name}</p>
-                                  <p className="text-xs text-zinc-500">{formatCurrency(account.size)}</p>
+                                  <p className="text-xs text-zinc-500">
+                                    {formatCurrency(account.size)}
+                                  </p>
                                 </div>
                               </div>
                             ))}
@@ -361,8 +388,10 @@ export function PnlFormDialog({
               />
             </div>
 
-              <div className="grid gap-2">
-                <Label htmlFor="amount" className="text-xs sm:text-sm">Montant (USD) *</Label>
+            <div className="grid gap-2">
+              <Label htmlFor="amount" className="text-xs sm:text-sm">
+                Montant (USD) *
+              </Label>
               <Input
                 id="amount"
                 type="number"
@@ -378,7 +407,9 @@ export function PnlFormDialog({
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="notes" className="text-xs sm:text-sm">Notes</Label>
+              <Label htmlFor="notes" className="text-xs sm:text-sm">
+                Notes
+              </Label>
               <textarea
                 id="notes"
                 className="flex min-h-[80px] w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-800 dark:bg-zinc-950 dark:placeholder:text-zinc-400 dark:focus-visible:ring-zinc-300"
@@ -402,7 +433,13 @@ export function PnlFormDialog({
               type="submit"
               disabled={isLoading || (multipleMode && selectedAccountIds.length === 0)}
             >
-              {isLoading ? "En cours..." : entry ? "Mettre à jour" : multipleMode ? `Ajouter (${selectedAccountIds.length})` : "Ajouter"}
+              {isLoading
+                ? "En cours..."
+                : entry
+                  ? "Mettre à jour"
+                  : multipleMode
+                    ? `Ajouter (${selectedAccountIds.length})`
+                    : "Ajouter"}
             </Button>
           </DialogFooter>
         </form>
@@ -410,4 +447,3 @@ export function PnlFormDialog({
     </Dialog>
   )
 }
-
