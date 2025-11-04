@@ -35,6 +35,7 @@ interface WithdrawalRow {
   date: string
   amount: string
   notes: string
+  includeTax?: boolean // Pour TakeProfitTrader uniquement
 }
 
 interface BulkWithdrawalFormDialogProps {
@@ -54,7 +55,7 @@ export function BulkWithdrawalFormDialog({
   const [isLoading, setIsLoading] = useState(false)
 
   // Filtrer uniquement les comptes financés
-  const eligibleAccounts = accounts.filter(account => account.accountType === "FUNDED")
+  const eligibleAccounts = accounts.filter((account) => account.accountType === "FUNDED")
 
   // Initialiser avec une ligne vide
   const [rows, setRows] = useState<WithdrawalRow[]>([
@@ -64,6 +65,7 @@ export function BulkWithdrawalFormDialog({
       date: new Date().toISOString().split("T")[0],
       amount: "",
       notes: "",
+      includeTax: true, // Par défaut, le montant inclut les taxes
     },
   ])
 
@@ -76,6 +78,7 @@ export function BulkWithdrawalFormDialog({
         date: new Date().toISOString().split("T")[0],
         amount: "",
         notes: "",
+        includeTax: true, // Par défaut, le montant inclut les taxes
       },
     ])
   }
@@ -92,12 +95,30 @@ export function BulkWithdrawalFormDialog({
     setRows(rows.filter((row) => row.id !== id))
   }
 
-  const updateRow = (id: string, field: keyof WithdrawalRow, value: string) => {
-    setRows(
-      rows.map((row) =>
-        row.id === id ? { ...row, [field]: value } : row
-      )
-    )
+  const updateRow = (id: string, field: keyof WithdrawalRow, value: string | boolean) => {
+    setRows(rows.map((row) => (row.id === id ? { ...row, [field]: value } : row)))
+  }
+
+  // Fonction pour calculer le montant brut à enregistrer
+  const calculateGrossAmount = (
+    amount: string,
+    propfirm: string,
+    includeTaxes: boolean
+  ): number => {
+    const amountNum = parseFloat(amount)
+    if (isNaN(amountNum) || amountNum <= 0) return amountNum
+
+    // Pour TakeProfitTrader uniquement
+    if (propfirm === "TAKEPROFITTRADER") {
+      // Si includeTaxes = false, le montant entré est net, on doit convertir en brut
+      if (!includeTaxes) {
+        // net = brut * 0.8, donc brut = net / 0.8
+        return amountNum / 0.8
+      }
+      // Si includeTaxes = true, le montant entré est déjà brut
+    }
+    // Pour les autres propfirms, pas de conversion
+    return amountNum
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -106,9 +127,7 @@ export function BulkWithdrawalFormDialog({
 
     try {
       // Valider que toutes les lignes ont un compte, une date et un montant
-      const invalidRows = rows.filter(
-        (row) => !row.accountId || !row.date || !row.amount
-      )
+      const invalidRows = rows.filter((row) => !row.accountId || !row.date || !row.amount)
 
       if (invalidRows.length > 0) {
         toast({
@@ -122,13 +141,21 @@ export function BulkWithdrawalFormDialog({
 
       // Créer tous les retraits
       const promises = rows.map(async (row) => {
+        // Trouver le compte pour obtenir la propfirm
+        const account = eligibleAccounts.find((acc) => acc.id === row.accountId)
+        const propfirm = account?.propfirm || ""
+        const includeTaxes = row.includeTax ?? true // Par défaut true
+
+        // Calculer le montant brut à enregistrer
+        const grossAmount = calculateGrossAmount(row.amount, propfirm, includeTaxes)
+
         const res = await fetch("/api/withdrawals", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             accountId: row.accountId,
             date: row.date,
-            amount: parseFloat(row.amount),
+            amount: grossAmount,
             notes: row.notes || undefined,
           }),
         })
@@ -156,6 +183,7 @@ export function BulkWithdrawalFormDialog({
           date: new Date().toISOString().split("T")[0],
           amount: "",
           notes: "",
+          includeTax: true,
         },
       ])
 
@@ -177,9 +205,7 @@ export function BulkWithdrawalFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[95vw] sm:max-w-5xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
-          <DialogTitle className="text-lg sm:text-xl">
-            Ajout groupé de retraits
-          </DialogTitle>
+          <DialogTitle className="text-lg sm:text-xl">Ajout groupé de retraits</DialogTitle>
           <DialogDescription className="text-xs sm:text-sm">
             Ajoutez plusieurs retraits pour différents comptes financés en une seule fois
           </DialogDescription>
@@ -257,6 +283,50 @@ export function BulkWithdrawalFormDialog({
                       required
                       className="text-xs"
                     />
+                    {/* Option pour TakeProfitTrader : inclure ou non les 20% */}
+                    {(() => {
+                      const account = eligibleAccounts.find((acc) => acc.id === row.accountId)
+                      if (account?.propfirm === "TAKEPROFITTRADER") {
+                        const amountNum = parseFloat(row.amount) || 0
+                        const includeTaxes = row.includeTax ?? true
+                        const netAmount = includeTaxes ? amountNum * 0.8 : amountNum
+                        const grossAmount = includeTaxes ? amountNum : amountNum / 0.8
+
+                        return (
+                          <div className="space-y-1.5 p-2 bg-zinc-100 dark:bg-zinc-800 rounded border border-zinc-200 dark:border-zinc-700">
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="checkbox"
+                                id={`includeTax-${row.id}`}
+                                checked={includeTaxes}
+                                onChange={(e) => updateRow(row.id, "includeTax", e.target.checked)}
+                                className="w-3.5 h-3.5 rounded border-zinc-300 dark:border-zinc-700"
+                              />
+                              <Label
+                                htmlFor={`includeTax-${row.id}`}
+                                className="text-xs font-normal cursor-pointer"
+                              >
+                                Montant inclut les 20%
+                              </Label>
+                            </div>
+                            {row.amount && !isNaN(amountNum) && amountNum > 0 && (
+                              <div className="text-xs text-zinc-600 dark:text-zinc-400 pl-5">
+                                {includeTaxes ? (
+                                  <>
+                                    Brut: ${grossAmount.toFixed(2)} | Net: ${netAmount.toFixed(2)}
+                                  </>
+                                ) : (
+                                  <>
+                                    Net: ${netAmount.toFixed(2)} | Brut: ${grossAmount.toFixed(2)}
+                                  </>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        )
+                      }
+                      return null
+                    })()}
                   </div>
                 </div>
 
@@ -334,16 +404,68 @@ export function BulkWithdrawalFormDialog({
                             className="w-full min-w-[140px] text-sm"
                           />
                         </td>
-                        <td className="px-4 py-2 whitespace-nowrap">
-                          <Input
-                            type="number"
-                            step="0.01"
-                            value={row.amount}
-                            onChange={(e) => updateRow(row.id, "amount", e.target.value)}
-                            placeholder="0.00"
-                            required
-                            className="w-full min-w-[110px] text-sm"
-                          />
+                        <td className="px-4 py-2">
+                          <div className="space-y-1.5">
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={row.amount}
+                              onChange={(e) => updateRow(row.id, "amount", e.target.value)}
+                              placeholder="0.00"
+                              required
+                              className="w-full min-w-[110px] text-sm"
+                            />
+                            {/* Option pour TakeProfitTrader : inclure ou non les 20% */}
+                            {(() => {
+                              const account = eligibleAccounts.find(
+                                (acc) => acc.id === row.accountId
+                              )
+                              if (account?.propfirm === "TAKEPROFITTRADER") {
+                                const amountNum = parseFloat(row.amount) || 0
+                                const includeTaxes = row.includeTax ?? true
+                                const netAmount = includeTaxes ? amountNum * 0.8 : amountNum
+                                const grossAmount = includeTaxes ? amountNum : amountNum / 0.8
+
+                                return (
+                                  <div className="space-y-1">
+                                    <div className="flex items-center gap-1.5">
+                                      <input
+                                        type="checkbox"
+                                        id={`includeTax-${row.id}`}
+                                        checked={includeTaxes}
+                                        onChange={(e) =>
+                                          updateRow(row.id, "includeTax", e.target.checked)
+                                        }
+                                        className="w-3.5 h-3.5 rounded border-zinc-300 dark:border-zinc-700"
+                                      />
+                                      <Label
+                                        htmlFor={`includeTax-${row.id}`}
+                                        className="text-xs font-normal cursor-pointer"
+                                      >
+                                        Inclut 20%
+                                      </Label>
+                                    </div>
+                                    {row.amount && !isNaN(amountNum) && amountNum > 0 && (
+                                      <div className="text-xs text-zinc-500 dark:text-zinc-400 pl-5">
+                                        {includeTaxes ? (
+                                          <>
+                                            Brut: ${grossAmount.toFixed(2)} | Net: $
+                                            {netAmount.toFixed(2)}
+                                          </>
+                                        ) : (
+                                          <>
+                                            Net: ${netAmount.toFixed(2)} | Brut: $
+                                            {grossAmount.toFixed(2)}
+                                          </>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                )
+                              }
+                              return null
+                            })()}
+                          </div>
                         </td>
                         <td className="px-4 py-2">
                           <Input
@@ -416,7 +538,9 @@ export function BulkWithdrawalFormDialog({
               disabled={isLoading || eligibleAccounts.length === 0}
               className="w-full sm:w-auto text-sm"
             >
-              {isLoading ? "Enregistrement..." : `Ajouter ${rows.length} retrait${rows.length > 1 ? "s" : ""}`}
+              {isLoading
+                ? "Enregistrement..."
+                : `Ajouter ${rows.length} retrait${rows.length > 1 ? "s" : ""}`}
             </Button>
           </DialogFooter>
         </form>
@@ -424,4 +548,3 @@ export function BulkWithdrawalFormDialog({
     </Dialog>
   )
 }
-
