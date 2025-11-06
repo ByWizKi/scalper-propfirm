@@ -118,18 +118,21 @@ export default function PnlPage() {
     }).format(amount)
   }
 
-  // Filtrer les entrées selon l'option "Masquer comptes d'évaluation"
-  const filteredEntries = hideEvalAccounts
-    ? entries.filter((entry) => {
-        const account = accounts.find((acc) => acc.id === entry.accountId)
-        return account?.accountType !== "EVAL"
-      })
-    : entries
-
-  const totalPnl = filteredEntries.reduce((sum, entry) => sum + entry.amount, 0)
-
   // Filtrer uniquement les comptes ACTIVE avant de les passer aux dialogs
   const eligibleAccounts = accounts.filter((account) => account.status === "ACTIVE")
+
+  // Filtrer les entrées selon l'option "Masquer comptes d'évaluation" et uniquement les comptes ACTIVE
+  const filteredEntries = entries.filter((entry) => {
+    const account = accounts.find((acc) => acc.id === entry.accountId)
+    // Uniquement les comptes ACTIVE
+    if (account?.status !== "ACTIVE") return false
+    // Optionnel : masquer les comptes d'évaluation si l'option est activée
+    if (hideEvalAccounts && account?.accountType === "EVAL") return false
+    return true
+  })
+
+  // Calculer le total PNL uniquement sur les comptes ACTIVE
+  const totalPnl = filteredEntries.reduce((sum, entry) => sum + entry.amount, 0)
 
   // Regrouper les entrées par compte
   const entriesByAccount = filteredEntries.reduce(
