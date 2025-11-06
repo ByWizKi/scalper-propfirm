@@ -468,9 +468,11 @@ export default function AccountDetailPage() {
               <Button
                 size="sm"
                 onClick={() => setPnlDialogOpen(true)}
-                disabled={account.status === "FAILED"}
+                disabled={account.status !== "ACTIVE"}
                 title={
-                  account.status === "FAILED" ? "Impossible d'ajouter un PNL à un compte cramé" : ""
+                  account.status !== "ACTIVE"
+                    ? "Impossible d'ajouter un PNL à un compte non actif"
+                    : ""
                 }
               >
                 Ajouter

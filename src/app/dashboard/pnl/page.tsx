@@ -128,8 +128,8 @@ export default function PnlPage() {
 
   const totalPnl = filteredEntries.reduce((sum, entry) => sum + entry.amount, 0)
 
-  // Filtrer les comptes FAILED (cramés) avant de les passer aux dialogs
-  const eligibleAccounts = accounts.filter((account) => account.status !== "FAILED")
+  // Filtrer uniquement les comptes ACTIVE avant de les passer aux dialogs
+  const eligibleAccounts = accounts.filter((account) => account.status === "ACTIVE")
 
   // Regrouper les entrées par compte
   const entriesByAccount = filteredEntries.reduce(

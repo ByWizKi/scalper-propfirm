@@ -174,10 +174,10 @@ export function PnlFormDialog({
   const uniquePropfirms = Array.from(new Set(accounts.map((acc) => acc.propfirm)))
   const uniqueAccountTypes = Array.from(new Set(accounts.map((acc) => acc.accountType)))
 
-  // Filter accounts - exclure les comptes avec statut FAILED
+  // Filter accounts - uniquement les comptes ACTIVE
   const filteredAccounts = accounts.filter((account) => {
-    // Exclure les comptes avec statut FAILED
-    if (account.status === "FAILED") return false
+    // Uniquement les comptes avec statut ACTIVE
+    if (account.status !== "ACTIVE") return false
     if (filterPropfirm !== "all" && account.propfirm !== filterPropfirm) return false
     if (filterAccountType !== "all" && account.accountType !== filterAccountType) return false
     return true

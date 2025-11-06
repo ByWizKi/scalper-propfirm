@@ -54,8 +54,8 @@ export function BulkPnlFormDialog({
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
 
-  // Filtrer les comptes FAILED (cramés)
-  const eligibleAccounts = accounts.filter((account) => account.status !== "FAILED")
+  // Filtrer uniquement les comptes ACTIVE
+  const eligibleAccounts = accounts.filter((account) => account.status === "ACTIVE")
 
   // Initialiser avec une ligne vide
   const [rows, setRows] = useState<PnlRow[]>([
