@@ -27,6 +27,7 @@ interface PropfirmAccount {
   propfirm: string
   accountType: string
   size: number
+  status?: string
 }
 
 export default function PnlPage() {
@@ -126,6 +127,9 @@ export default function PnlPage() {
     : entries
 
   const totalPnl = filteredEntries.reduce((sum, entry) => sum + entry.amount, 0)
+
+  // Filtrer les comptes FAILED (cramés) avant de les passer aux dialogs
+  const eligibleAccounts = accounts.filter((account) => account.status !== "FAILED")
 
   // Regrouper les entrées par compte
   const entriesByAccount = filteredEntries.reduce(
@@ -348,14 +352,14 @@ export default function PnlPage() {
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         entry={selectedEntry}
-        accounts={accounts}
+        accounts={eligibleAccounts}
         onSuccess={fetchData}
       />
 
       <BulkPnlFormDialog
         open={bulkDialogOpen}
         onOpenChange={setBulkDialogOpen}
-        accounts={accounts}
+        accounts={eligibleAccounts}
         onSuccess={fetchData}
       />
     </div>

@@ -465,7 +465,14 @@ export default function AccountDetailPage() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle>Historique PnL</CardTitle>
-              <Button size="sm" onClick={() => setPnlDialogOpen(true)}>
+              <Button
+                size="sm"
+                onClick={() => setPnlDialogOpen(true)}
+                disabled={account.status === "FAILED"}
+                title={
+                  account.status === "FAILED" ? "Impossible d'ajouter un PNL à un compte cramé" : ""
+                }
+              >
                 Ajouter
               </Button>
             </div>
@@ -728,6 +735,7 @@ export default function AccountDetailPage() {
             propfirm: account.propfirm,
             accountType: account.accountType,
             size: account.size,
+            status: account.status,
           },
         ]}
         onSuccess={() => {

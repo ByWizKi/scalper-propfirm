@@ -27,6 +27,7 @@ interface Account {
   name: string
   propfirm: string
   accountType: string
+  status?: string
 }
 
 interface PnlRow {
@@ -52,6 +53,9 @@ export function BulkPnlFormDialog({
 }: BulkPnlFormDialogProps) {
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
+
+  // Filtrer les comptes FAILED (cramés)
+  const eligibleAccounts = accounts.filter((account) => account.status !== "FAILED")
 
   // Initialiser avec une ligne vide
   const [rows, setRows] = useState<PnlRow[]>([
@@ -90,11 +94,7 @@ export function BulkPnlFormDialog({
   }
 
   const updateRow = (id: string, field: keyof PnlRow, value: string) => {
-    setRows(
-      rows.map((row) =>
-        row.id === id ? { ...row, [field]: value } : row
-      )
-    )
+    setRows(rows.map((row) => (row.id === id ? { ...row, [field]: value } : row)))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -103,9 +103,7 @@ export function BulkPnlFormDialog({
 
     try {
       // Valider que toutes les lignes ont un compte, une date et un montant
-      const invalidRows = rows.filter(
-        (row) => !row.accountId || !row.date || !row.amount
-      )
+      const invalidRows = rows.filter((row) => !row.accountId || !row.date || !row.amount)
 
       if (invalidRows.length > 0) {
         toast({
@@ -174,9 +172,7 @@ export function BulkPnlFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[95vw] sm:max-w-5xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
-          <DialogTitle className="text-lg sm:text-xl">
-            Ajout groupé de PnL
-          </DialogTitle>
+          <DialogTitle className="text-lg sm:text-xl">Ajout groupé de PnL</DialogTitle>
           <DialogDescription className="text-xs sm:text-sm">
             Ajoutez plusieurs entrées PnL pour différents comptes en une seule fois
           </DialogDescription>
@@ -217,11 +213,17 @@ export function BulkPnlFormDialog({
                       <SelectValue placeholder="Sélectionner un compte" />
                     </SelectTrigger>
                     <SelectContent>
-                      {accounts.map((account) => (
-                        <SelectItem key={account.id} value={account.id}>
-                          <span className="text-xs">{account.name}</span>
+                      {eligibleAccounts.length > 0 ? (
+                        eligibleAccounts.map((account) => (
+                          <SelectItem key={account.id} value={account.id}>
+                            <span className="text-xs">{account.name}</span>
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="none" disabled>
+                          Aucun compte disponible
                         </SelectItem>
-                      ))}
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
@@ -379,9 +381,11 @@ export function BulkPnlFormDialog({
             </div>
             <div className="text-xs sm:text-sm font-medium">
               Total:{" "}
-              <span className={`${rows.reduce((sum, row) => sum + (parseFloat(row.amount) || 0), 0) >= 0 ? "text-green-600" : "text-red-600"}`}>
-                {rows.reduce((sum, row) => sum + (parseFloat(row.amount) || 0), 0) >= 0 ? "+" : ""}
-                ${rows.reduce((sum, row) => sum + (parseFloat(row.amount) || 0), 0).toFixed(2)}
+              <span
+                className={`${rows.reduce((sum, row) => sum + (parseFloat(row.amount) || 0), 0) >= 0 ? "text-green-600" : "text-red-600"}`}
+              >
+                {rows.reduce((sum, row) => sum + (parseFloat(row.amount) || 0), 0) >= 0 ? "+" : ""}$
+                {rows.reduce((sum, row) => sum + (parseFloat(row.amount) || 0), 0).toFixed(2)}
               </span>
             </div>
           </div>
@@ -396,12 +400,10 @@ export function BulkPnlFormDialog({
             >
               Annuler
             </Button>
-            <Button
-              type="submit"
-              disabled={isLoading}
-              className="w-full sm:w-auto text-sm"
-            >
-              {isLoading ? "Enregistrement..." : `Ajouter ${rows.length} entrée${rows.length > 1 ? "s" : ""}`}
+            <Button type="submit" disabled={isLoading} className="w-full sm:w-auto text-sm">
+              {isLoading
+                ? "Enregistrement..."
+                : `Ajouter ${rows.length} entrée${rows.length > 1 ? "s" : ""}`}
             </Button>
           </DialogFooter>
         </form>
@@ -409,4 +411,3 @@ export function BulkPnlFormDialog({
     </Dialog>
   )
 }
-
