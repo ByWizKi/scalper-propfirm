@@ -3,9 +3,22 @@
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { StatCard } from "@/components/stat-card"
 import { PnlFormDialog } from "@/components/pnl-form-dialog"
 import { BulkPnlFormDialog } from "@/components/bulk-pnl-form-dialog"
-import { Plus, Edit, Trash2, TrendingUp, TrendingDown, Table } from "lucide-react"
+import { MonthlyCalendar } from "@/components/monthly-calendar"
+import {
+  Plus,
+  Edit,
+  Trash2,
+  TrendingUp,
+  TrendingDown,
+  Table,
+  ChevronDown,
+  Activity,
+  BarChart2,
+  Target,
+} from "lucide-react"
 import { toast } from "@/hooks/use-toast"
 import { format } from "date-fns"
 import { fr } from "date-fns/locale"
@@ -38,6 +51,8 @@ export default function PnlPage() {
   const [bulkDialogOpen, setBulkDialogOpen] = useState(false)
   const [selectedEntry, setSelectedEntry] = useState<PnlEntry | null>(null)
   const [hideEvalAccounts, setHideEvalAccounts] = useState(false)
+  const [calendarCollapsed, setCalendarCollapsed] = useState(false)
+  const [collapsedAccounts, setCollapsedAccounts] = useState<string[]>([])
 
   useEffect(() => {
     fetchData()
@@ -121,6 +136,42 @@ export default function PnlPage() {
   // Filtrer uniquement les comptes ACTIVE avant de les passer aux dialogs
   const eligibleAccounts = accounts.filter((account) => account.status === "ACTIVE")
 
+  const toggleAccountCollapse = (accountId: string) => {
+    setCollapsedAccounts((prev) =>
+      prev.includes(accountId) ? prev.filter((id) => id !== accountId) : [...prev, accountId]
+    )
+  }
+
+  const calendarEntries = entries.reduce<PnlEntry[]>((acc, entry) => {
+    const account = accounts.find((accAccount) => accAccount.id === entry.accountId)
+    if (!account) return acc
+
+    const isFundedBufferEntry =
+      account.accountType === "FUNDED" && entry.notes?.toLowerCase().includes("buffer")
+    if (isFundedBufferEntry) {
+      return acc
+    }
+
+    if (account.status !== "ACTIVE") {
+      return acc
+    }
+
+    if (hideEvalAccounts && account.accountType === "EVAL") {
+      return acc
+    }
+
+    const enrichedNotes = entry.notes
+      ? `[${entry.account.name}] ${entry.notes}`
+      : `[${entry.account.name}]`
+
+    acc.push({
+      ...entry,
+      notes: enrichedNotes,
+    })
+
+    return acc
+  }, [])
+
   // Filtrer les entrées selon l'option "Masquer comptes d'évaluation" et uniquement les comptes ACTIVE
   const filteredEntries = entries.filter((entry) => {
     const account = accounts.find((acc) => acc.id === entry.accountId)
@@ -157,6 +208,38 @@ export default function PnlPage() {
     account.entries.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
   })
 
+  const uniqueTradingDays = filteredEntries.reduce((set, entry) => {
+    set.add(format(new Date(entry.date), "yyyy-MM-dd"))
+    return set
+  }, new Set<string>())
+
+  const averageDailyPnl = uniqueTradingDays.size > 0 ? totalPnl / uniqueTradingDays.size : 0
+
+  const positiveEntriesCount = filteredEntries.filter((entry) => entry.amount >= 0).length
+  const successRate =
+    filteredEntries.length > 0
+      ? Math.round((positiveEntriesCount / filteredEntries.length) * 100)
+      : 0
+
+  const dailyAggregates = filteredEntries.reduce(
+    (acc, entry) => {
+      const key = format(new Date(entry.date), "yyyy-MM-dd")
+      acc[key] = (acc[key] || 0) + entry.amount
+      return acc
+    },
+    {} as Record<string, number>
+  )
+
+  const bestDayKey = Object.keys(dailyAggregates).reduce((best, key) => {
+    if (!best) return key
+    return dailyAggregates[key] > dailyAggregates[best] ? key : best
+  }, "")
+
+  const bestDayAmount = bestDayKey ? dailyAggregates[bestDayKey] : 0
+  const bestDayLabel = bestDayKey ? format(new Date(bestDayKey), "d MMM", { locale: fr }) : "—"
+
+  const accountsWithEntries = Object.keys(entriesByAccount).length
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -169,186 +252,365 @@ export default function PnlPage() {
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-zinc-900 dark:text-zinc-50">PnL</h1>
-          <p className="text-sm sm:text-base text-zinc-600 dark:text-zinc-400 mt-1 sm:mt-2">
-            Suivez vos profits et pertes
-          </p>
+    <div className="space-y-6 sm:space-y-8 p-4 sm:p-6 lg:p-8">
+      <section className="space-y-6">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div className="space-y-2">
+            <h1 className="text-3xl sm:text-4xl font-bold text-zinc-900 dark:text-zinc-50">
+              Suivi des performances
+            </h1>
+            <p className="text-sm sm:text-base text-zinc-600 dark:text-zinc-300 max-w-3xl">
+              Consultez vos résultats consolidés, surveillez la répartition des gains et des pertes,
+              puis accédez rapidement aux outils d&apos;ajout ou au calendrier détaillé.
+            </p>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
+            <Button
+              onClick={handleAdd}
+              disabled={eligibleAccounts.length === 0}
+              className="w-full sm:w-auto flex items-center gap-2 text-xs sm:text-sm md:text-base"
+            >
+              <Plus className="h-4 w-4" />
+              <span className="hidden sm:inline whitespace-nowrap">Ajouter un PnL</span>
+              <span className="sm:hidden whitespace-nowrap">Ajouter</span>
+            </Button>
+            <Button
+              onClick={handleBulkAdd}
+              disabled={eligibleAccounts.length === 0}
+              variant="outline"
+              className="w-full sm:w-auto flex items-center gap-2 text-xs sm:text-sm md:text-base"
+            >
+              <Table className="h-4 w-4" />
+              <span className="hidden sm:inline whitespace-nowrap">Ajout groupé</span>
+              <span className="sm:hidden whitespace-nowrap">Groupe</span>
+            </Button>
+          </div>
         </div>
-        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-          <Button onClick={handleAdd} disabled={accounts.length === 0} className="w-full sm:w-auto">
-            <Plus className="h-4 w-4 mr-2" />
-            <span>Ajouter un PnL</span>
-          </Button>
-          <Button
-            onClick={handleBulkAdd}
-            disabled={accounts.length === 0}
-            variant="outline"
-            className="w-full sm:w-auto"
-          >
-            <Table className="h-4 w-4 mr-2" />
-            <span>Ajout groupé</span>
-          </Button>
-        </div>
-      </div>
 
-      {/* Filtre pour masquer les comptes d'évaluation */}
-      {accounts.length > 0 && (
-        <div className="flex items-center gap-2 mb-4 sm:mb-6 px-1">
-          <input
-            type="checkbox"
-            id="hide-eval"
-            checked={hideEvalAccounts}
-            onChange={(e) => setHideEvalAccounts(e.target.checked)}
-            className="h-4 w-4 rounded border-zinc-300 text-blue-600 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-900 cursor-pointer"
+        <div className="grid gap-4 sm:gap-6 md:grid-cols-2 xl:grid-cols-4">
+          <StatCard
+            title="PnL cumulé"
+            value={formatCurrency(totalPnl)}
+            icon={Activity}
+            variant={totalPnl >= 0 ? "success" : "danger"}
+            description={`${accountsWithEntries} compte${accountsWithEntries > 1 ? "s" : ""} suivi${accountsWithEntries > 1 ? "s" : ""}`}
           />
+          <StatCard
+            title="Moyenne par entrée"
+            value={formatCurrency(averageDailyPnl)}
+            icon={BarChart2}
+            variant={averageDailyPnl >= 0 ? "success" : "danger"}
+            description={`${uniqueTradingDays.size} jour${uniqueTradingDays.size > 1 ? "s" : ""} actifs`}
+          />
+          <StatCard
+            title="Taux de réussite"
+            value={`${successRate}%`}
+            icon={TrendingUp}
+            variant={successRate >= 50 ? "success" : "danger"}
+            description={`${positiveEntriesCount} entrée${positiveEntriesCount > 1 ? "s" : ""} gagnante${positiveEntriesCount > 1 ? "s" : ""}`}
+          />
+          <StatCard
+            title="Meilleur jour"
+            value={bestDayKey ? formatCurrency(bestDayAmount) : "—"}
+            icon={Target}
+            variant={bestDayAmount >= 0 ? "success" : "danger"}
+            description={bestDayKey ? `Le ${bestDayLabel}` : "En attente de données"}
+          />
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-zinc-200/70 dark:border-zinc-800/70 bg-white/85 dark:bg-zinc-950/70 backdrop-blur-sm p-4 sm:p-5 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <h2 className="text-base sm:text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+              Paramètres d&apos;affichage
+            </h2>
+            <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-300 max-w-2xl">
+              Les vues PnL affichent uniquement les comptes actifs. Activez l&apos;option pour
+              inclure les comptes d&apos;évaluation dans les statistiques, le calendrier et les
+              tableaux détaillés.
+            </p>
+          </div>
           <label
-            htmlFor="hide-eval"
-            className="text-xs sm:text-sm text-zinc-700 dark:text-zinc-300 cursor-pointer select-none"
+            htmlFor="hide-eval-toggle"
+            className="flex items-center gap-3 text-xs sm:text-sm text-zinc-700 dark:text-zinc-300 cursor-pointer select-none"
           >
-            Masquer les PnL des comptes d&apos;évaluation
+            <span>Inclure les comptes d&apos;évaluation</span>
+            <span className="relative inline-flex h-6 w-11 items-center">
+              <input
+                id="hide-eval-toggle"
+                type="checkbox"
+                checked={!hideEvalAccounts}
+                onChange={(e) => setHideEvalAccounts(!e.target.checked)}
+                className="sr-only peer"
+              />
+              <span className="absolute inset-0 rounded-full bg-zinc-300 transition-colors peer-checked:bg-blue-600 dark:bg-zinc-700 dark:peer-checked:bg-blue-500" />
+              <span className="absolute left-1 top-1 h-4 w-4 rounded-full bg-white shadow-sm transition-transform peer-checked:translate-x-5" />
+            </span>
           </label>
         </div>
-      )}
+      </section>
 
-      {accounts.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">
-              Vous devez d&apos;abord créer un compte avant d&apos;ajouter des entrées PnL
+      <section className="rounded-2xl border border-zinc-200/70 dark:border-zinc-800/70 bg-white/90 dark:bg-zinc-950/90 shadow-sm">
+        <div className="px-5 sm:px-6 py-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between gap-4">
+          <div className="space-y-1">
+            <h2 className="text-base sm:text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+              Calendrier PnL — Comptes actifs
+            </h2>
+            <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400">
+              Les comptes financés excluent automatiquement le PnL attribué au buffer. Utilisez les
+              paramètres du tableau de bord pour inclure ou non les comptes d&apos;évaluation.
             </p>
-          </CardContent>
-        </Card>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-xs sm:text-sm flex items-center gap-1"
+            onClick={() => setCalendarCollapsed((prev) => !prev)}
+          >
+            <ChevronDown
+              className={`h-4 w-4 transition-transform ${calendarCollapsed ? "-rotate-90" : "rotate-0"}`}
+            />
+            {calendarCollapsed ? "Déplier" : "Replier"}
+          </Button>
+        </div>
+        {!calendarCollapsed && (
+          <div className="p-4 sm:p-6">
+            <MonthlyCalendar pnlEntries={calendarEntries} />
+          </div>
+        )}
+      </section>
+
+      {eligibleAccounts.length === 0 ? (
+        <div className="rounded-3xl border-2 border-dashed border-zinc-200 dark:border-zinc-800 bg-white/60 dark:bg-zinc-950/60 p-10 text-center">
+          <p className="text-sm sm:text-base text-zinc-600 dark:text-zinc-300 max-w-md mx-auto">
+            Créez d&apos;abord un compte de prop firm pour commencer à enregistrer vos performances.
+          </p>
+        </div>
+      ) : filteredEntries.length === 0 ? (
+        <div className="rounded-3xl border border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-950/70 p-10 text-center space-y-4">
+          <TrendingUp className="mx-auto h-12 w-12 text-zinc-400" />
+          <div className="space-y-2">
+            <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+              Aucune entrée PnL disponible
+            </h3>
+            <p className="text-sm text-zinc-600 dark:text-zinc-400 max-w-md mx-auto">
+              Enregistrez votre première journée de trading pour alimenter les statistiques et le
+              calendrier.
+            </p>
+          </div>
+          <Button onClick={handleAdd} className="bg-zinc-900 text-white hover:bg-zinc-800">
+            <Plus className="h-4 w-4 mr-2" />
+            Ajouter un PnL
+          </Button>
+        </div>
       ) : (
-        <>
-          <Card className="mb-4 sm:mb-6">
-            <CardContent className="pt-4 sm:pt-6">
-              <div className="flex items-center justify-between gap-3">
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 mb-1">
-                    PnL Total
-                  </p>
-                  <p
-                    className={`text-2xl sm:text-3xl font-bold truncate ${totalPnl >= 0 ? "text-green-600" : "text-red-600"}`}
-                  >
-                    {formatCurrency(totalPnl)}
-                  </p>
-                </div>
-                {totalPnl >= 0 ? (
-                  <TrendingUp className="h-8 w-8 sm:h-12 sm:w-12 text-green-600 flex-shrink-0" />
-                ) : (
-                  <TrendingDown className="h-8 w-8 sm:h-12 sm:w-12 text-red-600 flex-shrink-0" />
-                )}
-              </div>
-            </CardContent>
-          </Card>
+        <div className="space-y-4 sm:space-y-6">
+          {Object.entries(entriesByAccount).map(([accountId, accountData]) => {
+            const isCollapsed = collapsedAccounts.includes(accountId)
+            const isPositive = accountData.total >= 0
+            const latestEntry = accountData.entries[0]
+            const accountPositiveTotal = accountData.entries.reduce(
+              (sum, entry) => (entry.amount > 0 ? sum + entry.amount : sum),
+              0
+            )
+            const accountNegativeTotal = accountData.entries.reduce(
+              (sum, entry) => (entry.amount < 0 ? sum + entry.amount : sum),
+              0
+            )
+            const accountAverage =
+              accountData.entries.length > 0 ? accountData.total / accountData.entries.length : 0
+            const accountSuccess =
+              accountData.entries.length > 0
+                ? Math.round(
+                    (accountData.entries.filter((entry) => entry.amount >= 0).length /
+                      accountData.entries.length) *
+                      100
+                  )
+                : 0
 
-          {entries.length === 0 ? (
-            <Card>
-              <CardContent className="py-12 text-center">
-                <TrendingUp className="h-12 w-12 text-zinc-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium mb-2">Aucune entrée PnL</h3>
-                <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4">
-                  Commencez par ajouter votre première entrée
-                </p>
-                <Button onClick={handleAdd}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Ajouter un PnL
-                </Button>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="space-y-3 sm:space-y-4">
-              {Object.entries(entriesByAccount).map(([accountId, accountData]) => (
-                <Card key={accountId}>
-                  <CardContent className="p-0">
-                    {/* En-tête du compte */}
-                    <div className="flex items-center justify-between gap-3 p-3 sm:p-4 bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800">
-                      <div className="min-w-0 flex-1">
-                        <h3 className="font-semibold text-base sm:text-lg truncate">
-                          {accountData.accountName}
-                        </h3>
-                        <p className="text-xs sm:text-sm text-zinc-500">
-                          {accountData.entries.length} entrée
-                          {accountData.entries.length > 1 ? "s" : ""}
-                        </p>
-                      </div>
-                      <div className="text-right min-w-0">
-                        <p className="text-[10px] sm:text-xs text-zinc-500 mb-1">Total</p>
-                        <p
-                          className={`text-base sm:text-xl font-bold truncate ${accountData.total >= 0 ? "text-green-600" : "text-red-600"}`}
-                        >
-                          {accountData.total >= 0 ? "+" : ""}
-                          {formatCurrency(accountData.total)}
-                        </p>
-                      </div>
-                    </div>
+            const lastEntryLabel = latestEntry
+              ? format(new Date(latestEntry.date), "d MMM yyyy", { locale: fr })
+              : "—"
 
-                    {/* Entrées PnL du compte */}
-                    <div className="divide-y divide-zinc-200 dark:divide-zinc-800">
-                      {accountData.entries.map((entry) => (
-                        <div
-                          key={entry.id}
-                          className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 sm:p-4 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors"
-                        >
-                          <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
-                            <div
-                              className={`p-1.5 sm:p-2 rounded-lg flex-shrink-0 ${entry.amount >= 0 ? "bg-green-100 dark:bg-green-900" : "bg-red-100 dark:bg-red-900"}`}
-                            >
-                              {entry.amount >= 0 ? (
-                                <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-600 dark:text-green-400" />
-                              ) : (
-                                <TrendingDown className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-red-600 dark:text-red-400" />
-                              )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-xs sm:text-sm text-zinc-500 truncate">
-                                {format(new Date(entry.date), "d MMMM yyyy", { locale: fr })}
-                              </p>
-                              {entry.notes && (
-                                <p className="text-[10px] sm:text-xs text-zinc-500 mt-1 line-clamp-1">
-                                  {entry.notes}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                          <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-4">
-                            <span
-                              className={`text-base sm:text-lg font-bold truncate ${entry.amount >= 0 ? "text-green-600" : "text-red-600"}`}
-                            >
-                              {entry.amount >= 0 ? "+" : ""}
-                              {formatCurrency(entry.amount)}
-                            </span>
-                            <div className="flex gap-1 flex-shrink-0">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8"
-                                onClick={() => handleEdit(entry)}
-                              >
-                                <Edit className="h-3.5 w-3.5" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8"
-                                onClick={() => handleDelete(entry.id)}
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </Button>
-                            </div>
+            return (
+              <Card key={accountId} className="border-none bg-transparent shadow-none">
+                <CardContent className="p-0">
+                  <div className="overflow-hidden rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 bg-white/90 dark:bg-zinc-950/80 shadow-sm">
+                    <div
+                      className={`flex flex-col gap-4 border-b border-zinc-200/70 dark:border-zinc-800/60 bg-linear-to-r ${
+                        isPositive
+                          ? "from-emerald-500/10 via-emerald-500/5 to-transparent"
+                          : "from-rose-500/10 via-rose-500/5 to-transparent"
+                      } p-4 sm:p-6`}
+                    >
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div className="space-y-1 min-w-0">
+                          <h3 className="text-lg sm:text-xl font-semibold text-zinc-900 dark:text-zinc-50 truncate">
+                            {accountData.accountName}
+                          </h3>
+                          <div className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-300">
+                            {accountData.entries.length} entrée
+                            {accountData.entries.length > 1 ? "s" : ""} enregistrée
                           </div>
                         </div>
-                      ))}
+                        <div className="flex items-center gap-3">
+                          <div className="text-right">
+                            <p className="text-[10px] uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                              Total cumulé
+                            </p>
+                            <p
+                              className={`text-lg sm:text-2xl font-bold ${
+                                isPositive ? "text-emerald-600" : "text-rose-600"
+                              }`}
+                            >
+                              {isPositive ? "+" : ""}
+                              {formatCurrency(accountData.total)}
+                            </p>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => toggleAccountCollapse(accountId)}
+                            className="h-9 w-9 rounded-full bg-white/70 text-zinc-700 hover:bg-white/90 dark:bg-zinc-900/70 dark:text-zinc-200 dark:hover:bg-zinc-900"
+                            aria-expanded={!isCollapsed}
+                            aria-label={isCollapsed ? "Déplier le compte" : "Réduire le compte"}
+                          >
+                            <ChevronDown
+                              className={`h-4 w-4 transition-transform duration-200 ${
+                                isCollapsed ? "-rotate-90" : "rotate-0"
+                              }`}
+                            />
+                          </Button>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-2 text-[11px] uppercase tracking-wide">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-white/70 px-2.5 py-1 text-zinc-700 dark:bg-zinc-900/60 dark:text-zinc-200">
+                          <span className="h-2 w-2 rounded-full bg-blue-500" />
+                          Dernier PnL : {lastEntryLabel}
+                        </span>
+                        <span className="inline-flex items-center gap-1 rounded-full bg-white/70 px-2.5 py-1 text-zinc-700 dark:bg-zinc-900/60 dark:text-zinc-200">
+                          <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                          {accountSuccess}% de succès
+                        </span>
+                        <span className="inline-flex items-center gap-1 rounded-full bg-white/70 px-2.5 py-1 text-zinc-700 dark:bg-zinc-900/60 dark:text-zinc-200">
+                          <span className="h-2 w-2 rounded-full bg-amber-500" />
+                          {accountData.entries.length} trade
+                          {accountData.entries.length > 1 ? "s" : ""}
+                        </span>
+                      </div>
+
+                      <div className="px-1 sm:px-2 pb-2">
+                        <div className="grid gap-2 sm:gap-3 sm:grid-cols-3">
+                          <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-3 space-y-1">
+                            <p className="text-[11px] uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                              Gains cumulés
+                            </p>
+                            <p className="text-sm sm:text-base font-semibold text-emerald-600 dark:text-emerald-400">
+                              {accountPositiveTotal > 0 ? "+" : ""}
+                              {formatCurrency(accountPositiveTotal)}
+                            </p>
+                          </div>
+                          <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-3 space-y-1">
+                            <p className="text-[11px] uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                              Pertes cumulées
+                            </p>
+                            <p className="text-sm sm:text-base font-semibold text-rose-600 dark:text-rose-400">
+                              {formatCurrency(accountNegativeTotal)}
+                            </p>
+                          </div>
+                          <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-3 space-y-1">
+                            <p className="text-[11px] uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                              Moyenne par entrée
+                            </p>
+                            <p
+                              className={`text-sm sm:text-base font-semibold ${
+                                accountAverage >= 0
+                                  ? "text-emerald-600 dark:text-emerald-400"
+                                  : "text-rose-600 dark:text-rose-400"
+                              }`}
+                            >
+                              {accountAverage >= 0 ? "+" : ""}
+                              {formatCurrency(accountAverage)}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </>
+
+                    {!isCollapsed && (
+                      <div className="p-3 sm:p-5 space-y-3">
+                        {accountData.entries.map((entry) => (
+                          <div
+                            key={entry.id}
+                            className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-zinc-200/80 dark:border-zinc-800/70 bg-zinc-50/70 dark:bg-zinc-900/60 p-3 sm:p-4 transition hover:border-zinc-300 dark:hover:border-zinc-700"
+                          >
+                            <div className="flex items-start gap-3 flex-1 min-w-0">
+                              <div
+                                className={`rounded-xl p-2 sm:p-2.5 ${
+                                  entry.amount >= 0
+                                    ? "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-300"
+                                    : "bg-rose-100 text-rose-600 dark:bg-rose-900/40 dark:text-rose-300"
+                                }`}
+                              >
+                                {entry.amount >= 0 ? (
+                                  <TrendingUp className="h-4 w-4" />
+                                ) : (
+                                  <TrendingDown className="h-4 w-4" />
+                                )}
+                              </div>
+                              <div className="space-y-1 min-w-0">
+                                <p className="text-sm font-medium text-zinc-800 dark:text-zinc-100">
+                                  {format(new Date(entry.date), "d MMMM yyyy", { locale: fr })}
+                                </p>
+                                {entry.notes && (
+                                  <p className="text-xs text-zinc-500 dark:text-zinc-400 line-clamp-2">
+                                    {entry.notes}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-4 w-full sm:w-auto">
+                              <span
+                                className={`text-base sm:text-lg font-semibold ${
+                                  entry.amount >= 0
+                                    ? "text-emerald-600 dark:text-emerald-400"
+                                    : "text-rose-600 dark:text-rose-400"
+                                }`}
+                              >
+                                {entry.amount >= 0 ? "+" : ""}
+                                {formatCurrency(entry.amount)}
+                              </span>
+                              <div className="flex gap-1">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+                                  onClick={() => handleEdit(entry)}
+                                >
+                                  <Edit className="h-3.5 w-3.5" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-zinc-500 hover:text-rose-600 dark:text-zinc-400 dark:hover:text-rose-400"
+                                  onClick={() => handleDelete(entry.id)}
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )
+          })}
+        </div>
       )}
 
       <PnlFormDialog
