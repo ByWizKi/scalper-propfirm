@@ -231,11 +231,29 @@ export default function PnlPage() {
   const bestDayAmount = bestDayKey ? dailyAggregates[bestDayKey] : 0
   const bestDayLabel = bestDayKey ? format(new Date(bestDayKey), "d MMM", { locale: fr }) : "—"
 
-  // Calculer le PnL mensuel (30 derniers jours)
+  // Calculer le PnL mensuel (30 derniers jours) - uniquement comptes actifs financés hors buffer
   const thirtyDaysAgo = new Date()
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
-  const monthlyPnl = filteredEntries
-    .filter((entry) => new Date(entry.date) >= thirtyDaysAgo)
+  const monthlyPnl = entries
+    .filter((entry) => {
+      const account = accounts.find((acc) => acc.id === entry.accountId)
+      if (!account) return false
+
+      // Uniquement les comptes ACTIVE et FUNDED
+      if (account.status !== "ACTIVE" || account.accountType !== "FUNDED") {
+        return false
+      }
+
+      // Exclure les entrées buffer pour les comptes financés
+      const isFundedBufferEntry =
+        account.accountType === "FUNDED" && entry.notes?.toLowerCase().includes("buffer")
+      if (isFundedBufferEntry) {
+        return false
+      }
+
+      // Uniquement les 30 derniers jours
+      return new Date(entry.date) >= thirtyDaysAgo
+    })
     .reduce((sum, entry) => sum + entry.amount, 0)
 
   const accountsWithEntries = Object.keys(entriesByAccount).length
@@ -295,13 +313,21 @@ export default function PnlPage() {
             variant={totalPnl >= 0 ? "success" : "danger"}
             description={`${accountsWithEntries} compte${accountsWithEntries > 1 ? "s" : ""} suivi${accountsWithEntries > 1 ? "s" : ""}`}
           />
-          <StatCard
-            title="PnL Mensuel"
-            value={formatCurrency(monthlyPnl)}
-            icon={BarChart2}
-            variant={monthlyPnl >= 0 ? "success" : "danger"}
-            description="Performance des 30 derniers jours"
-          />
+          <div className="space-y-2">
+            <StatCard
+              title="PnL Mensuel"
+              value={formatCurrency(monthlyPnl)}
+              icon={BarChart2}
+              variant={monthlyPnl >= 0 ? "success" : "danger"}
+              description="Performance des 30 derniers jours"
+            />
+            <div className="rounded-lg border border-blue-200/70 dark:border-blue-800/70 bg-blue-50/50 dark:bg-blue-950/30 p-3">
+              <p className="text-[10px] sm:text-xs text-blue-700 dark:text-blue-300">
+                Somme des profits et pertes sur les 30 derniers jours pour les comptes actifs
+                financés uniquement. Les entrées buffer sont exclues.
+              </p>
+            </div>
+          </div>
           <StatCard
             title="Taux de réussite"
             value={`${successRate}%`}
@@ -316,24 +342,6 @@ export default function PnlPage() {
             variant={bestDayAmount >= 0 ? "success" : "danger"}
             description={bestDayKey ? `Le ${bestDayLabel}` : "En attente de données"}
           />
-        </div>
-
-        {/* Note explicative pour le PnL Mensuel */}
-        <div className="rounded-xl border border-blue-200/70 dark:border-blue-800/70 bg-blue-50/50 dark:bg-blue-950/30 p-4 sm:p-5">
-          <div className="flex items-start gap-3">
-            <BarChart2 className="h-5 w-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
-            <div className="space-y-1">
-              <p className="text-sm font-semibold text-blue-900 dark:text-blue-100">
-                À propos du PnL Mensuel
-              </p>
-              <p className="text-xs sm:text-sm text-blue-700 dark:text-blue-300">
-                Le PnL Mensuel représente la somme de tous vos profits et pertes sur les 30 derniers
-                jours. Cette métrique vous permet de suivre votre performance récente et
-                d&apos;identifier les tendances à court terme. Seuls les comptes actifs sont
-                comptabilisés dans ce calcul.
-              </p>
-            </div>
-          </div>
         </div>
       </section>
 
