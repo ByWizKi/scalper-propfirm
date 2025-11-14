@@ -3,7 +3,7 @@
 import { useMemo, useCallback } from "react"
 import { StatCard, useStatVariant } from "@/components/stat-card"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Wallet, TrendingUp, DollarSign, Target } from "lucide-react"
+import { Wallet, TrendingUp, DollarSign, Target, Percent, Award, Clock } from "lucide-react"
 import { ExpensesCalendar } from "@/components/expenses-calendar"
 import { WithdrawalsCalendar } from "@/components/withdrawals-calendar"
 import { useDashboardStatsCache } from "@/hooks/use-data-cache"
@@ -29,6 +29,8 @@ export default function DashboardPage() {
 
   // ⚡ MEMOIZATION: Calculer le variant
   const differenceVariant = useStatVariant(totalNetWithdrawals - (stats?.totalInvested || 0))
+  const globalRoiVariant = useStatVariant(stats?.globalRoi || 0)
+  const monthlyPnlVariant = useStatVariant(stats?.monthlyPnl || 0)
 
   // ⚡ MEMOIZATION: Fonctions de formatage
   const formatCurrency = useCallback((amount: number) => {
@@ -106,6 +108,98 @@ export default function DashboardPage() {
           )}
           description="Retraits nets - Investi"
         />
+      </div>
+
+      {/* Nouvelles statistiques */}
+      <div className="grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-4 mb-6 sm:mb-8">
+        <StatCard
+          title="ROI Global"
+          value={`${(stats?.globalRoi || 0).toFixed(1)}%`}
+          icon={Percent}
+          variant={globalRoiVariant}
+          description="Retour sur investissement global"
+          secondaryText={`${stats?.validatedEval || 0} validées • ${stats?.failedEval || 0} échouées`}
+        />
+
+        <StatCard
+          title="Taux de réussite évaluations"
+          value={`${(stats?.evalSuccessRate || 0).toFixed(1)}%`}
+          icon={Award}
+          variant={stats?.evalSuccessRate && stats.evalSuccessRate >= 50 ? "success" : "danger"}
+          description="Pourcentage d'évaluations validées"
+          secondaryText={`${stats?.validatedEval || 0} validées sur ${(stats?.validatedEval || 0) + (stats?.failedEval || 0)} terminées`}
+        />
+
+        <StatCard
+          title="Durée moyenne validation"
+          value={stats?.avgValidationDays ? `${stats.avgValidationDays} jours` : "—"}
+          icon={Clock}
+          variant="neutral"
+          description="Temps moyen pour valider une évaluation"
+          secondaryText={
+            stats?.avgValidationDays
+              ? `Basé sur ${stats.validatedEval || 0} validation${(stats.validatedEval || 0) > 1 ? "s" : ""}`
+              : "Aucune validation"
+          }
+        />
+
+        <StatCard
+          title="PnL Mensuel"
+          value={formatCurrency(stats?.monthlyPnl || 0)}
+          icon={TrendingUp}
+          variant={monthlyPnlVariant}
+          description="Performance des 30 derniers jours"
+          secondaryText={formatCurrencyEUR((stats?.monthlyPnl || 0) * USD_TO_EUR)}
+        />
+      </div>
+
+      {/* Notes explicatives */}
+      <div className="grid gap-4 sm:gap-6 md:grid-cols-2 mb-6 sm:mb-8">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base sm:text-lg">À propos des statistiques</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3 text-xs sm:text-sm text-zinc-600 dark:text-zinc-400">
+              <div>
+                <p className="font-semibold text-zinc-900 dark:text-zinc-50 mb-1">ROI Global</p>
+                <p>
+                  Le retour sur investissement global mesure la rentabilité de tous vos comptes. Il
+                  compare le profit net (PnL total - investissement total) à votre investissement
+                  initial. Un ROI positif indique que vous êtes rentable.
+                </p>
+              </div>
+              <div>
+                <p className="font-semibold text-zinc-900 dark:text-zinc-50 mb-1">
+                  Taux de réussite évaluations
+                </p>
+                <p>
+                  Ce taux calcule le pourcentage d&apos;évaluations que vous avez validées parmi
+                  celles qui sont terminées (validées ou échouées). Les comptes encore actifs ne
+                  sont pas comptabilisés dans ce calcul.
+                </p>
+              </div>
+              <div>
+                <p className="font-semibold text-zinc-900 dark:text-zinc-50 mb-1">
+                  Durée moyenne de validation
+                </p>
+                <p>
+                  Cette métrique indique le temps moyen (en jours) entre la création d&apos;un
+                  compte d&apos;évaluation et sa validation. Elle vous aide à estimer combien de
+                  temps il faut généralement pour valider une évaluation.
+                </p>
+              </div>
+              <div>
+                <p className="font-semibold text-zinc-900 dark:text-zinc-50 mb-1">PnL Mensuel</p>
+                <p>
+                  Le PnL mensuel représente la somme de tous vos profits et pertes sur les 30
+                  derniers jours. C&apos;est un indicateur de votre performance récente et de votre
+                  tendance actuelle.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <div className="grid gap-4 sm:gap-6 md:grid-cols-1 mb-6 sm:mb-8">

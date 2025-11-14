@@ -41,6 +41,31 @@ export async function GET() {
 
     const netProfit = totalPnl - totalInvested
 
+    // Calculer le ROI global
+    const globalRoi = totalInvested > 0 ? (netProfit / totalInvested) * 100 : 0
+
+    // Calculer le taux de réussite des évaluations
+    const evalAccounts = accounts.filter((a) => a.accountType === "EVAL")
+    const validatedEval = evalAccounts.filter((a) => a.status === "VALIDATED").length
+    const failedEval = evalAccounts.filter((a) => a.status === "FAILED").length
+    const totalEvalCompleted = validatedEval + failedEval
+    const evalSuccessRate = totalEvalCompleted > 0 ? (validatedEval / totalEvalCompleted) * 100 : 0
+
+    // Calculer la durée moyenne de validation (en jours)
+    const validatedAccounts = accounts.filter((a) => a.status === "VALIDATED")
+    let avgValidationDays = 0
+    if (validatedAccounts.length > 0) {
+      const totalDays = validatedAccounts.reduce((sum, acc) => {
+        const createdAt = new Date(acc.createdAt)
+        const updatedAt = new Date(acc.updatedAt)
+        const daysDiff = Math.ceil(
+          (updatedAt.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24)
+        )
+        return sum + daysDiff
+      }, 0)
+      avgValidationDays = Math.round(totalDays / validatedAccounts.length)
+    }
+
     // Récupérer les PnL récentes pour le graphique (30 derniers jours)
     const thirtyDaysAgo = new Date()
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
@@ -57,6 +82,9 @@ export async function GET() {
       },
     })
 
+    // Calculer le PnL mensuel (30 derniers jours)
+    const monthlyPnl = recentPnl.reduce((sum, entry) => sum + entry.amount, 0)
+
     return NextResponse.json({
       totalAccounts,
       activeAccounts,
@@ -65,6 +93,13 @@ export async function GET() {
       totalPnl,
       totalWithdrawals,
       netProfit,
+      globalRoi,
+      evalSuccessRate,
+      validatedEval,
+      failedEval,
+      activeEval: evalAccounts.filter((a) => a.status === "ACTIVE").length,
+      avgValidationDays,
+      monthlyPnl,
       recentPnl,
     })
   } catch (_error) {

@@ -26,6 +26,7 @@ import {
   Filter,
   Layers,
   ShieldCheck,
+  Percent,
 } from "lucide-react"
 import { useAccountsListCache } from "@/hooks/use-data-cache"
 import { useDeleteAccountMutation } from "@/hooks/use-mutation"
@@ -42,6 +43,8 @@ interface PropfirmAccount {
   pricePaid: number
   notes?: string
   createdAt: string
+  pnlEntries?: Array<{ amount: number }>
+  linkedEval?: { pricePaid: number }
 }
 
 const PROPFIRM_LABELS: Record<string, string> = {
@@ -557,6 +560,8 @@ export default function AccountsPage() {
               pricePaid: number
               notes?: string | null
               createdAt: string
+              pnlEntries?: Array<{ amount: number }>
+              linkedEval?: { pricePaid: number }
             }) => {
               const isCollapsed = collapsedAccounts.includes(account.id)
               const gradient =
@@ -564,6 +569,15 @@ export default function AccountsPage() {
               const createdAtLabel = format(new Date(account.createdAt), "d MMM yyyy", {
                 locale: fr,
               })
+
+              // Calculer le ROI pour ce compte
+              const totalPnl = (account.pnlEntries || []).reduce(
+                (sum, entry) => sum + entry.amount,
+                0
+              )
+              const totalInvested = account.pricePaid + (account.linkedEval?.pricePaid || 0)
+              const netProfit = totalPnl - totalInvested
+              const accountRoi = totalInvested > 0 ? (netProfit / totalInvested) * 100 : 0
 
               return (
                 <Card key={account.id} className="border-none bg-transparent shadow-none">
@@ -634,7 +648,7 @@ export default function AccountsPage() {
 
                       {!isCollapsed && (
                         <div className="p-4 sm:p-6 space-y-4">
-                          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
                             <div className="rounded-xl border border-zinc-200/70 dark:border-zinc-800/70 bg-zinc-50 dark:bg-zinc-900/70 p-3">
                               <p className="text-[11px] uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
                                 Type de compte
@@ -670,6 +684,41 @@ export default function AccountsPage() {
                               <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
                                 {formatCurrency(account.size)}
                               </p>
+                            </div>
+                            <div className="rounded-xl border border-zinc-200/70 dark:border-zinc-800/70 bg-zinc-50 dark:bg-zinc-900/70 p-3">
+                              <p className="text-[11px] uppercase tracking-wide text-zinc-500 dark:text-zinc-400 flex items-center gap-1">
+                                <Percent className="h-3 w-3" />
+                                ROI
+                              </p>
+                              <p
+                                className={`text-sm font-semibold ${
+                                  accountRoi >= 0
+                                    ? "text-green-600 dark:text-green-400"
+                                    : "text-red-600 dark:text-red-400"
+                                }`}
+                              >
+                                {accountRoi >= 0 ? "+" : ""}
+                                {accountRoi.toFixed(1)}%
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Note explicative pour le ROI */}
+                          <div className="rounded-xl border border-blue-200/70 dark:border-blue-800/70 bg-blue-50/50 dark:bg-blue-950/30 p-3 sm:p-4">
+                            <div className="flex items-start gap-2 sm:gap-3">
+                              <Percent className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
+                              <div className="space-y-1 min-w-0">
+                                <p className="text-xs sm:text-sm font-semibold text-blue-900 dark:text-blue-100">
+                                  À propos du ROI par compte
+                                </p>
+                                <p className="text-[11px] sm:text-xs text-blue-700 dark:text-blue-300">
+                                  Le ROI (Retour sur Investissement) mesure la rentabilité de ce
+                                  compte spécifique. Il compare le profit net (PnL total -
+                                  investissement total, incluant l&apos;évaluation liée si
+                                  applicable) à votre investissement initial. Un ROI positif indique
+                                  que le compte est rentable.
+                                </p>
+                              </div>
                             </div>
                           </div>
 
