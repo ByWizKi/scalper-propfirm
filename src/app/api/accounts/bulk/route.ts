@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { PropfirmType, AccountType, AccountStatus } from "@prisma/client"
 
 // POST - Créer plusieurs comptes en une fois
 export async function POST(request: Request) {
@@ -11,6 +12,8 @@ export async function POST(request: Request) {
     if (!session?.user?.id) {
       return NextResponse.json({ message: "Non authentifié" }, { status: 401 })
     }
+
+    const userId = session.user.id
 
     const body = await request.json()
     const { accounts } = body
@@ -55,13 +58,16 @@ export async function POST(request: Request) {
         }) =>
           prisma.propfirmAccount.create({
             data: {
-              userId: session.user.id,
+              userId: userId,
               name: account.name,
-              propfirm: account.propfirm,
-              size: parseInt(account.size),
-              accountType: account.accountType,
-              status: account.status || "ACTIVE",
-              pricePaid: parseFloat(account.pricePaid),
+              propfirm: account.propfirm as PropfirmType,
+              size: typeof account.size === "string" ? parseInt(account.size) : account.size,
+              accountType: account.accountType as AccountType,
+              status: (account.status || "ACTIVE") as AccountStatus,
+              pricePaid:
+                typeof account.pricePaid === "string"
+                  ? parseFloat(account.pricePaid)
+                  : account.pricePaid,
               linkedEvalId: account.linkedEvalId || null,
               notes: account.notes || null,
             },

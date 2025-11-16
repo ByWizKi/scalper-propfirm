@@ -210,8 +210,8 @@ export function BulkAccountFormDialog({
       // Réinitialiser le formulaire
       setFormData({
         count: "1",
-        propfirm: "TOPSTEP",
-        accountType: "EVAL",
+        propfirm: PropfirmType.TOPSTEP,
+        accountType: AccountType.EVAL,
         size: "",
         nameBase: "",
         customNames: [],
