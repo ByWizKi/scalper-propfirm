@@ -125,11 +125,11 @@ export function StatCard({
           </Tooltip>
           <Icon className={`${sizes.icon} ${styles.icon} flex-shrink-0`} />
         </CardHeader>
-        <CardContent>
+        <CardContent className="min-w-0">
           <Tooltip>
             <TooltipTrigger asChild>
               <div
-                className={`${sizes.value} font-bold ${styles.value} truncate leading-tight cursor-help`}
+                className={`${sizes.value} font-bold ${styles.value} truncate leading-tight cursor-help min-w-0 overflow-hidden text-ellipsis whitespace-nowrap`}
               >
                 {value}
               </div>

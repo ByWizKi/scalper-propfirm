@@ -316,6 +316,7 @@ export default function AccountsPage() {
             icon={Activity}
             description={heroDescription}
             secondaryText={heroSecondary}
+            className="min-w-0"
           />
           <StatCard
             title="Total investi"
@@ -323,6 +324,7 @@ export default function AccountsPage() {
             icon={Wallet}
             variant="warning"
             description="Argent dépensé"
+            className="min-w-0"
           />
           <StatCard
             title="Dernier validé"
@@ -331,6 +333,7 @@ export default function AccountsPage() {
             description={lastValidatedDescription}
             secondaryText={lastValidatedLabel}
             variant={lastValidatedAccount ? "success" : "neutral"}
+            className="min-w-0"
           />
           <StatCard
             title="Dernier ajouté"
@@ -338,6 +341,7 @@ export default function AccountsPage() {
             icon={Target}
             description={lastAccountDescription}
             secondaryText={lastAccountDateLabel}
+            className="min-w-0"
           />
         </div>
       </section>
@@ -367,49 +371,49 @@ export default function AccountsPage() {
                 <button
                   type="button"
                   onClick={() => setStatusFilter("all")}
-                  className={`flex items-center justify-center gap-1.5 sm:gap-2 rounded-lg border-2 px-2 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
+                  className={`flex items-center justify-center gap-1.5 sm:gap-2 rounded-lg border-2 px-2 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition-all cursor-pointer min-w-0 ${
                     statusFilter === "all"
                       ? "border-blue-500 bg-blue-50 text-blue-700 dark:border-blue-400 dark:bg-blue-950/50 dark:text-blue-300"
                       : "border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
                   }`}
                 >
-                  <span className="truncate">Tous</span>
+                  <span className="truncate w-full text-center">Tous</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setStatusFilter("active")}
-                  className={`flex items-center justify-center gap-1.5 sm:gap-2 rounded-lg border-2 px-2 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
+                  className={`flex items-center justify-center gap-1.5 sm:gap-2 rounded-lg border-2 px-2 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition-all cursor-pointer min-w-0 ${
                     statusFilter === "active"
                       ? "border-emerald-500 bg-emerald-50 text-emerald-700 dark:border-emerald-400 dark:bg-emerald-950/50 dark:text-emerald-300"
                       : "border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
                   }`}
                 >
                   <Activity className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
-                  <span className="truncate">Actifs</span>
+                  <span className="truncate min-w-0">Actifs</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setStatusFilter("validated")}
-                  className={`flex items-center justify-center gap-1.5 sm:gap-2 rounded-lg border-2 px-2 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
+                  className={`flex items-center justify-center gap-1.5 sm:gap-2 rounded-lg border-2 px-2 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition-all cursor-pointer min-w-0 ${
                     statusFilter === "validated"
                       ? "border-amber-500 bg-amber-50 text-amber-700 dark:border-amber-400 dark:bg-amber-950/50 dark:text-amber-300"
                       : "border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
                   }`}
                 >
                   <ShieldCheck className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
-                  <span className="truncate">Validés</span>
+                  <span className="truncate min-w-0">Validés</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setStatusFilter("failed")}
-                  className={`flex items-center justify-center gap-1.5 sm:gap-2 rounded-lg border-2 px-2 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
+                  className={`flex items-center justify-center gap-1.5 sm:gap-2 rounded-lg border-2 px-2 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition-all cursor-pointer min-w-0 ${
                     statusFilter === "failed"
                       ? "border-rose-500 bg-rose-50 text-rose-700 dark:border-rose-400 dark:bg-rose-950/50 dark:text-rose-300"
                       : "border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
                   }`}
                 >
                   <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
-                  <span className="truncate">Échoués</span>
+                  <span className="truncate min-w-0">Échoués</span>
                 </button>
               </div>
             </div>
@@ -424,37 +428,37 @@ export default function AccountsPage() {
                 <button
                   type="button"
                   onClick={() => setTypeFilter("all")}
-                  className={`flex items-center justify-center gap-1.5 sm:gap-2 rounded-lg border-2 px-2 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
+                  className={`flex items-center justify-center gap-1.5 sm:gap-2 rounded-lg border-2 px-2 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition-all cursor-pointer min-w-0 ${
                     typeFilter === "all"
                       ? "border-blue-500 bg-blue-50 text-blue-700 dark:border-blue-400 dark:bg-blue-950/50 dark:text-blue-300"
                       : "border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
                   }`}
                 >
-                  <span className="truncate">Tous</span>
+                  <span className="truncate w-full text-center">Tous</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setTypeFilter("eval")}
-                  className={`flex items-center justify-center gap-1.5 sm:gap-2 rounded-lg border-2 px-2 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
+                  className={`flex items-center justify-center gap-1.5 sm:gap-2 rounded-lg border-2 px-2 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition-all cursor-pointer min-w-0 ${
                     typeFilter === "eval"
                       ? "border-blue-500 bg-blue-50 text-blue-700 dark:border-blue-400 dark:bg-blue-950/50 dark:text-blue-300"
                       : "border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
                   }`}
                 >
                   <Target className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
-                  <span className="truncate">Évaluations</span>
+                  <span className="truncate min-w-0">Évaluations</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setTypeFilter("funded")}
-                  className={`flex items-center justify-center gap-1.5 sm:gap-2 rounded-lg border-2 px-2 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
+                  className={`flex items-center justify-center gap-1.5 sm:gap-2 rounded-lg border-2 px-2 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition-all cursor-pointer min-w-0 ${
                     typeFilter === "funded"
                       ? "border-emerald-500 bg-emerald-50 text-emerald-700 dark:border-emerald-400 dark:bg-emerald-950/50 dark:text-emerald-300"
                       : "border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
                   }`}
                 >
                   <ShieldCheck className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
-                  <span className="truncate">Financés</span>
+                  <span className="truncate min-w-0">Financés</span>
                 </button>
               </div>
             </div>
@@ -529,7 +533,7 @@ export default function AccountsPage() {
           </div>
         </div>
       ) : (
-        <div className="grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+        <div className="grid gap-3 sm:gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4">
           {filteredAndSortedAccounts.map(
             (account: {
               id: string
@@ -559,40 +563,42 @@ export default function AccountsPage() {
               return (
                 <Card key={account.id} className="border-none bg-transparent shadow-none">
                   <CardContent className="p-0">
-                    <div className="overflow-hidden rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 bg-white/90 dark:bg-zinc-950/80 shadow-sm">
+                    <div className="overflow-hidden rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 bg-white/90 dark:bg-zinc-950/80 shadow-sm w-full">
                       <div
-                        className={`flex flex-col gap-3 border-b border-zinc-200/70 dark:border-zinc-800/60 bg-linear-to-r ${gradient} p-4 hover:shadow-md transition-shadow`}
+                        className={`flex flex-col gap-2 sm:gap-3 border-b border-zinc-200/70 dark:border-zinc-800/60 bg-linear-to-r ${gradient} p-3 sm:p-4 hover:shadow-md transition-shadow`}
                       >
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="min-w-0 flex-1 space-y-2">
-                            <div className="flex items-center gap-2">
-                              <h3 className="text-base sm:text-lg font-bold text-zinc-900 dark:text-zinc-50 truncate">
+                        <div className="flex items-start justify-between gap-2 min-w-0 w-full">
+                          <div className="min-w-0 flex-1 space-y-1.5 sm:space-y-2 overflow-hidden">
+                            <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 w-full">
+                              <h3 className="text-sm sm:text-base md:text-lg font-bold text-zinc-900 dark:text-zinc-50 truncate min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap">
                                 {account.name}
                               </h3>
                               <span
-                                className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-bold shrink-0 ${
+                                className={`inline-flex items-center rounded-full px-1.5 sm:px-2 py-0.5 text-[10px] sm:text-xs font-bold shrink-0 ${
                                   STATUS_COLORS[account.status]
                                 }`}
                               >
                                 {STATUS_LABELS[account.status]}
                               </span>
                             </div>
-                            <div className="flex flex-wrap items-center gap-1.5">
-                              <span className="inline-flex items-center gap-1 rounded-full bg-white/90 px-2 py-0.5 text-xs font-semibold text-zinc-700 dark:bg-zinc-900/80 dark:text-zinc-200">
+                            <div className="flex flex-wrap items-center gap-1 sm:gap-1.5 min-w-0">
+                              <span className="inline-flex items-center gap-1 rounded-full bg-white/90 px-1.5 sm:px-2 py-0.5 text-[10px] sm:text-xs font-semibold text-zinc-700 dark:bg-zinc-900/80 dark:text-zinc-200 shrink-0">
                                 {account.accountType === "EVAL" ? (
-                                  <Target className="h-3.5 w-3.5" />
+                                  <Target className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />
                                 ) : (
-                                  <ShieldCheck className="h-3.5 w-3.5" />
+                                  <ShieldCheck className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />
                                 )}
-                                {PROPFIRM_LABELS[account.propfirm] ?? account.propfirm}
+                                <span className="truncate max-w-[100px] xs:max-w-[140px] sm:max-w-none">
+                                  {PROPFIRM_LABELS[account.propfirm] ?? account.propfirm}
+                                </span>
                               </span>
                             </div>
                           </div>
-                          <div className="flex items-center gap-2 shrink-0">
+                          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-10 w-10 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:text-zinc-100 dark:hover:bg-zinc-800"
+                              className="h-8 w-8 sm:h-10 sm:w-10 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:text-zinc-100 dark:hover:bg-zinc-800"
                               onClick={(e) => {
                                 e.stopPropagation()
                                 handleEdit({
@@ -603,12 +609,12 @@ export default function AccountsPage() {
                               aria-label="Modifier"
                               title="Modifier"
                             >
-                              <Edit className="h-5 w-5" />
+                              <Edit className="h-4 w-4 sm:h-5 sm:w-5" />
                             </Button>
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-10 w-10 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:text-zinc-100 dark:hover:bg-zinc-800"
+                              className="h-8 w-8 sm:h-10 sm:w-10 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:text-zinc-100 dark:hover:bg-zinc-800"
                               onClick={(e) => {
                                 e.stopPropagation()
                                 handleDelete(account.id)
@@ -616,66 +622,66 @@ export default function AccountsPage() {
                               aria-label="Supprimer"
                               title="Supprimer"
                             >
-                              <Trash2 className="h-5 w-5" />
+                              <Trash2 className="h-4 w-4 sm:h-5 sm:w-5" />
                             </Button>
                           </div>
                         </div>
-                        <div className="flex items-center justify-between gap-3 pt-1 border-t border-zinc-200/50 dark:border-zinc-800/50">
-                          <div className="flex items-center gap-1.5 text-sm text-zinc-700 dark:text-zinc-300">
-                            <Wallet className="h-4 w-4" />
-                            <span className="font-semibold">
+                        <div className="flex items-center justify-between gap-2 sm:gap-3 pt-1 border-t border-zinc-200/50 dark:border-zinc-800/50 min-w-0 w-full">
+                          <div className="flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm text-zinc-700 dark:text-zinc-300 min-w-0 flex-1">
+                            <Wallet className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+                            <span className="font-semibold truncate">
                               {formatCurrencyCompact(account.size)}
                             </span>
                           </div>
                           <div
-                            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-bold text-sm ${
+                            className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg font-bold text-xs sm:text-sm shrink-0 ${
                               accountRoi >= 0
                                 ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400"
                                 : "bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-400"
                             }`}
                           >
-                            <Percent className="h-4 w-4" />
-                            <span>{formatRoi(accountRoi)}</span>
+                            <Percent className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+                            <span className="whitespace-nowrap">{formatRoi(accountRoi)}</span>
                           </div>
                         </div>
                       </div>
 
-                      <div className="p-4 space-y-3">
-                        <div className="grid grid-cols-2 gap-2.5">
-                          <div className="rounded-lg border border-zinc-200/70 dark:border-zinc-800/70 bg-zinc-50/50 dark:bg-zinc-900/50 p-3">
-                            <div className="flex items-center gap-1.5 mb-1.5">
+                      <div className="p-3 sm:p-4 space-y-2 sm:space-y-3">
+                        <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
+                          <div className="rounded-lg border border-zinc-200/70 dark:border-zinc-800/70 bg-zinc-50/50 dark:bg-zinc-900/50 p-2 sm:p-3">
+                            <div className="flex items-center gap-1 sm:gap-1.5 mb-1 sm:mb-1.5">
                               {account.accountType === "EVAL" ? (
-                                <Target className="h-3.5 w-3.5 text-blue-500" />
+                                <Target className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-blue-500 shrink-0" />
                               ) : (
-                                <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
+                                <ShieldCheck className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-emerald-500 shrink-0" />
                               )}
-                              <p className="text-xs font-semibold text-zinc-600 dark:text-zinc-400 uppercase tracking-wide">
+                              <p className="text-[10px] sm:text-xs font-semibold text-zinc-600 dark:text-zinc-400 uppercase tracking-wide truncate">
                                 Type
                               </p>
                             </div>
-                            <p className="text-sm font-bold text-zinc-900 dark:text-zinc-50">
+                            <p className="text-xs sm:text-sm font-bold text-zinc-900 dark:text-zinc-50 break-words">
                               {ACCOUNT_TYPE_LABELS[account.accountType]}
                             </p>
                           </div>
-                          <div className="rounded-lg border border-zinc-200/70 dark:border-zinc-800/70 bg-zinc-50/50 dark:bg-zinc-900/50 p-3">
-                            <div className="flex items-center gap-1.5 mb-1.5">
-                              <Target className="h-3.5 w-3.5 text-amber-500" />
-                              <p className="text-xs font-semibold text-zinc-600 dark:text-zinc-400 uppercase tracking-wide">
+                          <div className="rounded-lg border border-zinc-200/70 dark:border-zinc-800/70 bg-zinc-50/50 dark:bg-zinc-900/50 p-2 sm:p-3">
+                            <div className="flex items-center gap-1 sm:gap-1.5 mb-1 sm:mb-1.5">
+                              <Target className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-amber-500 shrink-0" />
+                              <p className="text-[10px] sm:text-xs font-semibold text-zinc-600 dark:text-zinc-400 uppercase tracking-wide truncate">
                                 Prix payé
                               </p>
                             </div>
-                            <p className="text-sm font-bold text-zinc-900 dark:text-zinc-50 text-right">
+                            <p className="text-xs sm:text-sm font-bold text-zinc-900 dark:text-zinc-50 text-right break-words">
                               {formatCurrencyCompact(account.pricePaid)}
                             </p>
                           </div>
                         </div>
 
                         {account.notes && (
-                          <div className="rounded-lg border border-zinc-200/70 dark:border-zinc-800/70 bg-zinc-50/50 dark:bg-zinc-900/50 p-3">
-                            <p className="text-xs font-semibold text-zinc-600 dark:text-zinc-400 mb-1.5 uppercase tracking-wide">
+                          <div className="rounded-lg border border-zinc-200/70 dark:border-zinc-800/70 bg-zinc-50/50 dark:bg-zinc-900/50 p-2 sm:p-3">
+                            <p className="text-[10px] sm:text-xs font-semibold text-zinc-600 dark:text-zinc-400 mb-1 sm:mb-1.5 uppercase tracking-wide">
                               Notes
                             </p>
-                            <p className="text-sm text-zinc-700 dark:text-zinc-300 whitespace-pre-wrap line-clamp-2">
+                            <p className="text-xs sm:text-sm text-zinc-700 dark:text-zinc-300 whitespace-pre-wrap line-clamp-2 break-words">
                               {account.notes}
                             </p>
                           </div>
@@ -684,13 +690,13 @@ export default function AccountsPage() {
                         <Button
                           variant="default"
                           size="sm"
-                          className="w-full h-9 text-sm font-semibold"
+                          className="w-full h-8 sm:h-9 text-xs sm:text-sm font-semibold"
                           onClick={(e) => {
                             e.stopPropagation()
                             router.push(`/dashboard/accounts/${account.id}`)
                           }}
                         >
-                          <ArrowUpRight className="h-4 w-4 mr-1.5" />
+                          <ArrowUpRight className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-1.5" />
                           Voir détails
                         </Button>
                       </div>

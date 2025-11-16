@@ -18,6 +18,7 @@ import {
   Activity,
   BarChart2,
   Target,
+  Filter,
 } from "lucide-react"
 import { toast } from "@/hooks/use-toast"
 import { format } from "date-fns"
@@ -273,7 +274,7 @@ export default function PnlPage() {
     <div className="space-y-6 sm:space-y-8 p-4 sm:p-6 lg:p-8">
       <section className="space-y-6">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          <div>
+          <div className="space-y-2">
             <h1 className="text-3xl sm:text-4xl font-bold text-zinc-900 dark:text-zinc-50">
               Mes performances
             </h1>
@@ -334,40 +335,46 @@ export default function PnlPage() {
       </section>
 
       <section className="rounded-2xl border border-zinc-200/70 dark:border-zinc-800/70 bg-white/85 dark:bg-zinc-950/70 backdrop-blur-sm p-4 sm:p-5 shadow-sm">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <Activity className="h-5 w-5 text-zinc-600 dark:text-zinc-400" />
-            <h2 className="text-base sm:text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-              Filtres
-            </h2>
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <Filter className="h-5 w-5 text-zinc-600 dark:text-zinc-400" />
+              <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">Filtres</h2>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400">
+              <Activity className="h-4 w-4" />
+              <span className="font-semibold">{filteredEntries.length}</span>
+              <span>entrée{filteredEntries.length > 1 ? "s" : ""}</span>
+            </div>
           </div>
-          <label
-            htmlFor="hide-eval-toggle"
-            className="flex items-center gap-3 text-sm font-medium text-zinc-700 dark:text-zinc-300 cursor-pointer select-none"
-          >
-            <span>Inclure évaluations</span>
-            <span className="relative inline-flex h-6 w-11 items-center">
-              <input
-                id="hide-eval-toggle"
-                type="checkbox"
-                checked={!hideEvalAccounts}
-                onChange={(e) => setHideEvalAccounts(!e.target.checked)}
-                className="sr-only peer"
-              />
-              <span className="absolute inset-0 rounded-full bg-zinc-300 transition-colors peer-checked:bg-blue-600 dark:bg-zinc-700 dark:peer-checked:bg-blue-500" />
-              <span className="absolute left-1 top-1 h-4 w-4 rounded-full bg-white shadow-sm transition-transform peer-checked:translate-x-5" />
-            </span>
-          </label>
+
+          <div className="flex items-center justify-between pt-2 border-t border-zinc-200 dark:border-zinc-800">
+            <label
+              htmlFor="hide-eval-toggle"
+              className="flex items-center gap-3 text-sm font-medium text-zinc-700 dark:text-zinc-300 cursor-pointer select-none"
+            >
+              <span>Inclure évaluations</span>
+              <span className="relative inline-flex h-6 w-11 items-center">
+                <input
+                  id="hide-eval-toggle"
+                  type="checkbox"
+                  checked={!hideEvalAccounts}
+                  onChange={(e) => setHideEvalAccounts(!e.target.checked)}
+                  className="sr-only peer"
+                />
+                <span className="absolute inset-0 rounded-full bg-zinc-300 transition-colors peer-checked:bg-blue-600 dark:bg-zinc-700 dark:peer-checked:bg-blue-500" />
+                <span className="absolute left-1 top-1 h-4 w-4 rounded-full bg-white shadow-sm transition-transform peer-checked:translate-x-5" />
+              </span>
+            </label>
+          </div>
         </div>
       </section>
 
-      <section className="rounded-2xl border border-zinc-200/70 dark:border-zinc-800/70 bg-white/90 dark:bg-zinc-950/90 shadow-sm">
-        <div className="px-5 sm:px-6 py-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between gap-4">
+      <section className="rounded-2xl border border-zinc-200/70 dark:border-zinc-800/70 bg-white/85 dark:bg-zinc-950/70 backdrop-blur-sm shadow-sm">
+        <div className="px-5 sm:px-6 py-4 border-b border-zinc-200/70 dark:border-zinc-800/70 flex items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <BarChart2 className="h-5 w-5 text-zinc-600 dark:text-zinc-400" />
-            <h2 className="text-base sm:text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-              Calendrier
-            </h2>
+            <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">Calendrier</h2>
           </div>
           <Button
             variant="ghost"
