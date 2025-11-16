@@ -1,13 +1,16 @@
 "use client"
 
-import { useMemo, useCallback } from "react"
-import { StatCard, useStatVariant } from "@/components/stat-card"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Wallet, TrendingUp, DollarSign, Target, Percent, Award, Clock } from "lucide-react"
-import { ExpensesCalendar } from "@/components/expenses-calendar"
-import { WithdrawalsCalendar } from "@/components/withdrawals-calendar"
+import { useMemo } from "react"
+import { Card, CardContent } from "@/components/ui/card"
+import { Wallet } from "lucide-react"
 import { useDashboardStatsCache } from "@/hooks/use-data-cache"
 import { calculateTotalNetWithdrawals } from "@/lib/withdrawal-utils"
+import { DashboardWidgetsManager } from "@/components/dashboard-widgets-manager"
+import { useDashboardConfig } from "@/hooks/use-dashboard-config"
+import { useCustomStats } from "@/hooks/use-custom-stats"
+import { evaluateCustomStat } from "@/lib/custom-stat-evaluator"
+import { WidgetType } from "@/types/dashboard-widget.types"
+import * as LucideIcons from "lucide-react"
 
 export default function DashboardPage() {
   // Utilisation du hook de cache avec invalidation automatique
@@ -19,34 +22,86 @@ export default function DashboardPage() {
   const accounts = useMemo(() => data?.accounts || [], [data?.accounts])
   const withdrawals = useMemo(() => data?.withdrawals || [], [data?.withdrawals])
 
-  // Taux de change USD vers EUR
-  const USD_TO_EUR = 0.92
-
   // ⚡ MEMOIZATION: Calculer le total net des retraits (après taxes)
   const totalNetWithdrawals = useMemo(() => {
     return calculateTotalNetWithdrawals(withdrawals)
   }, [withdrawals])
 
-  // ⚡ MEMOIZATION: Calculer le variant
-  const differenceVariant = useStatVariant(totalNetWithdrawals - (stats?.totalInvested || 0))
-  const globalRoiVariant = useStatVariant(stats?.globalRoi || 0)
-  const monthlyPnlVariant = useStatVariant(stats?.monthlyPnl || 0)
+  // Configuration des widgets avec drag and drop
+  const { widgets, setWidgets } = useDashboardConfig()
 
-  // ⚡ MEMOIZATION: Fonctions de formatage
-  const formatCurrency = useCallback((amount: number) => {
-    return new Intl.NumberFormat("fr-FR", {
-      style: "currency",
-      currency: "USD",
-    }).format(amount)
-  }, [])
+  // Charger les statistiques personnalisées
+  const { customStats } = useCustomStats()
 
-  const formatCurrencyEUR = useCallback((amount: number) => {
-    return new Intl.NumberFormat("fr-FR", {
-      style: "currency",
-      currency: "EUR",
-    }).format(amount)
-  }, [])
+  // Convertir les statistiques personnalisées en widgets
+  const customStatWidgets = useMemo(() => {
+    if (!customStats || customStats.length === 0) return []
 
+    return customStats
+      .filter((cs) => cs.enabled)
+      .map((cs) => {
+        // Récupérer l'icône Lucide
+        const IconComponent =
+          (cs.icon &&
+            (LucideIcons[cs.icon as keyof typeof LucideIcons] as LucideIcons.LucideIcon)) ||
+          LucideIcons.TrendingUp
+
+        return {
+          id: `custom-stat-${cs.id}`,
+          type: WidgetType.STAT_CARD as const,
+          enabled: cs.enabled,
+          order: cs.order, // Utiliser l'ordre réel de la base de données
+          title: cs.title,
+          config: {
+            title: cs.title,
+            value: (data?: { stats?: Record<string, number> }) => {
+              const result = evaluateCustomStat(cs.formula, data?.stats || {})
+              // Formater selon le type de valeur
+              if (
+                cs.formula.includes("Rate") ||
+                cs.formula.includes("Rate") ||
+                cs.formula.includes("%")
+              ) {
+                return `${result.toFixed(1)}%`
+              }
+              return new Intl.NumberFormat("fr-FR", {
+                style: "currency",
+                currency: "USD",
+                maximumFractionDigits: 0,
+              }).format(result)
+            },
+            icon: IconComponent,
+            variant: (cs.variant === "success" ||
+            cs.variant === "danger" ||
+            cs.variant === "warning" ||
+            cs.variant === "default" ||
+            cs.variant === "neutral"
+              ? cs.variant
+              : "neutral") as "success" | "danger" | "neutral" | "warning" | "default",
+            description: cs.description || "",
+            size: "md" as const,
+          },
+        }
+      })
+  }, [customStats])
+
+  // Fusionner les widgets par défaut avec les statistiques personnalisées
+  const allWidgets = useMemo(() => {
+    return [...widgets, ...customStatWidgets].sort((a, b) => a.order - b.order)
+  }, [widgets, customStatWidgets])
+
+  // Préparer les données pour les widgets
+  const widgetData = useMemo(
+    () => ({
+      stats,
+      accounts,
+      withdrawals,
+      totalNetWithdrawals,
+    }),
+    [stats, accounts, withdrawals, totalNetWithdrawals]
+  )
+
+  // Afficher le loading uniquement au premier chargement, pas lors des mises à jour
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -60,150 +115,79 @@ export default function DashboardPage() {
     )
   }
 
+  // Fonction pour mettre à jour l'ordre des statistiques personnalisées
+  const updateCustomStatsOrder = async (newWidgets: typeof allWidgets) => {
+    // Extraire les widgets personnalisés avec leur nouvel ordre basé sur leur position dans la liste complète
+    const customStatOrders = newWidgets
+      .map((w, index) => {
+        if (w.id.startsWith("custom-stat-")) {
+          const customStatId = w.id.replace("custom-stat-", "")
+          return {
+            id: customStatId,
+            order: index, // Ordre basé sur la position dans la liste complète
+          }
+        }
+        return null
+      })
+      .filter((item): item is { id: string; order: number } => item !== null)
+
+    if (customStatOrders.length > 0) {
+      try {
+        await fetch("/api/custom-stats/reorder", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ orders: customStatOrders }),
+          credentials: "include",
+        })
+        // Déclencher un événement pour recharger les statistiques personnalisées
+        window.dispatchEvent(new Event("customStatsUpdated"))
+      } catch (error) {
+        console.error("Erreur lors de la mise à jour de l'ordre:", error)
+      }
+    }
+  }
+
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
-      <div className="mb-6 sm:mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold text-zinc-900 dark:text-zinc-50">
-          Tableau de bord
-        </h1>
-        <p className="text-sm sm:text-base text-zinc-600 dark:text-zinc-400 mt-1 sm:mt-2">
-          Vue d&apos;ensemble de vos comptes propfirm
-        </p>
-      </div>
+    <div className="p-3 sm:p-4 md:p-6 lg:p-8">
+      <DashboardWidgetsManager
+        widgets={allWidgets}
+        onWidgetsChange={(newWidgets) => {
+          // Filtrer les widgets personnalisés avant de sauvegarder
+          const defaultWidgets = newWidgets.filter((w) => !w.id.startsWith("custom-stat-"))
+          setWidgets(defaultWidgets)
 
-      <div className="grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-4 mb-6 sm:mb-8">
-        <StatCard
-          title="Total Comptes"
-          value={stats?.totalAccounts || 0}
-          icon={Wallet}
-          variant="neutral"
-          description={`${stats?.activeAccounts || 0} actifs • ${stats?.fundedAccounts || 0} financés`}
-        />
+          // Mettre à jour l'ordre des statistiques personnalisées
+          updateCustomStatsOrder(newWidgets)
+        }}
+        data={widgetData}
+      />
 
-        <StatCard
-          title="Investi Total"
-          value={formatCurrency(stats?.totalInvested || 0)}
-          icon={Target}
-          variant="neutral"
-          secondaryText={formatCurrencyEUR((stats?.totalInvested || 0) * USD_TO_EUR)}
-          description="Coût des comptes"
-        />
-
-        <StatCard
-          title="Retraits Nets"
-          value={formatCurrency(totalNetWithdrawals)}
-          icon={DollarSign}
-          variant="success"
-          secondaryText={formatCurrencyEUR(totalNetWithdrawals * USD_TO_EUR)}
-          description="Retraits nets après taxes"
-        />
-
-        <StatCard
-          title="Bilan"
-          value={formatCurrency(totalNetWithdrawals - (stats?.totalInvested || 0))}
-          icon={TrendingUp}
-          variant={differenceVariant}
-          secondaryText={formatCurrencyEUR(
-            (totalNetWithdrawals - (stats?.totalInvested || 0)) * USD_TO_EUR
-          )}
-          description="Retraits nets - Investi"
-        />
-      </div>
-
-      {/* Nouvelles statistiques */}
-      <div className="space-y-4 sm:space-y-6 mb-6 sm:mb-8">
-        <div className="grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-4">
-          <div className="space-y-2">
-            <StatCard
-              title="ROI Global"
-              value={`${(stats?.globalRoi || 0).toFixed(1)}%`}
-              icon={Percent}
-              variant={globalRoiVariant}
-              description="Retour sur investissement global"
-              secondaryText={`${stats?.validatedEval || 0} validées • ${stats?.failedEval || 0} échouées`}
-            />
-            <div className="rounded-lg border border-blue-200/70 dark:border-blue-800/70 bg-blue-50/50 dark:bg-blue-950/30 p-3">
-              <p className="text-[10px] sm:text-xs text-blue-700 dark:text-blue-300">
-                Mesure la rentabilité réelle basée sur les retraits nets effectués (après taxes).
-                Compare les retraits nets à votre investissement initial.
-              </p>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <StatCard
-              title="Taux de réussite évaluations"
-              value={`${(stats?.evalSuccessRate || 0).toFixed(1)}%`}
-              icon={Award}
-              variant={stats?.evalSuccessRate && stats.evalSuccessRate >= 50 ? "success" : "danger"}
-              description="Pourcentage d'évaluations validées"
-              secondaryText={`${stats?.validatedEval || 0} validées sur ${(stats?.validatedEval || 0) + (stats?.failedEval || 0)} terminées`}
-            />
-            <div className="rounded-lg border border-blue-200/70 dark:border-blue-800/70 bg-blue-50/50 dark:bg-blue-950/30 p-3">
-              <p className="text-[10px] sm:text-xs text-blue-700 dark:text-blue-300">
-                Pourcentage d&apos;évaluations validées parmi celles terminées (validées ou
-                échouées). Les comptes encore actifs ne sont pas comptabilisés.
-              </p>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <StatCard
-              title="Durée moyenne validation"
-              value={stats?.avgValidationDays ? `${stats.avgValidationDays} jours` : "—"}
-              icon={Clock}
-              variant="neutral"
-              description="Temps moyen pour valider une évaluation"
-              secondaryText={
-                stats?.avgValidationDays
-                  ? `Basé sur ${stats.validatedEval || 0} validation${(stats.validatedEval || 0) > 1 ? "s" : ""}`
-                  : "Aucune validation"
-              }
-            />
-            <div className="rounded-lg border border-blue-200/70 dark:border-blue-800/70 bg-blue-50/50 dark:bg-blue-950/30 p-3">
-              <p className="text-[10px] sm:text-xs text-blue-700 dark:text-blue-300">
-                Temps moyen (en jours) entre la création d&apos;un compte d&apos;évaluation et sa
-                validation. Aide à estimer le temps nécessaire pour valider une évaluation.
-              </p>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <StatCard
-              title="PnL Mensuel"
-              value={formatCurrency(stats?.monthlyPnl || 0)}
-              icon={TrendingUp}
-              variant={monthlyPnlVariant}
-              description="Performance des 30 derniers jours"
-              secondaryText={formatCurrencyEUR((stats?.monthlyPnl || 0) * USD_TO_EUR)}
-            />
-            <div className="rounded-lg border border-blue-200/70 dark:border-blue-800/70 bg-blue-50/50 dark:bg-blue-950/30 p-3">
-              <p className="text-[10px] sm:text-xs text-blue-700 dark:text-blue-300">
-                Somme des profits et pertes sur les 30 derniers jours pour les comptes actifs
-                financés uniquement. Les entrées buffer sont exclues.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid gap-4 sm:gap-6 md:grid-cols-1 mb-6 sm:mb-8">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base sm:text-lg">Bilan Financier</CardTitle>
-          </CardHeader>
-          <CardContent>
+      {/* Section Bilan Financier (toujours affichée) */}
+      <div className="grid gap-3 sm:gap-4 md:gap-6 md:grid-cols-1 mb-4 sm:mb-6 md:mb-8 mt-4 sm:mt-6 md:mt-8">
+        <Card className="rounded-2xl border border-zinc-200/70 dark:border-zinc-800/70 bg-white/85 dark:bg-zinc-950/70 backdrop-blur-sm shadow-sm">
+          <CardContent className="p-3 sm:p-4 md:p-6">
             <div className="space-y-3 sm:space-y-4">
+              <h2 className="text-lg sm:text-xl font-semibold text-zinc-900 dark:text-zinc-50 mb-4">
+                Bilan Financier
+              </h2>
               <div className="flex items-center justify-between gap-2">
                 <span className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400">
                   Total Retraits Nets
                 </span>
                 <div className="text-right min-w-0">
                   <div className="font-medium text-green-600 text-sm sm:text-base truncate">
-                    {formatCurrency(totalNetWithdrawals)}
+                    {new Intl.NumberFormat("fr-FR", {
+                      style: "currency",
+                      currency: "USD",
+                    }).format(totalNetWithdrawals)}
                   </div>
                   <div className="text-[10px] sm:text-xs text-green-600 truncate">
-                    {formatCurrencyEUR(totalNetWithdrawals * USD_TO_EUR)}
+                    {new Intl.NumberFormat("fr-FR", {
+                      style: "currency",
+                      currency: "EUR",
+                    }).format(totalNetWithdrawals * 0.92)}
                   </div>
                 </div>
               </div>
@@ -213,10 +197,17 @@ export default function DashboardPage() {
                 </span>
                 <div className="text-right min-w-0">
                   <div className="font-medium text-red-600 text-sm sm:text-base truncate">
-                    -{formatCurrency(stats?.totalInvested || 0)}
+                    -
+                    {new Intl.NumberFormat("fr-FR", {
+                      style: "currency",
+                      currency: "USD",
+                    }).format(stats?.totalInvested || 0)}
                   </div>
                   <div className="text-[10px] sm:text-xs text-red-600 truncate">
-                    {formatCurrencyEUR((stats?.totalInvested || 0) * USD_TO_EUR)}
+                    {new Intl.NumberFormat("fr-FR", {
+                      style: "currency",
+                      currency: "EUR",
+                    }).format((stats?.totalInvested || 0) * 0.92)}
                   </div>
                 </div>
               </div>
@@ -225,16 +216,28 @@ export default function DashboardPage() {
                   <span className="text-base sm:text-lg font-medium">Différence</span>
                   <div className="text-right min-w-0">
                     <div
-                      className={`text-xl sm:text-2xl font-bold truncate ${totalNetWithdrawals - (stats?.totalInvested || 0) >= 0 ? "text-green-600" : "text-red-600"}`}
+                      className={`text-xl sm:text-2xl font-bold truncate ${
+                        totalNetWithdrawals - (stats?.totalInvested || 0) >= 0
+                          ? "text-green-600"
+                          : "text-red-600"
+                      }`}
                     >
-                      {formatCurrency(totalNetWithdrawals - (stats?.totalInvested || 0))}
+                      {new Intl.NumberFormat("fr-FR", {
+                        style: "currency",
+                        currency: "USD",
+                      }).format(totalNetWithdrawals - (stats?.totalInvested || 0))}
                     </div>
                     <div
-                      className={`text-[10px] sm:text-xs truncate ${totalNetWithdrawals - (stats?.totalInvested || 0) >= 0 ? "text-green-600" : "text-red-600"}`}
+                      className={`text-[10px] sm:text-xs truncate ${
+                        totalNetWithdrawals - (stats?.totalInvested || 0) >= 0
+                          ? "text-green-600"
+                          : "text-red-600"
+                      }`}
                     >
-                      {formatCurrencyEUR(
-                        (totalNetWithdrawals - (stats?.totalInvested || 0)) * USD_TO_EUR
-                      )}
+                      {new Intl.NumberFormat("fr-FR", {
+                        style: "currency",
+                        currency: "EUR",
+                      }).format((totalNetWithdrawals - (stats?.totalInvested || 0)) * 0.92)}
                     </div>
                   </div>
                 </div>
@@ -249,14 +252,8 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      {/* Calendriers */}
-      <div className="grid gap-4 sm:gap-6 grid-cols-1 mb-6 sm:mb-8">
-        <ExpensesCalendar expenses={accounts} />
-        <WithdrawalsCalendar withdrawals={withdrawals} />
-      </div>
-
       {stats?.totalAccounts === 0 && (
-        <Card className="mt-8">
+        <Card className="mt-8 rounded-2xl border border-zinc-200/70 dark:border-zinc-800/70 bg-white/85 dark:bg-zinc-950/70 backdrop-blur-sm shadow-sm">
           <CardContent className="py-12 text-center">
             <Wallet className="h-12 w-12 text-zinc-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium mb-2">Aucun compte pour le moment</h3>

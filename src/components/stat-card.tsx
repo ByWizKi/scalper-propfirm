@@ -1,14 +1,14 @@
 "use client"
 
 import * as React from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { LucideIcon } from "lucide-react"
 
 /**
  * Props pour le composant StatCard polymorphe
  */
-interface StatCardProps {
+export interface StatCardProps {
   /** Titre de la card */
   title: string
   /** Valeur principale à afficher */
@@ -113,61 +113,58 @@ export function StatCard({
 
   return (
     <TooltipProvider>
-      <Card className={className}>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <CardTitle className={`${sizes.title} truncate pr-2 cursor-help`}>{title}</CardTitle>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>{title}</p>
-            </TooltipContent>
-          </Tooltip>
-          <Icon className={`${sizes.icon} ${styles.icon} flex-shrink-0`} />
-        </CardHeader>
-        <CardContent className="min-w-0">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div
-                className={`${sizes.value} font-bold ${styles.value} truncate leading-tight cursor-help min-w-0 overflow-hidden text-ellipsis whitespace-nowrap`}
-              >
-                {value}
-              </div>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p className="font-bold">{valueString}</p>
-            </TooltipContent>
-          </Tooltip>
+      <Card
+        className={`rounded-2xl border border-zinc-200/70 dark:border-zinc-800/70 bg-white/85 dark:bg-zinc-950/70 backdrop-blur-sm shadow-sm ${className}`}
+      >
+        <CardContent className="p-3 sm:p-4 md:p-5">
+          <div className="flex items-start justify-between gap-3 mb-3">
+            <div className="flex-1 min-w-0">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <h3
+                    className={`${sizes.title} text-zinc-600 dark:text-zinc-400 truncate cursor-help`}
+                  >
+                    {title}
+                  </h3>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{title}</p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
+            <Icon className={`${sizes.icon} ${styles.icon} flex-shrink-0`} />
+          </div>
 
-          {secondaryText && (
+          <div className="space-y-1">
             <Tooltip>
               <TooltipTrigger asChild>
-                <p
-                  className={`${sizes.secondary} ${styles.value} mt-0.5 sm:mt-1 truncate cursor-help`}
+                <div
+                  className={`${sizes.value} font-bold ${styles.value} truncate leading-tight cursor-help min-w-0 overflow-hidden text-ellipsis whitespace-nowrap`}
                 >
-                  {secondaryText}
-                </p>
+                  {value}
+                </div>
               </TooltipTrigger>
               <TooltipContent>
-                <p>{secondaryText}</p>
+                <p className="font-bold">{valueString}</p>
+                {secondaryText && <p className="text-xs mt-1">{secondaryText}</p>}
               </TooltipContent>
             </Tooltip>
-          )}
 
-          {description && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <p
-                  className={`${sizes.description} text-zinc-500 dark:text-zinc-400 mt-0.5 sm:mt-1 truncate cursor-help`}
-                >
-                  {description}
-                </p>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>{description}</p>
-              </TooltipContent>
-            </Tooltip>
-          )}
+            {description && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <p
+                    className={`${sizes.description} text-zinc-500 dark:text-zinc-400 truncate cursor-help`}
+                  >
+                    {description}
+                  </p>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{description}</p>
+                </TooltipContent>
+              </Tooltip>
+            )}
+          </div>
         </CardContent>
       </Card>
     </TooltipProvider>
