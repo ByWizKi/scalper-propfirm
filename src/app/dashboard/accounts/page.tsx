@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { AccountFormDialog } from "@/components/account-form-dialog"
+import { BulkAccountFormDialog } from "@/components/bulk-account-form-dialog"
 import { StatCard } from "@/components/stat-card"
 import {
   Plus,
@@ -20,11 +21,9 @@ import {
   Wallet,
   Activity,
   Target,
-  ChevronDown,
   ArrowUpRight,
   Eye,
   Filter,
-  Layers,
   ShieldCheck,
   Percent,
 } from "lucide-react"
@@ -93,13 +92,12 @@ export default function AccountsPage() {
   const { mutate: deleteAccount } = useDeleteAccountMutation()
 
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [bulkDialogOpen, setBulkDialogOpen] = useState(false)
   const [selectedAccount, setSelectedAccount] = useState<PropfirmAccount | null>(null)
   const [sortBy, setSortBy] = useState<"date-desc" | "date-asc">("date-desc")
   const [filterPropfirm, setFilterPropfirm] = useState<string>("all")
-  const [hideInactive, setHideInactive] = useState(false)
-  const [hideEvalAccounts, setHideEvalAccounts] = useState(false)
-  const [collapsedAccounts, setCollapsedAccounts] = useState<string[]>([])
-  const [showOnlyActive, setShowOnlyActive] = useState(false)
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "validated" | "failed">("all")
+  const [typeFilter, setTypeFilter] = useState<"all" | "eval" | "funded">("all")
 
   const handleDelete = async (id: string) => {
     if (!confirm("Êtes-vous sûr de vouloir supprimer ce compte ?")) {
@@ -119,6 +117,10 @@ export default function AccountsPage() {
     setDialogOpen(true)
   }
 
+  const handleBulkAdd = () => {
+    setBulkDialogOpen(true)
+  }
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("fr-FR", {
       style: "currency",
@@ -126,10 +128,18 @@ export default function AccountsPage() {
     }).format(amount)
   }
 
-  const toggleAccountCollapse = (accountId: string) => {
-    setCollapsedAccounts((prev) =>
-      prev.includes(accountId) ? prev.filter((id) => id !== accountId) : [...prev, accountId]
-    )
+  const formatCurrencyCompact = (amount: number) => {
+    if (amount >= 1000) {
+      return `${(amount / 1000).toFixed(amount >= 10000 ? 0 : 1)}k $US`
+    }
+    return formatCurrency(amount)
+  }
+
+  const formatRoi = (roi: number) => {
+    if (Math.abs(roi) >= 1000) {
+      return `${roi >= 0 ? "+" : ""}${(roi / 1000).toFixed(1)}k%`
+    }
+    return `${roi >= 0 ? "+" : ""}${roi.toFixed(1)}%`
   }
 
   // Filtrer et trier les comptes
@@ -140,21 +150,22 @@ export default function AccountsPage() {
         return false
       }
 
-      // Filtre pour cacher les comptes inactifs (validés ou cramés)
-      if (
-        hideInactive &&
-        (account.status === "VALIDATED" ||
-          account.status === "FAILED" ||
-          account.status === "ARCHIVED")
-      ) {
+      // Filtre par statut
+      if (statusFilter === "active" && account.status !== "ACTIVE") {
+        return false
+      }
+      if (statusFilter === "validated" && account.status !== "VALIDATED") {
+        return false
+      }
+      if (statusFilter === "failed" && account.status !== "FAILED") {
         return false
       }
 
-      if (showOnlyActive && account.status !== "ACTIVE") {
+      // Filtre par type de compte
+      if (typeFilter === "eval" && account.accountType !== "EVAL") {
         return false
       }
-
-      if (hideEvalAccounts && account.accountType === "EVAL") {
+      if (typeFilter === "funded" && account.accountType !== "FUNDED") {
         return false
       }
 
@@ -239,21 +250,17 @@ export default function AccountsPage() {
     : "—"
   const lastAccountDescription = lastAccount
     ? `${PROPFIRM_LABELS[lastAccount.propfirm] ?? lastAccount.propfirm} • ${ACCOUNT_TYPE_LABELS[lastAccount.accountType]}`
-    : "Ajoutez votre premier compte"
+    : "Aucun compte"
 
   const lastValidatedLabel = lastValidatedAccount
     ? format(new Date(lastValidatedAccount.createdAt), "d MMM yyyy", { locale: fr })
     : "—"
   const lastValidatedDescription = lastValidatedAccount
     ? `${PROPFIRM_LABELS[lastValidatedAccount.propfirm] ?? lastValidatedAccount.propfirm} • ${formatCurrency(lastValidatedAccount.size)}`
-    : "Aucun compte validé pour l&apos;instant"
+    : "Aucun compte validé"
 
-  const heroDescription = `${filteredActiveCount} actif${filteredActiveCount > 1 ? "s" : ""} visible${filteredActiveCount > 1 ? "s" : ""}`
+  const heroDescription = `${filteredActiveCount} actif${filteredActiveCount > 1 ? "s" : ""}`
   const heroSecondary = `${filteredEvalCount} éval · ${filteredFundedCount} financé${filteredFundedCount > 1 ? "s" : ""}`
-
-  const includeEvaluationAccounts = !hideEvalAccounts
-  const showInactiveAccounts = !hideInactive
-  const onlyActiveAccounts = showOnlyActive
 
   // Obtenir la liste des propfirms disponibles
   const availablePropfirms: string[] = Array.from(
@@ -277,42 +284,48 @@ export default function AccountsPage() {
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="space-y-2">
             <h1 className="text-3xl sm:text-4xl font-bold text-zinc-900 dark:text-zinc-50">
-              Gestion des comptes
+              Mes comptes
             </h1>
-            <p className="text-sm sm:text-base text-zinc-600 dark:text-zinc-300 max-w-3xl">
-              Centralisez vos comptes de prop firm, visualisez leur progression et retrouvez
-              rapidement les informations clés, dans un style cohérent avec la page PnL.
-            </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
             <Button
               onClick={handleAdd}
-              className="w-full sm:w-auto flex items-center gap-2 text-xs sm:text-sm md:text-base"
+              size="lg"
+              variant="default"
+              className="w-full sm:w-auto flex items-center gap-2 text-sm sm:text-base font-semibold h-11 sm:h-12"
             >
-              <Plus className="h-4 w-4" />
-              <span className="hidden sm:inline whitespace-nowrap">Ajouter un compte</span>
-              <span className="sm:hidden whitespace-nowrap">Ajouter</span>
+              <Plus className="h-5 w-5" />
+              <span>Nouveau compte</span>
+            </Button>
+            <Button
+              onClick={handleBulkAdd}
+              size="lg"
+              variant="outline"
+              className="w-full sm:w-auto flex items-center gap-2 text-sm sm:text-base font-semibold h-11 sm:h-12"
+            >
+              <Plus className="h-5 w-5" />
+              <span>Ajout groupé</span>
             </Button>
           </div>
         </div>
 
         <div className="grid gap-4 sm:gap-6 md:grid-cols-2 xl:grid-cols-4">
           <StatCard
-            title="Comptes suivis"
+            title="Total comptes"
             value={filteredCount}
             icon={Activity}
             description={heroDescription}
             secondaryText={heroSecondary}
           />
           <StatCard
-            title="Investissement total"
+            title="Total investi"
             value={formatCurrency(totalInvestment)}
             icon={Wallet}
             variant="warning"
-            description={"Frais engagés sur l'ensemble des comptes"}
+            description="Argent dépensé"
           />
           <StatCard
-            title="Dernier compte validé"
+            title="Dernier validé"
             value={lastValidatedAccount ? lastValidatedAccount.name : "—"}
             icon={ShieldCheck}
             description={lastValidatedDescription}
@@ -320,7 +333,7 @@ export default function AccountsPage() {
             variant={lastValidatedAccount ? "success" : "neutral"}
           />
           <StatCard
-            title="Dernier compte ajouté"
+            title="Dernier ajouté"
             value={lastAccount ? lastAccount.name : "—"}
             icon={Target}
             description={lastAccountDescription}
@@ -330,225 +343,193 @@ export default function AccountsPage() {
       </section>
 
       <section className="rounded-2xl border border-zinc-200/70 dark:border-zinc-800/70 bg-white/85 dark:bg-zinc-950/70 backdrop-blur-sm p-4 sm:p-5 shadow-sm">
-        <div className="flex flex-col gap-5">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="space-y-1.5">
-              <div className="inline-flex items-center gap-2 rounded-full bg-zinc-100/80 px-3 py-1 text-[11px] font-medium uppercase tracking-wide text-zinc-600 dark:bg-zinc-900/60 dark:text-zinc-300">
-                <Filter className="h-3.5 w-3.5" />
-                Paramètres d&apos;affichage
-              </div>
-              <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-300 max-w-2xl">
-                Ajustez les filtres pour n&apos;afficher que les comptes pertinents. Les cartes et
-                métriques reflètent instantanément vos préférences.
-              </p>
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <Filter className="h-5 w-5 text-zinc-600 dark:text-zinc-400" />
+              <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">Filtres</h2>
             </div>
-            <div className="flex flex-wrap items-center gap-2 text-[11px] uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-              <span className="inline-flex items-center gap-1 rounded-full bg-zinc-100 px-3 py-1 text-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-200">
-                {filteredCount} compte{filteredCount > 1 ? "s" : ""} affiché
-                {filteredCount > 1 ? "s" : ""}
-              </span>
-              <span className="inline-flex items-center gap-1 rounded-full bg-zinc-100 px-3 py-1 text-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-200">
-                {filteredActiveCount} actif{filteredActiveCount > 1 ? "s" : ""}
-              </span>
+            <div className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400">
+              <Activity className="h-4 w-4" />
+              <span className="font-semibold">{filteredCount}</span>
+              <span>compte{filteredCount > 1 ? "s" : ""}</span>
             </div>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            <button
-              type="button"
-              onClick={() => setHideEvalAccounts((prev) => !prev)}
-              className={`group flex items-start gap-3 rounded-xl border p-4 text-left transition hover:-translate-y-0.5 hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40 dark:hover:shadow-none ${
-                includeEvaluationAccounts
-                  ? "border-emerald-500/40 bg-emerald-50/80 dark:border-emerald-400/40 dark:bg-emerald-500/10"
-                  : "border-zinc-200/80 bg-zinc-50/50 dark:border-zinc-800/60 dark:bg-zinc-900/40"
-              }`}
-            >
-              <span
-                className={`mt-0.5 flex h-9 w-9 items-center justify-center rounded-full transition ${
-                  includeEvaluationAccounts
-                    ? "bg-emerald-500 text-white"
-                    : "bg-zinc-200/80 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-200"
-                }`}
-              >
-                <Eye className="h-4 w-4" />
-              </span>
-              <span className="space-y-1">
-                <span className="flex items-center gap-2 text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                  {includeEvaluationAccounts
-                    ? "Comptes d'évaluation inclus"
-                    : "Comptes d'évaluation masqués"}
-                  <span
-                    className={`inline-flex h-5 min-w-[44px] items-center justify-center rounded-full text-[11px] font-medium ${
-                      includeEvaluationAccounts
-                        ? "bg-emerald-500/20 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-300"
-                        : "bg-blue-500/20 text-blue-600 dark:bg-blue-500/10 dark:text-blue-300"
-                    }`}
-                  >
-                    {includeEvaluationAccounts ? "On" : "Off"}
-                  </span>
-                </span>
-                <span className="text-xs text-zinc-600 dark:text-zinc-400">
-                  {includeEvaluationAccounts
-                    ? "Les comptes d'évaluation restent visibles et comptabilisés."
-                    : "Les comptes d'évaluation sont cachés des listes."}
-                </span>
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setHideInactive((prev) => !prev)}
-              className={`group flex items-start gap-3 rounded-xl border p-4 text-left transition hover:-translate-y-0.5 hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40 dark:hover:shadow-none ${
-                showInactiveAccounts
-                  ? "border-zinc-200/80 bg-zinc-50/50 dark:border-zinc-800/60 dark:bg-zinc-900/40"
-                  : "border-amber-500/40 bg-amber-50/80 dark:border-amber-400/40 dark:bg-amber-500/10"
-              }`}
-            >
-              <span
-                className={`mt-0.5 flex h-9 w-9 items-center justify-center rounded-full transition ${
-                  showInactiveAccounts
-                    ? "bg-zinc-200/80 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-200"
-                    : "bg-amber-500 text-white"
-                }`}
-              >
-                <Layers className="h-4 w-4" />
-              </span>
-              <span className="space-y-1">
-                <span className="flex items-center gap-2 text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                  {showInactiveAccounts ? "Inactifs visibles" : "Inactifs masqués"}
-                  <span
-                    className={`inline-flex h-5 min-w-[44px] items-center justify-center rounded-full text-[11px] font-medium ${
-                      showInactiveAccounts
-                        ? "bg-emerald-500/20 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-300"
-                        : "bg-amber-500/20 text-amber-600 dark:bg-amber-500/10 dark:text-amber-300"
-                    }`}
-                  >
-                    {showInactiveAccounts ? "On" : "Off"}
-                  </span>
-                </span>
-                <span className="text-xs text-zinc-600 dark:text-zinc-400">
-                  {showInactiveAccounts
-                    ? "Tous les statuts restent visibles, y compris les comptes clôturés."
-                    : "Les comptes validés, cramés et archivés sont retirés de la liste."}
-                </span>
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setShowOnlyActive((prev) => !prev)}
-              className={`group flex items-start gap-3 rounded-xl border p-4 text-left transition hover:-translate-y-0.5 hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40 dark:hover:shadow-none ${
-                onlyActiveAccounts
-                  ? "border-emerald-500/40 bg-emerald-50/80 dark:border-emerald-400/40 dark:bg-emerald-500/10"
-                  : "border-zinc-200/80 bg-zinc-50/50 dark:border-zinc-800/60 dark:bg-zinc-900/40"
-              }`}
-            >
-              <span
-                className={`mt-0.5 flex h-9 w-9 items-center justify-center rounded-full transition ${
-                  onlyActiveAccounts
-                    ? "bg-emerald-500 text-white"
-                    : "bg-zinc-200/80 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-200"
-                }`}
-              >
-                <Activity className="h-4 w-4" />
-              </span>
-              <span className="space-y-1">
-                <span className="flex items-center gap-2 text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                  {onlyActiveAccounts ? "Seuls les actifs" : "Tous les statuts"}
-                  <span
-                    className={`inline-flex h-5 min-w-[44px] items-center justify-center rounded-full text-[11px] font-medium ${
-                      onlyActiveAccounts
-                        ? "bg-emerald-500/20 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-300"
-                        : "bg-blue-500/20 text-blue-600 dark:bg-blue-500/10 dark:text-blue-300"
-                    }`}
-                  >
-                    {onlyActiveAccounts ? "On" : "Off"}
-                  </span>
-                </span>
-                <span className="text-xs text-zinc-600 dark:text-zinc-400">
-                  {onlyActiveAccounts
-                    ? "Les listes n'affichent plus que les comptes au statut actif."
-                    : "Les comptes inactifs et historiques restent affichés."}
-                </span>
-              </span>
-            </button>
-          </div>
-
-          {accounts.length > 0 && (
-            <div className="grid gap-3 sm:gap-4 sm:grid-cols-2">
-              <div className="flex flex-col gap-1">
-                <span className="text-[11px] uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-                  Propfirm
-                </span>
-                <Select value={filterPropfirm} onValueChange={setFilterPropfirm}>
-                  <SelectTrigger className="h-10 text-sm">
-                    <SelectValue placeholder="Toutes les propfirms" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Toutes les propfirms</SelectItem>
-                    {availablePropfirms.map((propfirm) => (
-                      <SelectItem key={propfirm} value={propfirm}>
-                        {PROPFIRM_LABELS[propfirm as keyof typeof PROPFIRM_LABELS] ?? propfirm}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <span className="text-[11px] uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-                  Ordre d&apos;affichage
-                </span>
-                <Select
-                  value={sortBy}
-                  onValueChange={(value) => setSortBy(value as "date-desc" | "date-asc")}
+          <div className="space-y-4">
+            {/* Filtre par statut */}
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-zinc-900 dark:text-zinc-50 flex items-center gap-2">
+                <Activity className="h-4 w-4 shrink-0" />
+                <span>Statut</span>
+              </label>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setStatusFilter("all")}
+                  className={`flex items-center justify-center gap-1.5 sm:gap-2 rounded-lg border-2 px-2 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
+                    statusFilter === "all"
+                      ? "border-blue-500 bg-blue-50 text-blue-700 dark:border-blue-400 dark:bg-blue-950/50 dark:text-blue-300"
+                      : "border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                  }`}
                 >
-                  <SelectTrigger className="h-10 text-sm">
-                    <SelectValue placeholder="Ordre d'affichage" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="date-desc">Plus récents d&apos;abord</SelectItem>
-                    <SelectItem value="date-asc">Plus anciens d&apos;abord</SelectItem>
-                  </SelectContent>
-                </Select>
+                  <span className="truncate">Tous</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setStatusFilter("active")}
+                  className={`flex items-center justify-center gap-1.5 sm:gap-2 rounded-lg border-2 px-2 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
+                    statusFilter === "active"
+                      ? "border-emerald-500 bg-emerald-50 text-emerald-700 dark:border-emerald-400 dark:bg-emerald-950/50 dark:text-emerald-300"
+                      : "border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                  }`}
+                >
+                  <Activity className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+                  <span className="truncate">Actifs</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setStatusFilter("validated")}
+                  className={`flex items-center justify-center gap-1.5 sm:gap-2 rounded-lg border-2 px-2 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
+                    statusFilter === "validated"
+                      ? "border-amber-500 bg-amber-50 text-amber-700 dark:border-amber-400 dark:bg-amber-950/50 dark:text-amber-300"
+                      : "border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                  }`}
+                >
+                  <ShieldCheck className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+                  <span className="truncate">Validés</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setStatusFilter("failed")}
+                  className={`flex items-center justify-center gap-1.5 sm:gap-2 rounded-lg border-2 px-2 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
+                    statusFilter === "failed"
+                      ? "border-rose-500 bg-rose-50 text-rose-700 dark:border-rose-400 dark:bg-rose-950/50 dark:text-rose-300"
+                      : "border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                  }`}
+                >
+                  <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+                  <span className="truncate">Échoués</span>
+                </button>
               </div>
             </div>
-          )}
+
+            {/* Filtre par type */}
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-zinc-900 dark:text-zinc-50 flex items-center gap-2">
+                <Target className="h-4 w-4 shrink-0" />
+                <span>Type</span>
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setTypeFilter("all")}
+                  className={`flex items-center justify-center gap-1.5 sm:gap-2 rounded-lg border-2 px-2 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
+                    typeFilter === "all"
+                      ? "border-blue-500 bg-blue-50 text-blue-700 dark:border-blue-400 dark:bg-blue-950/50 dark:text-blue-300"
+                      : "border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                  }`}
+                >
+                  <span className="truncate">Tous</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTypeFilter("eval")}
+                  className={`flex items-center justify-center gap-1.5 sm:gap-2 rounded-lg border-2 px-2 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
+                    typeFilter === "eval"
+                      ? "border-blue-500 bg-blue-50 text-blue-700 dark:border-blue-400 dark:bg-blue-950/50 dark:text-blue-300"
+                      : "border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                  }`}
+                >
+                  <Target className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+                  <span className="truncate">Évaluations</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTypeFilter("funded")}
+                  className={`flex items-center justify-center gap-1.5 sm:gap-2 rounded-lg border-2 px-2 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
+                    typeFilter === "funded"
+                      ? "border-emerald-500 bg-emerald-50 text-emerald-700 dark:border-emerald-400 dark:bg-emerald-950/50 dark:text-emerald-300"
+                      : "border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                  }`}
+                >
+                  <ShieldCheck className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+                  <span className="truncate">Financés</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Filtres avancés */}
+            {accounts.length > 0 && (
+              <div className="grid gap-3 sm:grid-cols-2 pt-2 border-t border-zinc-200 dark:border-zinc-800">
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-semibold text-zinc-900 dark:text-zinc-50 flex items-center gap-2">
+                    <Wallet className="h-4 w-4 shrink-0" />
+                    <span>Propfirm</span>
+                  </label>
+                  <Select value={filterPropfirm} onValueChange={setFilterPropfirm}>
+                    <SelectTrigger className="h-10 text-xs sm:text-sm">
+                      <SelectValue placeholder="Toutes" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Toutes</SelectItem>
+                      {availablePropfirms.map((propfirm) => (
+                        <SelectItem key={propfirm} value={propfirm}>
+                          {PROPFIRM_LABELS[propfirm as keyof typeof PROPFIRM_LABELS] ?? propfirm}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-semibold text-zinc-900 dark:text-zinc-50 flex items-center gap-2">
+                    <Target className="h-4 w-4 shrink-0" />
+                    <span>Ordre</span>
+                  </label>
+                  <Select
+                    value={sortBy}
+                    onValueChange={(value) => setSortBy(value as "date-desc" | "date-asc")}
+                  >
+                    <SelectTrigger className="h-10 text-xs sm:text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="date-desc">Plus récents</SelectItem>
+                      <SelectItem value="date-asc">Plus anciens</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </section>
 
       {accounts.length === 0 ? (
         <div className="rounded-3xl border-2 border-dashed border-zinc-200 dark:border-zinc-800 bg-white/60 dark:bg-zinc-950/60 p-10 text-center space-y-4">
-          <Wallet className="mx-auto h-12 w-12 text-zinc-400" />
+          <Wallet className="mx-auto h-16 w-16 text-zinc-400" />
           <div className="space-y-2">
-            <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
-              Aucun compte pour le moment
-            </h3>
-            <p className="text-sm text-zinc-600 dark:text-zinc-400 max-w-md mx-auto">
-              Commencez par ajouter votre premier compte prop firm pour suivre vos performances et
-              vos frais.
-            </p>
+            <h3 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">Aucun compte</h3>
+            <p className="text-sm text-zinc-600 dark:text-zinc-400">Ajoutez votre premier compte</p>
           </div>
-          <Button onClick={handleAdd} className="flex items-center gap-2">
-            <Plus className="h-4 w-4" />
-            Ajouter un compte
+          <Button onClick={handleAdd} size="lg" className="flex items-center gap-2 mt-4">
+            <Plus className="h-5 w-5" />
+            Nouveau compte
           </Button>
         </div>
       ) : filteredAndSortedAccounts.length === 0 ? (
-        <div className="rounded-3xl border border-zinc-200 dark:border-zinc-800 bg-white/70 dark:bg-zinc-950/60 p-10 text-center space-y-4">
-          <Wallet className="mx-auto h-12 w-12 text-zinc-400" />
+        <div className="rounded-3xl border-2 border-dashed border-zinc-200 dark:border-zinc-800 bg-white/70 dark:bg-zinc-950/60 p-10 text-center space-y-4">
+          <Filter className="mx-auto h-16 w-16 text-zinc-400" />
           <div className="space-y-2">
-            <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
-              Aucun compte ne correspond aux filtres
-            </h3>
-            <p className="text-sm text-zinc-600 dark:text-zinc-400 max-w-md mx-auto">
-              Ajustez les filtres ci-dessus pour élargir la sélection ou réafficher les comptes
-              cachés.
+            <h3 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">Aucun résultat</h3>
+            <p className="text-sm text-zinc-600 dark:text-zinc-400">
+              Changez les filtres pour voir vos comptes
             </p>
           </div>
         </div>
       ) : (
-        <div className="space-y-4 sm:space-y-6">
+        <div className="grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
           {filteredAndSortedAccounts.map(
             (account: {
               id: string
@@ -563,12 +544,8 @@ export default function AccountsPage() {
               pnlEntries?: Array<{ amount: number }>
               linkedEval?: { pricePaid: number }
             }) => {
-              const isCollapsed = collapsedAccounts.includes(account.id)
               const gradient =
                 STATUS_GRADIENTS[account.status] ?? "from-zinc-500/10 via-zinc-500/5 to-transparent"
-              const createdAtLabel = format(new Date(account.createdAt), "d MMM yyyy", {
-                locale: fr,
-              })
 
               // Calculer le ROI pour ce compte
               const totalPnl = (account.pnlEntries || []).reduce(
@@ -584,174 +561,139 @@ export default function AccountsPage() {
                   <CardContent className="p-0">
                     <div className="overflow-hidden rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 bg-white/90 dark:bg-zinc-950/80 shadow-sm">
                       <div
-                        className={`flex flex-col gap-4 border-b border-zinc-200/70 dark:border-zinc-800/60 bg-linear-to-r ${gradient} p-4 sm:p-6`}
+                        className={`flex flex-col gap-3 border-b border-zinc-200/70 dark:border-zinc-800/60 bg-linear-to-r ${gradient} p-4 hover:shadow-md transition-shadow`}
                       >
-                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                          <div className="space-y-2 min-w-0">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <h3 className="text-lg sm:text-xl font-semibold text-zinc-900 dark:text-zinc-50 truncate">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0 flex-1 space-y-2">
+                            <div className="flex items-center gap-2">
+                              <h3 className="text-base sm:text-lg font-bold text-zinc-900 dark:text-zinc-50 truncate">
                                 {account.name}
                               </h3>
-                              <span className="inline-flex items-center gap-1 rounded-full bg-white/70 px-2.5 py-1 text-[11px] font-medium text-zinc-700 dark:bg-zinc-900/80 dark:text-zinc-200">
-                                {PROPFIRM_LABELS[account.propfirm] ?? account.propfirm}
-                              </span>
-                            </div>
-                            <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-300">
-                              Ouvert le {createdAtLabel} • Taille {formatCurrency(account.size)}
-                            </p>
-                          </div>
-                          <div
-                            className="flex items-center gap-2"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
-                              onClick={() => toggleAccountCollapse(account.id)}
-                              aria-label={
-                                isCollapsed
-                                  ? "Déplier les détails du compte"
-                                  : "Réduire les détails du compte"
-                              }
-                            >
-                              <ChevronDown
-                                className={`h-4 w-4 transition-transform ${isCollapsed ? "-rotate-90" : "rotate-0"}`}
-                              />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8"
-                              onClick={() =>
-                                handleEdit({
-                                  ...account,
-                                  notes: account.notes ?? undefined,
-                                } as PropfirmAccount)
-                              }
-                              aria-label="Modifier le compte"
-                            >
-                              <Edit className="h-3.5 w-3.5" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-rose-500 hover:text-rose-600 dark:text-rose-400"
-                              onClick={() => handleDelete(account.id)}
-                              aria-label="Supprimer le compte"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-
-                      {!isCollapsed && (
-                        <div className="p-4 sm:p-6 space-y-4">
-                          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-                            <div className="rounded-xl border border-zinc-200/70 dark:border-zinc-800/70 bg-zinc-50 dark:bg-zinc-900/70 p-3">
-                              <p className="text-[11px] uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-                                Type de compte
-                              </p>
-                              <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
-                                {ACCOUNT_TYPE_LABELS[account.accountType]}
-                              </p>
-                            </div>
-                            <div className="rounded-xl border border-zinc-200/70 dark:border-zinc-800/70 bg-zinc-50 dark:bg-zinc-900/70 p-3">
-                              <p className="text-[11px] uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-                                Statut
-                              </p>
                               <span
-                                className={`mt-1 inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium ${
+                                className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-bold shrink-0 ${
                                   STATUS_COLORS[account.status]
                                 }`}
                               >
                                 {STATUS_LABELS[account.status]}
                               </span>
                             </div>
-                            <div className="rounded-xl border border-zinc-200/70 dark:border-zinc-800/70 bg-zinc-50 dark:bg-zinc-900/70 p-3">
-                              <p className="text-[11px] uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-                                Frais engagés
-                              </p>
-                              <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
-                                {formatCurrency(account.pricePaid)}
-                              </p>
-                            </div>
-                            <div className="rounded-xl border border-zinc-200/70 dark:border-zinc-800/70 bg-zinc-50 dark:bg-zinc-900/70 p-3">
-                              <p className="text-[11px] uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-                                Capital nominal
-                              </p>
-                              <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
-                                {formatCurrency(account.size)}
-                              </p>
-                            </div>
-                            <div className="rounded-xl border border-zinc-200/70 dark:border-zinc-800/70 bg-zinc-50 dark:bg-zinc-900/70 p-3">
-                              <p className="text-[11px] uppercase tracking-wide text-zinc-500 dark:text-zinc-400 flex items-center gap-1">
-                                <Percent className="h-3 w-3" />
-                                ROI
-                              </p>
-                              <p
-                                className={`text-sm font-semibold ${
-                                  accountRoi >= 0
-                                    ? "text-green-600 dark:text-green-400"
-                                    : "text-red-600 dark:text-red-400"
-                                }`}
-                              >
-                                {accountRoi >= 0 ? "+" : ""}
-                                {accountRoi.toFixed(1)}%
-                              </p>
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              <span className="inline-flex items-center gap-1 rounded-full bg-white/90 px-2 py-0.5 text-xs font-semibold text-zinc-700 dark:bg-zinc-900/80 dark:text-zinc-200">
+                                {account.accountType === "EVAL" ? (
+                                  <Target className="h-3.5 w-3.5" />
+                                ) : (
+                                  <ShieldCheck className="h-3.5 w-3.5" />
+                                )}
+                                {PROPFIRM_LABELS[account.propfirm] ?? account.propfirm}
+                              </span>
                             </div>
                           </div>
-
-                          {/* Note explicative pour le ROI */}
-                          <div className="rounded-xl border border-blue-200/70 dark:border-blue-800/70 bg-blue-50/50 dark:bg-blue-950/30 p-3 sm:p-4">
-                            <div className="flex items-start gap-2 sm:gap-3">
-                              <Percent className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
-                              <div className="space-y-1 min-w-0">
-                                <p className="text-xs sm:text-sm font-semibold text-blue-900 dark:text-blue-100">
-                                  À propos du ROI par compte
-                                </p>
-                                <p className="text-[11px] sm:text-xs text-blue-700 dark:text-blue-300">
-                                  Le ROI (Retour sur Investissement) mesure la rentabilité de ce
-                                  compte spécifique. Il compare le profit net (PnL total -
-                                  investissement total, incluant l&apos;évaluation liée si
-                                  applicable) à votre investissement initial. Un ROI positif indique
-                                  que le compte est rentable.
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-
-                          {account.notes && (
-                            <div className="rounded-xl border border-zinc-200/70 dark:border-zinc-800/70 bg-zinc-50 dark:bg-zinc-900/60 p-4">
-                              <p className="text-[11px] uppercase tracking-wide text-zinc-500 dark:text-zinc-400 mb-2">
-                                Notes
-                              </p>
-                              <p className="text-sm text-zinc-600 dark:text-zinc-300 whitespace-pre-wrap">
-                                {account.notes}
-                              </p>
-                            </div>
-                          )}
-
-                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                            <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400">
-                              Créé le {createdAtLabel} •{" "}
-                              {PROPFIRM_LABELS[account.propfirm] ?? account.propfirm}
-                            </p>
-                            <div className="flex flex-wrap gap-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="text-xs sm:text-sm"
-                                onClick={() => router.push(`/dashboard/accounts/${account.id}`)}
-                              >
-                                Voir la fiche
-                                <ArrowUpRight className="ml-1.5 h-3.5 w-3.5" />
-                              </Button>
-                            </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-10 w-10 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:text-zinc-100 dark:hover:bg-zinc-800"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleEdit({
+                                  ...account,
+                                  notes: account.notes ?? undefined,
+                                } as PropfirmAccount)
+                              }}
+                              aria-label="Modifier"
+                              title="Modifier"
+                            >
+                              <Edit className="h-5 w-5" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-10 w-10 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:text-zinc-100 dark:hover:bg-zinc-800"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleDelete(account.id)
+                              }}
+                              aria-label="Supprimer"
+                              title="Supprimer"
+                            >
+                              <Trash2 className="h-5 w-5" />
+                            </Button>
                           </div>
                         </div>
-                      )}
+                        <div className="flex items-center justify-between gap-3 pt-1 border-t border-zinc-200/50 dark:border-zinc-800/50">
+                          <div className="flex items-center gap-1.5 text-sm text-zinc-700 dark:text-zinc-300">
+                            <Wallet className="h-4 w-4" />
+                            <span className="font-semibold">
+                              {formatCurrencyCompact(account.size)}
+                            </span>
+                          </div>
+                          <div
+                            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-bold text-sm ${
+                              accountRoi >= 0
+                                ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400"
+                                : "bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-400"
+                            }`}
+                          >
+                            <Percent className="h-4 w-4" />
+                            <span>{formatRoi(accountRoi)}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="p-4 space-y-3">
+                        <div className="grid grid-cols-2 gap-2.5">
+                          <div className="rounded-lg border border-zinc-200/70 dark:border-zinc-800/70 bg-zinc-50/50 dark:bg-zinc-900/50 p-3">
+                            <div className="flex items-center gap-1.5 mb-1.5">
+                              {account.accountType === "EVAL" ? (
+                                <Target className="h-3.5 w-3.5 text-blue-500" />
+                              ) : (
+                                <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
+                              )}
+                              <p className="text-xs font-semibold text-zinc-600 dark:text-zinc-400 uppercase tracking-wide">
+                                Type
+                              </p>
+                            </div>
+                            <p className="text-sm font-bold text-zinc-900 dark:text-zinc-50">
+                              {ACCOUNT_TYPE_LABELS[account.accountType]}
+                            </p>
+                          </div>
+                          <div className="rounded-lg border border-zinc-200/70 dark:border-zinc-800/70 bg-zinc-50/50 dark:bg-zinc-900/50 p-3">
+                            <div className="flex items-center gap-1.5 mb-1.5">
+                              <Target className="h-3.5 w-3.5 text-amber-500" />
+                              <p className="text-xs font-semibold text-zinc-600 dark:text-zinc-400 uppercase tracking-wide">
+                                Prix payé
+                              </p>
+                            </div>
+                            <p className="text-sm font-bold text-zinc-900 dark:text-zinc-50 text-right">
+                              {formatCurrencyCompact(account.pricePaid)}
+                            </p>
+                          </div>
+                        </div>
+
+                        {account.notes && (
+                          <div className="rounded-lg border border-zinc-200/70 dark:border-zinc-800/70 bg-zinc-50/50 dark:bg-zinc-900/50 p-3">
+                            <p className="text-xs font-semibold text-zinc-600 dark:text-zinc-400 mb-1.5 uppercase tracking-wide">
+                              Notes
+                            </p>
+                            <p className="text-sm text-zinc-700 dark:text-zinc-300 whitespace-pre-wrap line-clamp-2">
+                              {account.notes}
+                            </p>
+                          </div>
+                        )}
+
+                        <Button
+                          variant="default"
+                          size="sm"
+                          className="w-full h-9 text-sm font-semibold"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            router.push(`/dashboard/accounts/${account.id}`)
+                          }}
+                        >
+                          <ArrowUpRight className="h-4 w-4 mr-1.5" />
+                          Voir détails
+                        </Button>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -767,6 +709,15 @@ export default function AccountsPage() {
         account={selectedAccount}
         onSuccess={() => {
           setDialogOpen(false)
+          router.refresh()
+        }}
+      />
+
+      <BulkAccountFormDialog
+        open={bulkDialogOpen}
+        onOpenChange={setBulkDialogOpen}
+        onSuccess={() => {
+          setBulkDialogOpen(false)
           router.refresh()
         }}
       />

@@ -273,95 +273,79 @@ export default function PnlPage() {
     <div className="space-y-6 sm:space-y-8 p-4 sm:p-6 lg:p-8">
       <section className="space-y-6">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          <div className="space-y-2">
+          <div>
             <h1 className="text-3xl sm:text-4xl font-bold text-zinc-900 dark:text-zinc-50">
-              Suivi des performances
+              Mes performances
             </h1>
-            <p className="text-sm sm:text-base text-zinc-600 dark:text-zinc-300 max-w-3xl">
-              Consultez vos résultats consolidés, surveillez la répartition des gains et des pertes,
-              puis accédez rapidement aux outils d&apos;ajout ou au calendrier détaillé.
-            </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
             <Button
               onClick={handleAdd}
               disabled={eligibleAccounts.length === 0}
-              className="w-full sm:w-auto flex items-center gap-2 text-xs sm:text-sm md:text-base"
+              size="lg"
+              className="w-full sm:w-auto flex items-center gap-2 text-sm sm:text-base font-semibold h-11 sm:h-12"
             >
-              <Plus className="h-4 w-4" />
-              <span className="hidden sm:inline whitespace-nowrap">Ajouter un PnL</span>
-              <span className="sm:hidden whitespace-nowrap">Ajouter</span>
+              <Plus className="h-5 w-5" />
+              <span>Nouveau PnL</span>
             </Button>
             <Button
               onClick={handleBulkAdd}
               disabled={eligibleAccounts.length === 0}
               variant="outline"
-              className="w-full sm:w-auto flex items-center gap-2 text-xs sm:text-sm md:text-base"
+              size="lg"
+              className="w-full sm:w-auto flex items-center gap-2 text-sm sm:text-base font-semibold h-11 sm:h-12"
             >
-              <Table className="h-4 w-4" />
-              <span className="hidden sm:inline whitespace-nowrap">Ajout groupé</span>
-              <span className="sm:hidden whitespace-nowrap">Groupe</span>
+              <Table className="h-5 w-5" />
+              <span>Ajout multiple</span>
             </Button>
           </div>
         </div>
 
         <div className="grid gap-4 sm:gap-6 md:grid-cols-2 xl:grid-cols-4">
           <StatCard
-            title="PnL cumulé"
+            title="PnL total"
             value={formatCurrency(totalPnl)}
             icon={Activity}
             variant={totalPnl >= 0 ? "success" : "danger"}
-            description={`${accountsWithEntries} compte${accountsWithEntries > 1 ? "s" : ""} suivi${accountsWithEntries > 1 ? "s" : ""}`}
+            description={`${accountsWithEntries} compte${accountsWithEntries > 1 ? "s" : ""}`}
           />
-          <div className="space-y-2">
-            <StatCard
-              title="PnL Mensuel"
-              value={formatCurrency(monthlyPnl)}
-              icon={BarChart2}
-              variant={monthlyPnl >= 0 ? "success" : "danger"}
-              description="Performance des 30 derniers jours"
-            />
-            <div className="rounded-lg border border-blue-200/70 dark:border-blue-800/70 bg-blue-50/50 dark:bg-blue-950/30 p-3">
-              <p className="text-[10px] sm:text-xs text-blue-700 dark:text-blue-300">
-                Somme des profits et pertes sur les 30 derniers jours pour les comptes actifs
-                financés uniquement. Les entrées buffer sont exclues.
-              </p>
-            </div>
-          </div>
           <StatCard
-            title="Taux de réussite"
+            title="PnL mensuel"
+            value={formatCurrency(monthlyPnl)}
+            icon={BarChart2}
+            variant={monthlyPnl >= 0 ? "success" : "danger"}
+            description="30 derniers jours"
+          />
+          <StatCard
+            title="Réussite"
             value={`${successRate}%`}
             icon={TrendingUp}
             variant={successRate >= 50 ? "success" : "danger"}
-            description={`${positiveEntriesCount} entrée${positiveEntriesCount > 1 ? "s" : ""} gagnante${positiveEntriesCount > 1 ? "s" : ""}`}
+            description={`${positiveEntriesCount} gain${positiveEntriesCount > 1 ? "s" : ""}`}
           />
           <StatCard
             title="Meilleur jour"
             value={bestDayKey ? formatCurrency(bestDayAmount) : "—"}
             icon={Target}
             variant={bestDayAmount >= 0 ? "success" : "danger"}
-            description={bestDayKey ? `Le ${bestDayLabel}` : "En attente de données"}
+            description={bestDayKey ? bestDayLabel : "Aucune donnée"}
           />
         </div>
       </section>
 
       <section className="rounded-2xl border border-zinc-200/70 dark:border-zinc-800/70 bg-white/85 dark:bg-zinc-950/70 backdrop-blur-sm p-4 sm:p-5 shadow-sm">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="space-y-1">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <Activity className="h-5 w-5 text-zinc-600 dark:text-zinc-400" />
             <h2 className="text-base sm:text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-              Paramètres d&apos;affichage
+              Filtres
             </h2>
-            <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-300 max-w-2xl">
-              Les vues PnL affichent uniquement les comptes actifs. Activez l&apos;option pour
-              inclure les comptes d&apos;évaluation dans les statistiques, le calendrier et les
-              tableaux détaillés.
-            </p>
           </div>
           <label
             htmlFor="hide-eval-toggle"
-            className="flex items-center gap-3 text-xs sm:text-sm text-zinc-700 dark:text-zinc-300 cursor-pointer select-none"
+            className="flex items-center gap-3 text-sm font-medium text-zinc-700 dark:text-zinc-300 cursor-pointer select-none"
           >
-            <span>Inclure les comptes d&apos;évaluation</span>
+            <span>Inclure évaluations</span>
             <span className="relative inline-flex h-6 w-11 items-center">
               <input
                 id="hide-eval-toggle"
@@ -379,25 +363,23 @@ export default function PnlPage() {
 
       <section className="rounded-2xl border border-zinc-200/70 dark:border-zinc-800/70 bg-white/90 dark:bg-zinc-950/90 shadow-sm">
         <div className="px-5 sm:px-6 py-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between gap-4">
-          <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <BarChart2 className="h-5 w-5 text-zinc-600 dark:text-zinc-400" />
             <h2 className="text-base sm:text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-              Calendrier PnL — Comptes actifs
+              Calendrier
             </h2>
-            <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400">
-              Les comptes financés excluent automatiquement le PnL attribué au buffer. Utilisez les
-              paramètres du tableau de bord pour inclure ou non les comptes d&apos;évaluation.
-            </p>
           </div>
           <Button
             variant="ghost"
-            size="sm"
-            className="text-xs sm:text-sm flex items-center gap-1"
+            size="lg"
+            className="h-10 w-10 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:text-zinc-100 dark:hover:bg-zinc-800"
             onClick={() => setCalendarCollapsed((prev) => !prev)}
+            aria-label={calendarCollapsed ? "Ouvrir" : "Fermer"}
+            title={calendarCollapsed ? "Ouvrir" : "Fermer"}
           >
             <ChevronDown
-              className={`h-4 w-4 transition-transform ${calendarCollapsed ? "-rotate-90" : "rotate-0"}`}
+              className={`h-5 w-5 transition-transform ${calendarCollapsed ? "-rotate-90" : "rotate-0"}`}
             />
-            {calendarCollapsed ? "Déplier" : "Replier"}
           </Button>
         </div>
         {!calendarCollapsed && (
@@ -409,25 +391,22 @@ export default function PnlPage() {
 
       {eligibleAccounts.length === 0 ? (
         <div className="rounded-3xl border-2 border-dashed border-zinc-200 dark:border-zinc-800 bg-white/60 dark:bg-zinc-950/60 p-10 text-center">
-          <p className="text-sm sm:text-base text-zinc-600 dark:text-zinc-300 max-w-md mx-auto">
-            Créez d&apos;abord un compte de prop firm pour commencer à enregistrer vos performances.
-          </p>
+          <Activity className="mx-auto h-16 w-16 text-zinc-400 mb-4" />
+          <h3 className="text-xl font-bold text-zinc-900 dark:text-zinc-100 mb-2">Aucun compte</h3>
+          <p className="text-sm text-zinc-600 dark:text-zinc-300">Créez un compte pour commencer</p>
         </div>
       ) : filteredEntries.length === 0 ? (
-        <div className="rounded-3xl border border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-950/70 p-10 text-center space-y-4">
-          <TrendingUp className="mx-auto h-12 w-12 text-zinc-400" />
+        <div className="rounded-3xl border-2 border-dashed border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-950/70 p-10 text-center space-y-4">
+          <TrendingUp className="mx-auto h-16 w-16 text-zinc-400" />
           <div className="space-y-2">
-            <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
-              Aucune entrée PnL disponible
-            </h3>
-            <p className="text-sm text-zinc-600 dark:text-zinc-400 max-w-md mx-auto">
-              Enregistrez votre première journée de trading pour alimenter les statistiques et le
-              calendrier.
+            <h3 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">Aucune donnée</h3>
+            <p className="text-sm text-zinc-600 dark:text-zinc-400">
+              Enregistrez votre premier PnL
             </p>
           </div>
-          <Button onClick={handleAdd} className="bg-zinc-900 text-white hover:bg-zinc-800">
-            <Plus className="h-4 w-4 mr-2" />
-            Ajouter un PnL
+          <Button onClick={handleAdd} size="lg" className="mt-4 flex items-center gap-2">
+            <Plus className="h-5 w-5" />
+            Nouveau PnL
           </Button>
         </div>
       ) : (
@@ -444,8 +423,6 @@ export default function PnlPage() {
               (sum, entry) => (entry.amount < 0 ? sum + entry.amount : sum),
               0
             )
-            const accountAverage =
-              accountData.entries.length > 0 ? accountData.total / accountData.entries.length : 0
             const accountSuccess =
               accountData.entries.length > 0
                 ? Math.round(
@@ -471,23 +448,32 @@ export default function PnlPage() {
                       } p-4 sm:p-6`}
                     >
                       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <div className="space-y-1 min-w-0">
-                          <h3 className="text-lg sm:text-xl font-semibold text-zinc-900 dark:text-zinc-50 truncate">
+                        <div className="space-y-2 min-w-0 flex-1">
+                          <h3 className="text-lg sm:text-xl font-bold text-zinc-900 dark:text-zinc-50 truncate">
                             {accountData.accountName}
                           </h3>
-                          <div className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-300">
-                            {accountData.entries.length} entrée
-                            {accountData.entries.length > 1 ? "s" : ""} enregistrée
+                          <div className="flex flex-wrap items-center gap-3 text-sm text-zinc-600 dark:text-zinc-300">
+                            <span className="flex items-center gap-1">
+                              <Activity className="h-4 w-4" />
+                              {accountData.entries.length} entrée
+                              {accountData.entries.length > 1 ? "s" : ""}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Target className="h-4 w-4" />
+                              {lastEntryLabel}
+                            </span>
                           </div>
                         </div>
                         <div className="flex items-center gap-3">
                           <div className="text-right">
-                            <p className="text-[10px] uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-                              Total cumulé
+                            <p className="text-xs font-semibold text-zinc-600 dark:text-zinc-400">
+                              Total
                             </p>
                             <p
-                              className={`text-lg sm:text-2xl font-bold ${
-                                isPositive ? "text-emerald-600" : "text-rose-600"
+                              className={`text-xl sm:text-2xl font-bold ${
+                                isPositive
+                                  ? "text-emerald-600 dark:text-emerald-400"
+                                  : "text-rose-600 dark:text-rose-400"
                               }`}
                             >
                               {isPositive ? "+" : ""}
@@ -496,14 +482,15 @@ export default function PnlPage() {
                           </div>
                           <Button
                             variant="ghost"
-                            size="icon"
+                            size="lg"
                             onClick={() => toggleAccountCollapse(accountId)}
-                            className="h-9 w-9 rounded-full bg-white/70 text-zinc-700 hover:bg-white/90 dark:bg-zinc-900/70 dark:text-zinc-200 dark:hover:bg-zinc-900"
+                            className="h-10 w-10 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:text-zinc-100 dark:hover:bg-zinc-800"
                             aria-expanded={!isCollapsed}
-                            aria-label={isCollapsed ? "Déplier le compte" : "Réduire le compte"}
+                            aria-label={isCollapsed ? "Ouvrir" : "Fermer"}
+                            title={isCollapsed ? "Ouvrir" : "Fermer"}
                           >
                             <ChevronDown
-                              className={`h-4 w-4 transition-transform duration-200 ${
+                              className={`h-5 w-5 transition-transform duration-200 ${
                                 isCollapsed ? "-rotate-90" : "rotate-0"
                               }`}
                             />
@@ -511,58 +498,44 @@ export default function PnlPage() {
                         </div>
                       </div>
 
-                      <div className="flex flex-wrap items-center gap-2 text-[11px] uppercase tracking-wide">
-                        <span className="inline-flex items-center gap-1 rounded-full bg-white/70 px-2.5 py-1 text-zinc-700 dark:bg-zinc-900/60 dark:text-zinc-200">
-                          <span className="h-2 w-2 rounded-full bg-blue-500" />
-                          Dernier PnL : {lastEntryLabel}
-                        </span>
-                        <span className="inline-flex items-center gap-1 rounded-full bg-white/70 px-2.5 py-1 text-zinc-700 dark:bg-zinc-900/60 dark:text-zinc-200">
-                          <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                          {accountSuccess}% de succès
-                        </span>
-                        <span className="inline-flex items-center gap-1 rounded-full bg-white/70 px-2.5 py-1 text-zinc-700 dark:bg-zinc-900/60 dark:text-zinc-200">
-                          <span className="h-2 w-2 rounded-full bg-amber-500" />
-                          {accountData.entries.length} trade
-                          {accountData.entries.length > 1 ? "s" : ""}
-                        </span>
-                      </div>
-
-                      <div className="px-1 sm:px-2 pb-2">
-                        <div className="grid gap-2 sm:gap-3 sm:grid-cols-3">
-                          <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-3 space-y-1">
-                            <p className="text-[11px] uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-                              Gains cumulés
-                            </p>
-                            <p className="text-sm sm:text-base font-semibold text-emerald-600 dark:text-emerald-400">
+                      {!isCollapsed && (
+                        <div className="grid gap-3 sm:grid-cols-3 pt-2">
+                          <div className="rounded-xl border-2 border-zinc-200/70 dark:border-zinc-800/70 bg-white dark:bg-zinc-900/70 p-4">
+                            <div className="flex items-center gap-2 mb-2">
+                              <TrendingUp className="h-4 w-4 text-emerald-500" />
+                              <p className="text-xs font-semibold text-zinc-600 dark:text-zinc-400">
+                                Gains
+                              </p>
+                            </div>
+                            <p className="text-base font-bold text-emerald-600 dark:text-emerald-400">
                               {accountPositiveTotal > 0 ? "+" : ""}
                               {formatCurrency(accountPositiveTotal)}
                             </p>
                           </div>
-                          <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-3 space-y-1">
-                            <p className="text-[11px] uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-                              Pertes cumulées
-                            </p>
-                            <p className="text-sm sm:text-base font-semibold text-rose-600 dark:text-rose-400">
+                          <div className="rounded-xl border-2 border-zinc-200/70 dark:border-zinc-800/70 bg-white dark:bg-zinc-900/70 p-4">
+                            <div className="flex items-center gap-2 mb-2">
+                              <TrendingDown className="h-4 w-4 text-rose-500" />
+                              <p className="text-xs font-semibold text-zinc-600 dark:text-zinc-400">
+                                Pertes
+                              </p>
+                            </div>
+                            <p className="text-base font-bold text-rose-600 dark:text-rose-400">
                               {formatCurrency(accountNegativeTotal)}
                             </p>
                           </div>
-                          <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-3 space-y-1">
-                            <p className="text-[11px] uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-                              Moyenne par entrée
-                            </p>
-                            <p
-                              className={`text-sm sm:text-base font-semibold ${
-                                accountAverage >= 0
-                                  ? "text-emerald-600 dark:text-emerald-400"
-                                  : "text-rose-600 dark:text-rose-400"
-                              }`}
-                            >
-                              {accountAverage >= 0 ? "+" : ""}
-                              {formatCurrency(accountAverage)}
+                          <div className="rounded-xl border-2 border-zinc-200/70 dark:border-zinc-800/70 bg-white dark:bg-zinc-900/70 p-4">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Target className="h-4 w-4 text-zinc-500 dark:text-zinc-400" />
+                              <p className="text-xs font-semibold text-zinc-600 dark:text-zinc-400">
+                                Réussite
+                              </p>
+                            </div>
+                            <p className="text-base font-bold text-zinc-900 dark:text-zinc-50">
+                              {accountSuccess}%
                             </p>
                           </div>
                         </div>
-                      </div>
+                      )}
                     </div>
 
                     {!isCollapsed && (
@@ -597,9 +570,9 @@ export default function PnlPage() {
                                 )}
                               </div>
                             </div>
-                            <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-4 w-full sm:w-auto">
+                            <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
                               <span
-                                className={`text-base sm:text-lg font-semibold ${
+                                className={`text-lg sm:text-xl font-bold ${
                                   entry.amount >= 0
                                     ? "text-emerald-600 dark:text-emerald-400"
                                     : "text-rose-600 dark:text-rose-400"
@@ -608,22 +581,26 @@ export default function PnlPage() {
                                 {entry.amount >= 0 ? "+" : ""}
                                 {formatCurrency(entry.amount)}
                               </span>
-                              <div className="flex gap-1">
+                              <div className="flex gap-2">
                                 <Button
                                   variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+                                  size="lg"
+                                  className="h-10 w-10 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-950"
                                   onClick={() => handleEdit(entry)}
+                                  aria-label="Modifier"
+                                  title="Modifier"
                                 >
-                                  <Edit className="h-3.5 w-3.5" />
+                                  <Edit className="h-5 w-5" />
                                 </Button>
                                 <Button
                                   variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 text-zinc-500 hover:text-rose-600 dark:text-zinc-400 dark:hover:text-rose-400"
+                                  size="lg"
+                                  className="h-10 w-10 text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950"
                                   onClick={() => handleDelete(entry.id)}
+                                  aria-label="Supprimer"
+                                  title="Supprimer"
                                 >
-                                  <Trash2 className="h-3.5 w-3.5" />
+                                  <Trash2 className="h-5 w-5" />
                                 </Button>
                               </div>
                             </div>
