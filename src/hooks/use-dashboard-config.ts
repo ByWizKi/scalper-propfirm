@@ -265,7 +265,7 @@ function getDefaultWidgets(): DashboardWidget[] {
       config: {
         title: "Retraits Bruts",
         value: (data?: WidgetData) => {
-          const amount = data?.stats?.totalWithdrawals || 0
+          const amount = (data?.stats?.totalWithdrawals as number) || 0
           return new Intl.NumberFormat("fr-FR", {
             style: "currency",
             currency: "USD",
@@ -285,7 +285,7 @@ function getDefaultWidgets(): DashboardWidget[] {
       config: {
         title: "Taxes Payées",
         value: (data?: WidgetData) => {
-          const amount = data?.stats?.totalTaxes || 0
+          const amount = (data?.stats?.totalTaxes as number) || 0
           return new Intl.NumberFormat("fr-FR", {
             style: "currency",
             currency: "USD",
@@ -517,7 +517,7 @@ function getDefaultWidgets(): DashboardWidget[] {
       config: {
         title: "Retrait Moyen",
         value: (data?: WidgetData) => {
-          const amount = data?.stats?.avgWithdrawal || 0
+          const amount = (data?.stats?.avgWithdrawal as number) || 0
           return new Intl.NumberFormat("fr-FR", {
             style: "currency",
             currency: "USD",

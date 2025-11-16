@@ -9,7 +9,7 @@ import { DashboardWidgetsManager } from "@/components/dashboard-widgets-manager"
 import { useDashboardConfig } from "@/hooks/use-dashboard-config"
 import { useCustomStats } from "@/hooks/use-custom-stats"
 import { evaluateCustomStat } from "@/lib/custom-stat-evaluator"
-import { WidgetType } from "@/types/dashboard-widget.types"
+import { WidgetType, WidgetData } from "@/types/dashboard-widget.types"
 import * as LucideIcons from "lucide-react"
 
 export default function DashboardPage() {
@@ -54,7 +54,7 @@ export default function DashboardPage() {
           title: cs.title,
           config: {
             title: cs.title,
-            value: (data?: { stats?: Record<string, number> }) => {
+            value: (data?: WidgetData) => {
               const result = evaluateCustomStat(cs.formula, data?.stats || {})
               // Formater selon le type de valeur
               if (

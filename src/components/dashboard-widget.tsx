@@ -119,11 +119,31 @@ function renderCalendarWidget(widget: DashboardWidget, data?: WidgetData) {
   const { config } = widget
 
   if (config.calendarType === "expenses") {
-    return <ExpensesCalendar expenses={data?.accounts || []} />
+    const accounts = Array.isArray(data?.accounts) ? data.accounts : []
+    return (
+      <ExpensesCalendar
+        expenses={
+          accounts as Array<{ id: string; createdAt: string; pricePaid: number; name: string }>
+        }
+      />
+    )
   }
 
   if (config.calendarType === "withdrawals") {
-    return <WithdrawalsCalendar withdrawals={data?.withdrawals || []} />
+    const withdrawals = Array.isArray(data?.withdrawals) ? data.withdrawals : []
+    return (
+      <WithdrawalsCalendar
+        withdrawals={
+          withdrawals as Array<{
+            id: string
+            date: string
+            amount: number
+            notes?: string
+            account: { propfirm: string }
+          }>
+        }
+      />
+    )
   }
 
   return null

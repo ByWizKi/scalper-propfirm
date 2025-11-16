@@ -51,7 +51,45 @@ export interface CalendarWidget extends BaseWidget {
 /**
  * Type pour les données passées aux widgets
  */
-export type WidgetData = Record<string, unknown>
+export interface WidgetData {
+  stats?: {
+    totalAccounts?: number
+    activeAccounts?: number
+    fundedAccounts?: number
+    totalInvested?: number
+    totalPnl?: number
+    totalWithdrawals?: number
+    globalRoi?: number
+    evalSuccessRate?: number
+    avgValidationDays?: number
+    monthlyPnl?: number
+    totalWithdrawalCount?: number
+    avgPnlPerAccount?: number
+    bestDay?: number
+    worstDay?: number
+    tradingDays?: number
+    activeAccountsRate?: number
+    weeklyPnl?: number
+    avgPnlPerTradingDay?: number
+    activeFundedAccounts?: number
+    totalCapitalUnderManagement?: number
+    globalSuccessRate?: number
+    avgWithdrawal?: number
+    totalTaxes?: number
+    fundedAccountsPnl?: number
+    evalAccountsPnl?: number
+    daysSinceFirstAccount?: number
+    withdrawalRate?: number
+    archivedAccounts?: number
+    validatedEval?: number
+    failedEval?: number
+    [key: string]: unknown
+  }
+  accounts?: unknown[]
+  withdrawals?: unknown[]
+  totalNetWithdrawals?: number
+  [key: string]: unknown
+}
 
 /**
  * Union type pour tous les widgets (polymorphisme)
