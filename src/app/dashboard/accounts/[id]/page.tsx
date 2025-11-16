@@ -5,7 +5,6 @@ import { useState, useMemo, useCallback } from "react"
 import { useRouter, useParams } from "next/navigation"
 import dynamic from "next/dynamic"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   ArrowLeft,
   Edit,
@@ -265,102 +264,128 @@ export default function AccountDetailPage() {
   const _last6Months = monthlyPnlArray.slice(0, 6)
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
+    <div className="space-y-6 sm:space-y-8 p-4 sm:p-6 lg:p-8">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
-        <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => router.push("/dashboard/accounts")}
-            className="flex-shrink-0"
-          >
-            <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
-          </Button>
-          <div className="min-w-0 flex-1">
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-zinc-900 dark:text-zinc-50 truncate">
-              {account.name}
-            </h1>
-            <p className="text-sm sm:text-base text-zinc-600 dark:text-zinc-400 mt-1 truncate">
-              {PROPFIRM_LABELS[account.propfirm]} • {formatCurrency(account.size)}
-            </p>
+      <section className="rounded-2xl border border-zinc-200/70 dark:border-zinc-800/70 bg-white/85 dark:bg-zinc-950/70 backdrop-blur-sm p-4 sm:p-5 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => router.push("/dashboard/accounts")}
+              className="h-9 w-9 sm:h-10 sm:w-10 shrink-0"
+            >
+              <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
+            </Button>
+            <div className="min-w-0 flex-1 overflow-hidden">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-zinc-900 dark:text-zinc-50 truncate">
+                {account.name}
+              </h1>
+              <p className="text-sm sm:text-base text-zinc-600 dark:text-zinc-400 mt-1 truncate">
+                {PROPFIRM_LABELS[account.propfirm]} • {formatCurrency(account.size)}
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            {account.accountType === "EVAL" &&
+              account.status === "ACTIVE" &&
+              isEligibleForValidation && (
+                <Button
+                  onClick={handleValidate}
+                  size="lg"
+                  className="bg-green-600 hover:bg-green-700 text-sm sm:text-base font-semibold h-11 sm:h-12"
+                >
+                  <CheckCircle2 className="h-5 w-5 mr-2" />
+                  <span className="hidden sm:inline">Valider le compte</span>
+                  <span className="sm:hidden">Valider</span>
+                </Button>
+              )}
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={() => setEditDialogOpen(true)}
+              className="text-sm sm:text-base font-semibold h-11 sm:h-12"
+            >
+              <Edit className="h-5 w-5 mr-2" />
+              <span className="hidden sm:inline">Modifier</span>
+              <span className="sm:hidden">Éditer</span>
+            </Button>
+            <Button
+              variant="destructive"
+              size="lg"
+              onClick={handleDelete}
+              className="text-sm sm:text-base font-semibold h-11 sm:h-12"
+            >
+              <Trash2 className="h-5 w-5 mr-2" />
+              Supprimer
+            </Button>
           </div>
         </div>
-        <div className="flex flex-wrap gap-2">
-          {account.accountType === "EVAL" &&
-            account.status === "ACTIVE" &&
-            isEligibleForValidation && (
-              <Button onClick={handleValidate} className="bg-green-600 hover:bg-green-700 text-sm">
-                <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-2" />
-                <span className="hidden sm:inline">Valider le compte</span>
-                <span className="sm:hidden">Valider</span>
-              </Button>
-            )}
-          <Button variant="outline" onClick={() => setEditDialogOpen(true)} className="text-sm">
-            <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-2" />
-            <span className="hidden sm:inline">Modifier</span>
-            <span className="sm:hidden">Éditer</span>
-          </Button>
-          <Button variant="destructive" onClick={handleDelete} className="text-sm">
-            <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-2" />
-            Supprimer
-          </Button>
-        </div>
-      </div>
+      </section>
 
       {/* Informations du compte */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Informations du compte</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <section className="rounded-2xl border border-zinc-200/70 dark:border-zinc-800/70 bg-white/85 dark:bg-zinc-950/70 backdrop-blur-sm shadow-sm">
+        <div className="px-5 sm:px-6 py-4 border-b border-zinc-200/70 dark:border-zinc-800/70">
+          <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+            Informations du compte
+          </h2>
+        </div>
+        <div className="p-4 sm:p-5 lg:p-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
             <div>
-              <p className="text-sm text-zinc-600 dark:text-zinc-400">Type</p>
-              <p className="font-medium">{ACCOUNT_TYPE_LABELS[account.accountType]}</p>
+              <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 mb-1">Type</p>
+              <p className="text-sm sm:text-base font-semibold text-zinc-900 dark:text-zinc-50">
+                {ACCOUNT_TYPE_LABELS[account.accountType]}
+              </p>
             </div>
             <div>
-              <p className="text-sm text-zinc-600 dark:text-zinc-400">Statut</p>
+              <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 mb-1">Statut</p>
               <span
-                className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${STATUS_COLORS[account.status]}`}
+                className={`inline-block px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold ${STATUS_COLORS[account.status]}`}
               >
                 {STATUS_LABELS[account.status]}
               </span>
             </div>
             <div>
-              <p className="text-sm text-zinc-600 dark:text-zinc-400">
+              <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 mb-1">
                 {account.linkedEval ? "Total investi" : "Prix payé"}
               </p>
-              <p className="font-medium">{formatCurrency(totalInvested)}</p>
-              <p className="text-xs text-zinc-500">
+              <p className="text-sm sm:text-base font-semibold text-zinc-900 dark:text-zinc-50">
+                {formatCurrency(totalInvested)}
+              </p>
+              <p className="text-[10px] sm:text-xs text-zinc-500 mt-0.5">
                 {formatCurrencyEUR(totalInvested * USD_TO_EUR)}
               </p>
               {account.linkedEval && (
-                <p className="text-xs text-zinc-500 mt-1">
+                <p className="text-[10px] sm:text-xs text-zinc-500 mt-1 break-words">
                   Compte: {formatCurrency(account.pricePaid)} + Eval:{" "}
                   {formatCurrency(account.linkedEval.pricePaid)}
                 </p>
               )}
             </div>
             <div>
-              <p className="text-sm text-zinc-600 dark:text-zinc-400">Date de création</p>
-              <p className="font-medium">
+              <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 mb-1">
+                Date de création
+              </p>
+              <p className="text-sm sm:text-base font-semibold text-zinc-900 dark:text-zinc-50">
                 {format(new Date(account.createdAt), "d MMM yyyy", { locale: fr })}
               </p>
             </div>
           </div>
           {account.linkedEval && (
-            <div className="mt-4 pt-4 border-t border-zinc-200 dark:border-zinc-800">
-              <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-1">
+            <div className="mt-4 pt-4 border-t border-zinc-200/70 dark:border-zinc-800/70">
+              <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 mb-2">
                 Compte d&apos;évaluation lié
               </p>
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-medium">{account.linkedEval.name}</p>
-                <div className="text-right">
-                  <p className="text-sm font-medium">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-sm sm:text-base font-semibold text-zinc-900 dark:text-zinc-50 truncate min-w-0 flex-1">
+                  {account.linkedEval.name}
+                </p>
+                <div className="text-right shrink-0">
+                  <p className="text-sm sm:text-base font-semibold text-zinc-900 dark:text-zinc-50">
                     {formatCurrency(account.linkedEval.pricePaid)}
                   </p>
-                  <p className="text-xs text-zinc-500">
+                  <p className="text-[10px] sm:text-xs text-zinc-500">
                     {formatCurrencyEUR(account.linkedEval.pricePaid * USD_TO_EUR)}
                   </p>
                 </div>
@@ -368,17 +393,19 @@ export default function AccountDetailPage() {
             </div>
           )}
           {account.notes && (
-            <div className="mt-4 pt-4 border-t border-zinc-200 dark:border-zinc-800">
-              <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-1">Notes</p>
-              <p className="text-sm">{account.notes}</p>
+            <div className="mt-4 pt-4 border-t border-zinc-200/70 dark:border-zinc-800/70">
+              <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 mb-2">Notes</p>
+              <p className="text-xs sm:text-sm text-zinc-700 dark:text-zinc-300 whitespace-pre-wrap break-words">
+                {account.notes}
+              </p>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </section>
 
       {/* Statistiques */}
       <div
-        className={`grid gap-4 sm:gap-6 mb-4 sm:mb-6 ${account.accountType === "EVAL" ? "grid-cols-1 sm:grid-cols-2 md:grid-cols-3" : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"}`}
+        className={`grid gap-3 sm:gap-4 md:gap-6 ${account.accountType === "EVAL" ? "grid-cols-1 sm:grid-cols-2 md:grid-cols-3" : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"}`}
       >
         <StatCard
           title="PnL Total"
@@ -386,6 +413,7 @@ export default function AccountDetailPage() {
           icon={totalPnl >= 0 ? TrendingUp : TrendingDown}
           variant={useStatVariant(totalPnl)}
           description={`${tradingDays} jour${tradingDays > 1 ? "s" : ""} de trading`}
+          className="min-w-0"
         />
 
         {account.accountType !== "EVAL" && (
@@ -396,6 +424,7 @@ export default function AccountDetailPage() {
             variant="success"
             secondaryText={formatCurrencyEUR(totalWithdrawals * USD_TO_EUR)}
             description={`${account.withdrawals.length} retrait${account.withdrawals.length > 1 ? "s" : ""}`}
+            className="min-w-0"
           />
         )}
 
@@ -405,6 +434,7 @@ export default function AccountDetailPage() {
           icon={TrendingUp}
           variant="success"
           description="Plus haut PnL quotidien"
+          className="min-w-0"
         />
 
         <StatCard
@@ -413,12 +443,13 @@ export default function AccountDetailPage() {
           icon={Calendar}
           variant={useStatVariant(avgPerDay)}
           description="PnL moyen par jour"
+          className="min-w-0"
         />
       </div>
 
       {/* Règles de validation */}
       {account.accountType === "EVAL" && (
-        <div className="mb-6">
+        <section className="rounded-2xl border border-zinc-200/70 dark:border-zinc-800/70 bg-white/85 dark:bg-zinc-950/70 backdrop-blur-sm shadow-sm">
           <AccountRulesTracker
             accountSize={account.size}
             accountType={account.accountType}
@@ -426,12 +457,12 @@ export default function AccountDetailPage() {
             pnlEntries={account.pnlEntries}
             onEligibilityChange={setIsEligibleForValidation}
           />
-        </div>
+        </section>
       )}
 
       {/* Cycles de trading pour comptes financés */}
       {account.accountType === "FUNDED" && account.propfirm !== "APEX" && (
-        <div className="mb-6">
+        <section className="rounded-2xl border border-zinc-200/70 dark:border-zinc-800/70 bg-white/85 dark:bg-zinc-950/70 backdrop-blur-sm shadow-sm">
           <TradingCyclesTracker
             pnlEntries={account.pnlEntries}
             withdrawals={account.withdrawals}
@@ -439,45 +470,59 @@ export default function AccountDetailPage() {
             propfirm={account.propfirm}
             maxDrawdown={getMaxDrawdown(account.propfirm, account.size)}
           />
-        </div>
+        </section>
       )}
 
       {/* Règles PA pour comptes financés Apex */}
       {account.accountType === "FUNDED" && account.propfirm === "APEX" && (
-        <div className="mb-6">
+        <section className="rounded-2xl border border-zinc-200/70 dark:border-zinc-800/70 bg-white/85 dark:bg-zinc-950/70 backdrop-blur-sm shadow-sm">
           <ApexPaRulesTracker accountSize={account.size} pnlEntries={account.pnlEntries} />
-        </div>
+        </section>
       )}
 
       {/* Vue calendrier mensuelle */}
       {account.pnlEntries.length > 0 && (
-        <div className="mb-6">
+        <section className="rounded-2xl border border-zinc-200/70 dark:border-zinc-800/70 bg-white/85 dark:bg-zinc-950/70 backdrop-blur-sm shadow-sm">
           <MonthlyCalendar pnlEntries={account.pnlEntries} />
-        </div>
+        </section>
       )}
 
       {/* PnL et Retraits */}
       <div
-        className={`grid gap-6 ${account.accountType === "EVAL" ? "md:grid-cols-1" : "md:grid-cols-2"}`}
+        className={`grid gap-4 sm:gap-6 ${account.accountType === "EVAL" ? "md:grid-cols-1" : "md:grid-cols-2"}`}
       >
         {/* Historique PnL */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>Historique PnL</CardTitle>
-              <Button size="sm" onClick={() => setPnlDialogOpen(true)}>
-                Ajouter
-              </Button>
+        <section className="rounded-2xl border border-zinc-200/70 dark:border-zinc-800/70 bg-white/85 dark:bg-zinc-950/70 backdrop-blur-sm shadow-sm">
+          <div className="px-5 sm:px-6 py-4 border-b border-zinc-200/70 dark:border-zinc-800/70 flex items-center justify-between gap-4">
+            <div>
+              <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+                Historique PnL
+              </h2>
+              <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 mt-0.5">
+                Les dernières entrées de profit et perte
+              </p>
             </div>
-            <CardDescription>Les dernières entrées de profit et perte</CardDescription>
-          </CardHeader>
-          <CardContent>
+            <Button
+              size="lg"
+              onClick={() => setPnlDialogOpen(true)}
+              disabled={account.status !== "ACTIVE"}
+              className="text-sm sm:text-base font-semibold h-11 sm:h-12"
+              title={
+                account.status !== "ACTIVE"
+                  ? "Impossible d'ajouter un PNL à un compte non actif"
+                  : ""
+              }
+            >
+              Ajouter
+            </Button>
+          </div>
+          <div className="p-4 sm:p-5 lg:p-6">
             {account.pnlEntries.length === 0 ? (
-              <p className="text-sm text-zinc-500 text-center py-8">
+              <p className="text-xs sm:text-sm text-zinc-500 text-center py-8">
                 Aucune entrée PnL pour le moment
               </p>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-2 sm:space-y-3">
                 {account.pnlEntries
                   .slice(0, 5)
                   .map(
@@ -489,33 +534,37 @@ export default function AccountDetailPage() {
                     }) => (
                       <div
                         key={entry.id}
-                        className="flex items-center justify-between p-3 rounded-lg bg-zinc-50 dark:bg-zinc-900"
+                        className="flex items-center justify-between gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg bg-zinc-50/50 dark:bg-zinc-900/50 border border-zinc-200/50 dark:border-zinc-800/50"
                       >
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
                           <div
-                            className={`p-2 rounded-lg ${entry.amount >= 0 ? "bg-green-100 dark:bg-green-900" : "bg-red-100 dark:bg-red-900"}`}
+                            className={`p-1.5 sm:p-2 rounded-lg shrink-0 ${entry.amount >= 0 ? "bg-green-100 dark:bg-green-900" : "bg-red-100 dark:bg-red-900"}`}
                           >
                             {entry.amount >= 0 ? (
-                              <TrendingUp className="h-4 w-4 text-green-600 dark:text-green-400" />
+                              <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-600 dark:text-green-400" />
                             ) : (
-                              <TrendingDown className="h-4 w-4 text-red-600 dark:text-red-400" />
+                              <TrendingDown className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-red-600 dark:text-red-400" />
                             )}
                           </div>
-                          <div>
-                            <p className="text-sm font-medium">
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-zinc-50">
                               {format(new Date(entry.date), "d MMM yyyy", { locale: fr })}
                             </p>
-                            {entry.notes && <p className="text-xs text-zinc-500">{entry.notes}</p>}
+                            {entry.notes && (
+                              <p className="text-[10px] sm:text-xs text-zinc-500 dark:text-zinc-400 mt-0.5 truncate">
+                                {entry.notes}
+                              </p>
+                            )}
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                           <span
-                            className={`font-bold ${entry.amount >= 0 ? "text-green-600" : "text-red-600"}`}
+                            className={`text-sm sm:text-base font-bold whitespace-nowrap ${entry.amount >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
                           >
                             {entry.amount >= 0 ? "+" : ""}
                             {formatCurrency(entry.amount)}
                           </span>
-                          <div className="flex gap-1">
+                          <div className="flex gap-0.5 sm:gap-1">
                             <Button
                               variant="ghost"
                               size="icon"
@@ -529,9 +578,9 @@ export default function AccountDetailPage() {
                                 })
                                 setPnlDialogOpen(true)
                               }}
-                              className="h-8 w-8"
+                              className="h-7 w-7 sm:h-8 sm:w-8"
                             >
-                              <Edit className="h-3.5 w-3.5" />
+                              <Edit className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                             </Button>
                             <Button
                               variant="ghost"
@@ -549,9 +598,9 @@ export default function AccountDetailPage() {
                                   }
                                 }
                               }}
-                              className="h-8 w-8"
+                              className="h-7 w-7 sm:h-8 sm:w-8"
                             >
-                              <Trash2 className="h-3.5 w-3.5" />
+                              <Trash2 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                             </Button>
                           </div>
                         </div>
@@ -562,7 +611,7 @@ export default function AccountDetailPage() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="w-full"
+                    className="w-full h-8 sm:h-9 text-xs sm:text-sm"
                     onClick={() => router.push("/dashboard/pnl")}
                   >
                     Voir tout ({account.pnlEntries.length})
@@ -570,28 +619,36 @@ export default function AccountDetailPage() {
                 )}
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </section>
 
         {/* Historique Retraits - Seulement pour les comptes financés */}
         {account.accountType !== "EVAL" && (
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle>Historique Retraits</CardTitle>
-                <Button size="sm" onClick={() => setWithdrawalDialogOpen(true)}>
-                  Ajouter
-                </Button>
+          <section className="rounded-2xl border border-zinc-200/70 dark:border-zinc-800/70 bg-white/85 dark:bg-zinc-950/70 backdrop-blur-sm shadow-sm">
+            <div className="px-5 sm:px-6 py-4 border-b border-zinc-200/70 dark:border-zinc-800/70 flex items-center justify-between gap-4">
+              <div>
+                <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+                  Historique Retraits
+                </h2>
+                <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 mt-0.5">
+                  Les derniers retraits effectués
+                </p>
               </div>
-              <CardDescription>Les derniers retraits effectués</CardDescription>
-            </CardHeader>
-            <CardContent>
+              <Button
+                size="lg"
+                onClick={() => setWithdrawalDialogOpen(true)}
+                className="text-sm sm:text-base font-semibold h-11 sm:h-12"
+              >
+                Ajouter
+              </Button>
+            </div>
+            <div className="p-4 sm:p-5 lg:p-6">
               {account.withdrawals.length === 0 ? (
-                <p className="text-sm text-zinc-500 text-center py-8">
+                <p className="text-xs sm:text-sm text-zinc-500 text-center py-8">
                   Aucun retrait pour le moment
                 </p>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-2 sm:space-y-3">
                   {account.withdrawals
                     .slice(0, 5)
                     .map(
@@ -610,36 +667,38 @@ export default function AccountDetailPage() {
                         return (
                           <div
                             key={withdrawal.id}
-                            className="flex items-center justify-between p-3 rounded-lg bg-zinc-50 dark:bg-zinc-900"
+                            className="flex items-center justify-between gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg bg-zinc-50/50 dark:bg-zinc-900/50 border border-zinc-200/50 dark:border-zinc-800/50"
                           >
-                            <div className="flex items-center gap-3">
-                              <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900">
-                                <DollarSign className="h-4 w-4 text-green-600 dark:text-green-400" />
+                            <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                              <div className="p-1.5 sm:p-2 rounded-lg bg-green-100 dark:bg-green-900 shrink-0">
+                                <DollarSign className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-600 dark:text-green-400" />
                               </div>
-                              <div>
-                                <p className="text-sm font-medium">
+                              <div className="min-w-0 flex-1">
+                                <p className="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-zinc-50">
                                   {format(new Date(withdrawal.date), "d MMM yyyy", { locale: fr })}
                                 </p>
                                 {withdrawal.notes && (
-                                  <p className="text-xs text-zinc-500">{withdrawal.notes}</p>
+                                  <p className="text-[10px] sm:text-xs text-zinc-500 dark:text-zinc-400 mt-0.5 truncate">
+                                    {withdrawal.notes}
+                                  </p>
                                 )}
                               </div>
                             </div>
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                               <div className="text-right">
-                                <p className="font-bold text-green-600">
+                                <p className="text-sm sm:text-base font-bold text-green-600 dark:text-green-400 whitespace-nowrap">
                                   {formatCurrency(withdrawal.amount)}
                                 </p>
                                 {isTakeProfitTrader && (
-                                  <p className="text-xs text-orange-600 dark:text-orange-400">
+                                  <p className="text-[10px] sm:text-xs text-orange-600 dark:text-orange-400 whitespace-nowrap">
                                     Net: {formatCurrency(netAmount)} (20% taxe)
                                   </p>
                                 )}
-                                <p className="text-xs text-green-600">
+                                <p className="text-[10px] sm:text-xs text-green-600 dark:text-green-400 whitespace-nowrap">
                                   {formatCurrencyEUR(netAmount * USD_TO_EUR)}
                                 </p>
                               </div>
-                              <div className="flex gap-1">
+                              <div className="flex gap-0.5 sm:gap-1">
                                 <Button
                                   variant="ghost"
                                   size="icon"
@@ -653,9 +712,9 @@ export default function AccountDetailPage() {
                                     })
                                     setWithdrawalDialogOpen(true)
                                   }}
-                                  className="h-8 w-8"
+                                  className="h-7 w-7 sm:h-8 sm:w-8"
                                 >
-                                  <Edit className="h-3.5 w-3.5" />
+                                  <Edit className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                                 </Button>
                                 <Button
                                   variant="ghost"
@@ -679,9 +738,9 @@ export default function AccountDetailPage() {
                                       }
                                     }
                                   }}
-                                  className="h-8 w-8"
+                                  className="h-7 w-7 sm:h-8 sm:w-8"
                                 >
-                                  <Trash2 className="h-3.5 w-3.5" />
+                                  <Trash2 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                                 </Button>
                               </div>
                             </div>
@@ -693,7 +752,7 @@ export default function AccountDetailPage() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="w-full"
+                      className="w-full h-8 sm:h-9 text-xs sm:text-sm"
                       onClick={() => router.push("/dashboard/withdrawals")}
                     >
                       Voir tout ({account.withdrawals.length})
@@ -701,8 +760,8 @@ export default function AccountDetailPage() {
                   )}
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </section>
         )}
       </div>
 
@@ -728,6 +787,7 @@ export default function AccountDetailPage() {
             propfirm: account.propfirm,
             accountType: account.accountType,
             size: account.size,
+            status: account.status,
           },
         ]}
         onSuccess={() => {

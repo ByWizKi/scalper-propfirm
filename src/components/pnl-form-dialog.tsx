@@ -37,6 +37,7 @@ interface PropfirmAccount {
   propfirm: string
   accountType: string
   size: number
+  status?: string
 }
 
 interface PnlFormDialogProps {
@@ -173,8 +174,10 @@ export function PnlFormDialog({
   const uniquePropfirms = Array.from(new Set(accounts.map((acc) => acc.propfirm)))
   const uniqueAccountTypes = Array.from(new Set(accounts.map((acc) => acc.accountType)))
 
-  // Filter accounts
+  // Filter accounts - uniquement les comptes ACTIVE
   const filteredAccounts = accounts.filter((account) => {
+    // Uniquement les comptes avec statut ACTIVE
+    if (account.status !== "ACTIVE") return false
     if (filterPropfirm !== "all" && account.propfirm !== filterPropfirm) return false
     if (filterAccountType !== "all" && account.accountType !== filterAccountType) return false
     return true
@@ -253,7 +256,7 @@ export function PnlFormDialog({
                     <SelectValue placeholder="Sélectionner un compte" />
                   </SelectTrigger>
                   <SelectContent>
-                    {accounts.map((account) => (
+                    {filteredAccounts.map((account) => (
                       <SelectItem key={account.id} value={account.id}>
                         {account.name} - {account.propfirm} ({account.accountType})
                       </SelectItem>

@@ -74,3 +74,72 @@ export const ACCOUNT_SIZES_BY_PROPFIRM: Record<
   ],
   [PropfirmType.OTHER]: [],
 }
+
+// Prix des comptes par propfirm, taille et type
+// Format: { propfirm: { accountType: { size: price } } }
+export const ACCOUNT_PRICES: Record<
+  PropfirmType,
+  Partial<Record<AccountType, Record<number, number>>>
+> = {
+  [PropfirmType.TOPSTEP]: {
+    [AccountType.EVAL]: {
+      50000: 58.8,
+      100000: 0, // À définir
+      150000: 0, // À définir
+    },
+    [AccountType.FUNDED]: {
+      50000: 0, // À définir
+      100000: 0, // À définir
+      150000: 0, // À définir
+    },
+  },
+  [PropfirmType.TAKEPROFITTRADER]: {
+    [AccountType.EVAL]: {
+      25000: 90,
+      50000: 0, // À définir
+      75000: 0, // À définir
+      100000: 0, // À définir
+      150000: 0, // À définir
+    },
+    [AccountType.FUNDED]: {
+      25000: 0, // À définir
+      50000: 0, // À définir
+      75000: 0, // À définir
+      100000: 0, // À définir
+      150000: 0, // À définir
+    },
+  },
+  [PropfirmType.APEX]: {
+    [AccountType.EVAL]: {},
+    [AccountType.FUNDED]: {},
+  },
+  [PropfirmType.FTMO]: {
+    [AccountType.EVAL]: {},
+    [AccountType.FUNDED]: {},
+  },
+  [PropfirmType.MYFUNDEDFUTURES]: {
+    [AccountType.EVAL]: {},
+    [AccountType.FUNDED]: {},
+  },
+  [PropfirmType.BULENOX]: {
+    [AccountType.EVAL]: {},
+    [AccountType.FUNDED]: {},
+  },
+  [PropfirmType.OTHER]: {
+    [AccountType.EVAL]: {},
+    [AccountType.FUNDED]: {},
+  },
+}
+
+/**
+ * Calcule le prix d'un compte selon la propfirm, le type et la taille
+ * Retourne 0 si le prix n'est pas défini
+ */
+export function getAccountPrice(
+  propfirm: PropfirmType,
+  accountType: AccountType,
+  size: number
+): number {
+  const prices = ACCOUNT_PRICES[propfirm]?.[accountType]?.[size]
+  return prices ?? 0
+}

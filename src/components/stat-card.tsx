@@ -2,12 +2,7 @@
 
 import * as React from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { LucideIcon } from "lucide-react"
 
 /**
@@ -64,22 +59,22 @@ const variantStyles = {
 const sizeStyles = {
   sm: {
     value: "text-lg sm:text-xl",
-    title: "text-xs sm:text-sm",
-    icon: "h-3 w-3 sm:h-3.5 sm:w-3.5",
-    description: "text-[10px] sm:text-xs",
-    secondary: "text-[10px] sm:text-xs",
+    title: "text-sm font-semibold",
+    icon: "h-4 w-4",
+    description: "text-xs",
+    secondary: "text-xs",
   },
   md: {
     value: "text-xl sm:text-2xl",
-    title: "text-xs sm:text-sm",
-    icon: "h-3.5 w-3.5 sm:h-4 sm:w-4",
-    description: "text-[10px] sm:text-xs",
-    secondary: "text-[10px] sm:text-xs",
+    title: "text-sm font-semibold",
+    icon: "h-4 w-4 sm:h-5 sm:w-5",
+    description: "text-xs",
+    secondary: "text-xs",
   },
   lg: {
     value: "text-2xl sm:text-3xl",
-    title: "text-sm sm:text-base",
-    icon: "h-4 w-4 sm:h-5 sm:w-5",
+    title: "text-sm font-semibold",
+    icon: "h-5 w-5 sm:h-6 sm:w-6",
     description: "text-xs sm:text-sm",
     secondary: "text-xs sm:text-sm",
   },
@@ -122,9 +117,7 @@ export function StatCard({
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <Tooltip>
             <TooltipTrigger asChild>
-              <CardTitle className={`${sizes.title} font-medium truncate pr-2 cursor-help`}>
-                {title}
-              </CardTitle>
+              <CardTitle className={`${sizes.title} truncate pr-2 cursor-help`}>{title}</CardTitle>
             </TooltipTrigger>
             <TooltipContent>
               <p>{title}</p>
@@ -132,10 +125,12 @@ export function StatCard({
           </Tooltip>
           <Icon className={`${sizes.icon} ${styles.icon} flex-shrink-0`} />
         </CardHeader>
-        <CardContent>
+        <CardContent className="min-w-0">
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className={`${sizes.value} font-bold ${styles.value} truncate leading-tight cursor-help`}>
+              <div
+                className={`${sizes.value} font-bold ${styles.value} truncate leading-tight cursor-help min-w-0 overflow-hidden text-ellipsis whitespace-nowrap`}
+              >
                 {value}
               </div>
             </TooltipTrigger>
@@ -147,7 +142,9 @@ export function StatCard({
           {secondaryText && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <p className={`${sizes.secondary} ${styles.value} mt-0.5 sm:mt-1 truncate cursor-help`}>
+                <p
+                  className={`${sizes.secondary} ${styles.value} mt-0.5 sm:mt-1 truncate cursor-help`}
+                >
                   {secondaryText}
                 </p>
               </TooltipTrigger>
@@ -160,7 +157,9 @@ export function StatCard({
           {description && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <p className={`${sizes.description} text-zinc-500 dark:text-zinc-400 mt-0.5 sm:mt-1 truncate cursor-help`}>
+                <p
+                  className={`${sizes.description} text-zinc-500 dark:text-zinc-400 mt-0.5 sm:mt-1 truncate cursor-help`}
+                >
                   {description}
                 </p>
               </TooltipTrigger>
@@ -183,4 +182,3 @@ export function useStatVariant(value: number): "success" | "danger" | "neutral" 
   if (value < 0) return "danger"
   return "neutral"
 }
-

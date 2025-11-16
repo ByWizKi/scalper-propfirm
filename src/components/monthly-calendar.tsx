@@ -146,14 +146,13 @@ function MonthlyCalendarBase({ pnlEntries }: MonthlyCalendarProps) {
 
   const goToPreviousMonth = () => setCurrentMonth(subMonths(currentMonth, 1))
   const goToNextMonth = () => setCurrentMonth(addMonths(currentMonth, 1))
-  const goToToday = () => setCurrentMonth(new Date())
 
   return (
     <Card>
       <CardHeader className="p-4 sm:p-6">
         <div className="flex flex-col gap-4">
           {/* Navigation et titre */}
-          <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center justify-center gap-2">
             <div className="flex items-center gap-1 sm:gap-2">
               <Button
                 variant="outline"
@@ -175,15 +174,6 @@ function MonthlyCalendarBase({ pnlEntries }: MonthlyCalendarProps) {
                 <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
               </Button>
             </div>
-
-            <Button
-              variant="outline"
-              onClick={goToToday}
-              className="text-xs sm:text-sm h-7 sm:h-9 px-2 sm:px-4"
-            >
-              <span className="hidden sm:inline">Aujourd&apos;hui</span>
-              <span className="sm:hidden">Auj.</span>
-            </Button>
           </div>
 
           {/* Stats mensuelles */}
