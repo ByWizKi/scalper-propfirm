@@ -624,115 +624,118 @@ export default function PnlPage() {
           </Button>
         </div>
       ) : (
-        <div className="grid gap-3 sm:gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4">
-          {filteredEntries.map((entry) => {
-            const account = accounts.find((acc) => acc.id === entry.accountId)
-            const isPositive = entry.amount >= 0
-            const gradient = isPositive
-              ? "from-emerald-500/10 via-emerald-500/5 to-transparent"
-              : "from-rose-500/10 via-rose-500/5 to-transparent"
+        <div className="grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
+          {(() => {
+            // Regrouper les entrées par compte
+            const entriesByAccount = filteredEntries.reduce(
+              (acc, entry) => {
+                const accountId = entry.accountId
+                if (!acc[accountId]) {
+                  acc[accountId] = []
+                }
+                acc[accountId].push(entry)
+                return acc
+              },
+              {} as Record<string, PnlEntry[]>
+            )
 
-            return (
-              <Card key={entry.id} className="border-none bg-transparent shadow-none">
-                <CardContent className="p-0">
-                  <div className="overflow-hidden rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 bg-white/90 dark:bg-zinc-950/80 shadow-sm w-full">
-                    <div
-                      className={`flex flex-col gap-2 sm:gap-3 border-b border-zinc-200/70 dark:border-zinc-800/60 bg-linear-to-r ${gradient} p-3 sm:p-4 hover:shadow-md transition-shadow`}
-                    >
-                      <div className="flex items-start justify-between gap-2 min-w-0 w-full">
-                        <div className="min-w-0 flex-1 space-y-1.5 sm:space-y-2 overflow-hidden">
-                          <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 w-full">
-                            <h3 className="text-sm sm:text-base md:text-lg font-bold text-zinc-900 dark:text-zinc-50 truncate min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap">
-                              {account?.name || "Compte inconnu"}
-                            </h3>
-                            <span
-                              className={`inline-flex items-center rounded-full px-1.5 sm:px-2 py-0.5 text-[10px] sm:text-xs font-bold shrink-0 ${
-                                isPositive
-                                  ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-300"
-                                  : "bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-300"
-                              }`}
-                            >
-                              {isPositive ? "Gain" : "Perte"}
-                            </span>
-                          </div>
-                          <div className="flex flex-wrap items-center gap-1 sm:gap-1.5 min-w-0">
-                            <span className="inline-flex items-center gap-1 rounded-full bg-white/90 px-1.5 sm:px-2 py-0.5 text-[10px] sm:text-xs font-semibold text-zinc-700 dark:bg-zinc-900/80 dark:text-zinc-200 shrink-0">
-                              {account?.accountType === "EVAL" ? (
-                                <Target className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />
-                              ) : (
-                                <ShieldCheck className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />
-                              )}
-                              <span className="truncate max-w-[100px] xs:max-w-[140px] sm:max-w-none">
-                                {account?.propfirm
-                                  ? (PROPFIRM_LABELS[account.propfirm] ?? account.propfirm)
-                                  : "—"}
+            // Trier les entrées par date (plus récent en premier) pour chaque compte
+            Object.keys(entriesByAccount).forEach((accountId) => {
+              entriesByAccount[accountId].sort((a, b) => {
+                return new Date(b.date).getTime() - new Date(a.date).getTime()
+              })
+            })
+
+            return Object.entries(entriesByAccount).map(([accountId, accountEntries]) => {
+              const account = accounts.find((acc) => acc.id === accountId)
+              if (!account) return null
+
+              const accountTotalPnl = accountEntries.reduce((sum, entry) => sum + entry.amount, 0)
+              const isPositive = accountTotalPnl >= 0
+              const gradient = isPositive
+                ? "from-emerald-500/10 via-emerald-500/5 to-transparent"
+                : "from-rose-500/10 via-rose-500/5 to-transparent"
+
+              return (
+                <Card key={accountId} className="border-none bg-transparent shadow-none">
+                  <CardContent className="p-0">
+                    <div className="overflow-hidden rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 bg-white/90 dark:bg-zinc-950/80 shadow-sm w-full">
+                      {/* Header de la card avec infos du compte */}
+                      <div
+                        className={`flex flex-col gap-2 sm:gap-3 border-b border-zinc-200/70 dark:border-zinc-800/60 bg-linear-to-r ${gradient} p-3 sm:p-4`}
+                      >
+                        <div className="flex items-start justify-between gap-2 min-w-0 w-full">
+                          <div className="min-w-0 flex-1 space-y-1.5 sm:space-y-2 overflow-hidden">
+                            <div className="flex items-start gap-1.5 sm:gap-2 min-w-0 w-full">
+                              <div className="min-w-0 flex-1 overflow-hidden">
+                                <h3
+                                  className="text-base sm:text-lg md:text-xl font-bold text-zinc-900 dark:text-zinc-50 truncate min-w-0 flex-1"
+                                  title={account.name}
+                                >
+                                  {account.name.length > 20
+                                    ? `${account.name.substring(0, 20)}...`
+                                    : account.name}
+                                </h3>
+                              </div>
+                              <span
+                                className={`inline-flex items-center rounded-full px-1.5 sm:px-2 py-0.5 text-[10px] sm:text-xs font-bold shrink-0 ${
+                                  isPositive
+                                    ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-300"
+                                    : "bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-300"
+                                }`}
+                              >
+                                {isPositive ? "Gain" : "Perte"}
                               </span>
+                            </div>
+                            <div className="flex flex-wrap items-center gap-1 sm:gap-1.5 min-w-0">
+                              <span className="inline-flex items-center gap-1 rounded-full bg-white/90 px-1.5 sm:px-2 py-0.5 text-[10px] sm:text-xs font-semibold text-zinc-700 dark:bg-zinc-900/80 dark:text-zinc-200 shrink-0">
+                                {account.accountType === "EVAL" ? (
+                                  <Target className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />
+                                ) : (
+                                  <ShieldCheck className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />
+                                )}
+                                <span className="truncate max-w-[100px] xs:max-w-[140px] sm:max-w-none">
+                                  {account.propfirm
+                                    ? (PROPFIRM_LABELS[account.propfirm] ?? account.propfirm)
+                                    : "—"}
+                                </span>
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* PnL total du compte */}
+                        <div className="flex items-center justify-between gap-2 sm:gap-3 pt-1 border-t border-zinc-200/50 dark:border-zinc-800/50 min-w-0 w-full">
+                          <div className="flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm text-zinc-700 dark:text-zinc-300 min-w-0 flex-1">
+                            <Activity className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+                            <span className="font-semibold truncate">
+                              PnL total ({accountEntries.length} entrée
+                              {accountEntries.length > 1 ? "s" : ""})
+                            </span>
+                          </div>
+                          <div
+                            className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg font-bold text-xs sm:text-sm shrink-0 ${
+                              isPositive
+                                ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400"
+                                : "bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-400"
+                            }`}
+                          >
+                            {isPositive ? (
+                              <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+                            ) : (
+                              <TrendingDown className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+                            )}
+                            <span className="whitespace-nowrap">
+                              {isPositive ? "+" : ""}
+                              {formatCurrency(accountTotalPnl)}
                             </span>
                           </div>
                         </div>
-                        <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 sm:h-10 sm:w-10 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:text-zinc-100 dark:hover:bg-zinc-800"
-                            onClick={() => handleEdit(entry)}
-                            aria-label="Modifier"
-                            title="Modifier"
-                          >
-                            <Edit className="h-4 w-4 sm:h-5 sm:w-5" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 sm:h-10 sm:w-10 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:text-zinc-100 dark:hover:bg-zinc-800"
-                            onClick={() => handleDelete(entry.id)}
-                            aria-label="Supprimer"
-                            title="Supprimer"
-                          >
-                            <Trash2 className="h-4 w-4 sm:h-5 sm:w-5" />
-                          </Button>
-                        </div>
                       </div>
-                      <div className="flex items-center justify-between gap-2 sm:gap-3 pt-1 border-t border-zinc-200/50 dark:border-zinc-800/50 min-w-0 w-full">
-                        <div className="flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm text-zinc-700 dark:text-zinc-300 min-w-0 flex-1">
-                          <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
-                          <span className="font-semibold truncate">
-                            {format(new Date(entry.date), "d MMM yyyy", { locale: fr })}
-                          </span>
-                        </div>
-                        <div
-                          className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg font-bold text-xs sm:text-sm shrink-0 ${
-                            isPositive
-                              ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400"
-                              : "bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-400"
-                          }`}
-                        >
-                          {isPositive ? (
-                            <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
-                          ) : (
-                            <TrendingDown className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
-                          )}
-                          <span className="whitespace-nowrap">
-                            {isPositive ? "+" : ""}
-                            {formatCurrency(entry.amount)}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
 
-                    <div className="p-3 sm:p-4 space-y-2 sm:space-y-3">
-                      {entry.notes && (
-                        <div className="rounded-lg border border-zinc-200/70 dark:border-zinc-800/70 bg-zinc-50/50 dark:bg-zinc-900/50 p-2 sm:p-3">
-                          <p className="text-[10px] sm:text-xs font-semibold text-zinc-600 dark:text-zinc-400 mb-1 sm:mb-1.5 uppercase tracking-wide">
-                            Notes
-                          </p>
-                          <p className="text-xs sm:text-sm text-zinc-700 dark:text-zinc-300 whitespace-pre-wrap line-clamp-2 wrap-break-word">
-                            {entry.notes}
-                          </p>
-                        </div>
-                      )}
-                      {account && (
-                        <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
+                      {/* Infos du compte */}
+                      <div className="p-3 sm:p-4 border-b border-zinc-200/70 dark:border-zinc-800/70">
+                        <div className="grid grid-cols-2 gap-2 sm:gap-2.5 mb-2 sm:mb-3">
                           <div className="rounded-lg border border-zinc-200/70 dark:border-zinc-800/70 bg-zinc-50/50 dark:bg-zinc-900/50 p-2 sm:p-3">
                             <div className="flex items-center gap-1 sm:gap-1.5 mb-1 sm:mb-1.5">
                               {account.accountType === "EVAL" ? (
@@ -760,13 +763,101 @@ export default function PnlPage() {
                             </p>
                           </div>
                         </div>
-                      )}
+                        <div className="rounded-lg border border-zinc-200/70 dark:border-zinc-800/70 bg-zinc-50/50 dark:bg-zinc-900/50 p-2 sm:p-3">
+                          <div className="flex items-center gap-1 sm:gap-1.5 mb-1 sm:mb-1.5">
+                            <Target className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-purple-500 shrink-0" />
+                            <p className="text-[10px] sm:text-xs font-semibold text-zinc-600 dark:text-zinc-400 uppercase tracking-wide truncate">
+                              Propfirm
+                            </p>
+                          </div>
+                          <p className="text-xs sm:text-sm font-bold text-zinc-900 dark:text-zinc-50 wrap-break-word">
+                            {account.propfirm
+                              ? (PROPFIRM_LABELS[account.propfirm] ?? account.propfirm)
+                              : "—"}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Liste des entrées PnL */}
+                      <div className="p-3 sm:p-4 space-y-2 sm:space-y-3">
+                        <h4 className="text-xs sm:text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-2">
+                          Entrées PnL ({accountEntries.length})
+                        </h4>
+                        <div className="space-y-2">
+                          {accountEntries.map((entry) => {
+                            const entryIsPositive = entry.amount >= 0
+                            return (
+                              <div
+                                key={entry.id}
+                                className="rounded-lg border border-zinc-200/70 dark:border-zinc-800/70 bg-zinc-50/50 dark:bg-zinc-900/50 p-2 sm:p-3 hover:bg-zinc-100/50 dark:hover:bg-zinc-800/50 transition-colors"
+                              >
+                                <div className="flex items-start justify-between gap-2 sm:gap-3">
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-1.5 sm:gap-2 mb-1">
+                                      <Calendar className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-zinc-500 shrink-0" />
+                                      <span className="text-xs sm:text-sm font-semibold text-zinc-700 dark:text-zinc-300 truncate">
+                                        {format(new Date(entry.date), "d MMM yyyy", { locale: fr })}
+                                      </span>
+                                    </div>
+                                    {entry.notes && (
+                                      <p className="text-xs text-zinc-600 dark:text-zinc-400 line-clamp-2 wrap-break-word mt-1">
+                                        {entry.notes}
+                                      </p>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                                    <div
+                                      className={`flex items-center gap-1 px-2 py-1 rounded-lg font-bold text-xs sm:text-sm ${
+                                        entryIsPositive
+                                          ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400"
+                                          : "bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-400"
+                                      }`}
+                                    >
+                                      {entryIsPositive ? (
+                                        <TrendingUp className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />
+                                      ) : (
+                                        <TrendingDown className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />
+                                      )}
+                                      <span className="whitespace-nowrap">
+                                        {entryIsPositive ? "+" : ""}
+                                        {formatCurrency(entry.amount)}
+                                      </span>
+                                    </div>
+                                    <div className="flex items-center gap-0.5 sm:gap-1">
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-7 w-7 sm:h-8 sm:w-8 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:text-zinc-100 dark:hover:bg-zinc-800"
+                                        onClick={() => handleEdit(entry)}
+                                        aria-label="Modifier"
+                                        title="Modifier"
+                                      >
+                                        <Edit className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-7 w-7 sm:h-8 sm:w-8 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:text-zinc-100 dark:hover:bg-zinc-800"
+                                        onClick={() => handleDelete(entry.id)}
+                                        aria-label="Supprimer"
+                                        title="Supprimer"
+                                      >
+                                        <Trash2 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )
-          })}
+                  </CardContent>
+                </Card>
+              )
+            })
+          })()}
         </div>
       )}
 
