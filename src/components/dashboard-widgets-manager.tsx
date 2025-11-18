@@ -211,6 +211,7 @@ export function DashboardWidgetsManager({
                   key={widget.id}
                   widget={widget}
                   onToggle={handleToggle}
+                  onDelete={handleDeleteCustomStat}
                   data={data}
                 />
               ))}
@@ -232,6 +233,7 @@ export function DashboardWidgetsManager({
                   key={widget.id}
                   widget={widget}
                   onToggle={handleToggle}
+                  onDelete={handleDeleteCustomStat}
                   data={data}
                 />
               ))}

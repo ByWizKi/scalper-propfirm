@@ -7,12 +7,13 @@ import { WithdrawalsCalendar } from "@/components/withdrawals-calendar"
 import { DashboardWidget, WidgetType, WidgetData } from "@/types/dashboard-widget.types"
 import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
-import { GripVertical, Eye, EyeOff } from "lucide-react"
+import { GripVertical, Eye, EyeOff, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 interface DashboardWidgetProps {
   widget: DashboardWidget
   onToggle: (widgetId: string) => void
+  onDelete?: (widgetId: string) => void
   data?: WidgetData // Données pour calculer les valeurs dynamiques
 }
 
@@ -20,7 +21,12 @@ interface DashboardWidgetProps {
  * Composant polymorphique pour afficher un widget
  * Utilise le pattern Strategy pour gérer différents types de widgets
  */
-export function DashboardWidgetRenderer({ widget, onToggle, data }: DashboardWidgetProps) {
+export function DashboardWidgetRenderer({
+  widget,
+  onToggle,
+  onDelete,
+  data,
+}: DashboardWidgetProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: widget.id,
   })
@@ -67,6 +73,20 @@ export function DashboardWidgetRenderer({ widget, onToggle, data }: DashboardWid
             <EyeOff className="h-4 w-4 text-zinc-600 dark:text-zinc-400" />
           )}
         </Button>
+
+        {/* Bouton supprimer (uniquement pour les widgets personnalisés) */}
+        {onDelete && widget.id.startsWith("custom-stat-") && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 p-1.5 hover:bg-red-100 dark:hover:bg-red-900/20"
+            onClick={() => onDelete(widget.id)}
+            aria-label="Supprimer"
+            title="Supprimer"
+          >
+            <X className="h-4 w-4 text-red-600 dark:text-red-400" />
+          </Button>
+        )}
       </div>
     </div>
   )
