@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useCreateAccountMutation, useUpdateAccountMutation } from "@/hooks/use-mutation"
-import { PROPFIRM_LABELS, ACCOUNT_SIZES_BY_PROPFIRM } from "@/lib/constants"
+import { PROPFIRM_LABELS, ACCOUNT_SIZES_BY_PROPFIRM, AVAILABLE_PROPFIRMS } from "@/lib/constants"
 import { PropfirmType } from "@/types/account.types"
 
 interface PropfirmAccount {
@@ -43,14 +43,10 @@ interface AccountFormDialogProps {
 }
 
 // Générer la liste des propfirms disponibles depuis les constantes
-const PROPFIRM_TYPES = Object.entries(PROPFIRM_LABELS)
-  .filter(
-    ([key]) =>
-      key !== PropfirmType.OTHER &&
-      key !== PropfirmType.FTMO &&
-      key !== PropfirmType.MYFUNDEDFUTURES
-  )
-  .map(([value, label]) => ({ value, label }))
+const PROPFIRM_TYPES = AVAILABLE_PROPFIRMS.map((key) => ({
+  value: key,
+  label: PROPFIRM_LABELS[key],
+}))
 
 const ACCOUNT_TYPES = [
   { value: "EVAL", label: "Évaluation" },

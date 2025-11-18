@@ -10,11 +10,21 @@ export const PROPFIRM_LABELS: Record<PropfirmType, string> = {
   [PropfirmType.TOPSTEP]: "TopStep",
   [PropfirmType.TAKEPROFITTRADER]: "Take Profit Trader",
   [PropfirmType.APEX]: "Apex",
-  [PropfirmType.FTMO]: "FTMO",
-  [PropfirmType.MYFUNDEDFUTURES]: "My Funded Futures",
   [PropfirmType.BULENOX]: "Bulenox",
   [PropfirmType.OTHER]: "Autre",
+  // Propfirms non utilisées (gardées pour compatibilité DB)
+  [PropfirmType.FTMO]: "FTMO",
+  [PropfirmType.MYFUNDEDFUTURES]: "My Funded Futures",
 }
+
+// Liste des propfirms disponibles dans l'interface utilisateur (sans FTMO et MYFUNDEDFUTURES)
+export const AVAILABLE_PROPFIRMS = [
+  PropfirmType.TOPSTEP,
+  PropfirmType.TAKEPROFITTRADER,
+  PropfirmType.APEX,
+  PropfirmType.BULENOX,
+  PropfirmType.OTHER,
+] as const
 
 export const ACCOUNT_TYPE_LABELS: Record<AccountType, string> = {
   [AccountType.EVAL]: "Évaluation",
@@ -36,7 +46,7 @@ export const STATUS_COLORS: Record<AccountStatus, string> = {
 }
 
 // Taux de change (devrait idéalement venir d'une API)
-export const USD_TO_EUR = 0.92
+export const USD_TO_EUR = 0.86
 
 // Tailles de compte disponibles par propfirm
 export const ACCOUNT_SIZES_BY_PROPFIRM: Record<
@@ -63,8 +73,6 @@ export const ACCOUNT_SIZES_BY_PROPFIRM: Record<
     { value: "250000", label: "250K" },
     { value: "300000", label: "300K" },
   ],
-  [PropfirmType.FTMO]: [],
-  [PropfirmType.MYFUNDEDFUTURES]: [],
   [PropfirmType.BULENOX]: [
     { value: "25000", label: "25K" },
     { value: "50000", label: "50K" },
@@ -73,6 +81,9 @@ export const ACCOUNT_SIZES_BY_PROPFIRM: Record<
     { value: "250000", label: "250K" },
   ],
   [PropfirmType.OTHER]: [],
+  // Propfirms non utilisées (gardées pour compatibilité DB)
+  [PropfirmType.FTMO]: [],
+  [PropfirmType.MYFUNDEDFUTURES]: [],
 }
 
 // Prix des comptes par propfirm, taille et type
@@ -113,19 +124,20 @@ export const ACCOUNT_PRICES: Record<
     [AccountType.EVAL]: {},
     [AccountType.FUNDED]: {},
   },
-  [PropfirmType.FTMO]: {
-    [AccountType.EVAL]: {},
-    [AccountType.FUNDED]: {},
-  },
-  [PropfirmType.MYFUNDEDFUTURES]: {
-    [AccountType.EVAL]: {},
-    [AccountType.FUNDED]: {},
-  },
   [PropfirmType.BULENOX]: {
     [AccountType.EVAL]: {},
     [AccountType.FUNDED]: {},
   },
   [PropfirmType.OTHER]: {
+    [AccountType.EVAL]: {},
+    [AccountType.FUNDED]: {},
+  },
+  // Propfirms non utilisées (gardées pour compatibilité DB)
+  [PropfirmType.FTMO]: {
+    [AccountType.EVAL]: {},
+    [AccountType.FUNDED]: {},
+  },
+  [PropfirmType.MYFUNDEDFUTURES]: {
     [AccountType.EVAL]: {},
     [AccountType.FUNDED]: {},
   },
