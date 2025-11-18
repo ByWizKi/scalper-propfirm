@@ -61,8 +61,6 @@ const PROPFIRM_LABELS: Record<string, string> = {
   TOPSTEP: "TopStep",
   TAKEPROFITTRADER: "Take Profit Trader",
   APEX: "Apex",
-  FTMO: "FTMO",
-  MYFUNDEDFUTURES: "My Funded Futures",
   BULENOX: "Bulenox",
   OTHER: "Autre",
 }

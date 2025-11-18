@@ -116,54 +116,75 @@ export function StatCard({
       <Card
         className={`rounded-2xl border border-zinc-200/70 dark:border-zinc-800/70 bg-white/85 dark:bg-zinc-950/70 backdrop-blur-sm shadow-sm ${className}`}
       >
-        <CardContent className="p-3 sm:p-4 md:p-5">
-          <div className="flex items-start justify-between gap-3 mb-3">
+        <CardContent className="p-3 sm:p-4 md:p-5 flex flex-col h-full">
+          <div className="flex items-start justify-between gap-2 sm:gap-3 mb-2 sm:mb-3 flex-shrink-0">
             <div className="flex-1 min-w-0">
               <Tooltip>
                 <TooltipTrigger asChild>
                   <h3
-                    className={`${sizes.title} text-zinc-600 dark:text-zinc-400 truncate cursor-help`}
+                    className={`${sizes.title} text-zinc-600 dark:text-zinc-400 break-words cursor-help line-clamp-2`}
                   >
                     {title}
                   </h3>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>{title}</p>
+                  <p className="max-w-xs break-words">{title}</p>
                 </TooltipContent>
               </Tooltip>
             </div>
-            <Icon className={`${sizes.icon} ${styles.icon} flex-shrink-0`} />
+            <Icon className={`${sizes.icon} ${styles.icon} flex-shrink-0 mt-0.5`} />
           </div>
 
-          <div className="space-y-1">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div
-                  className={`${sizes.value} font-bold ${styles.value} truncate leading-tight cursor-help min-w-0 overflow-hidden text-ellipsis whitespace-nowrap`}
-                >
-                  {value}
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p className="font-bold">{valueString}</p>
-                {secondaryText && <p className="text-xs mt-1">{secondaryText}</p>}
-              </TooltipContent>
-            </Tooltip>
-
-            {description && (
+          <div className="space-y-1 flex-1 flex flex-col justify-between">
+            <div>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <p
-                    className={`${sizes.description} text-zinc-500 dark:text-zinc-400 truncate cursor-help`}
+                  <div
+                    className={`${sizes.value} font-bold ${styles.value} break-words leading-tight cursor-help min-w-0`}
                   >
-                    {description}
-                  </p>
+                    {value}
+                  </div>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>{description}</p>
+                  <p className="font-bold break-words max-w-xs">{valueString}</p>
+                  {secondaryText && (
+                    <p className="text-xs mt-1 break-words max-w-xs">{secondaryText}</p>
+                  )}
                 </TooltipContent>
               </Tooltip>
-            )}
+            </div>
+
+            <div className="mt-auto">
+              {description && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <p
+                      className={`${sizes.description} text-zinc-500 dark:text-zinc-400 break-words cursor-help line-clamp-2`}
+                    >
+                      {description}
+                    </p>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="max-w-xs break-words">{description}</p>
+                  </TooltipContent>
+                </Tooltip>
+              )}
+
+              {secondaryText && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <p
+                      className={`${sizes.secondary} text-zinc-400 dark:text-zinc-500 break-words cursor-help line-clamp-1 mt-1`}
+                    >
+                      {secondaryText}
+                    </p>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="max-w-xs break-words">{secondaryText}</p>
+                  </TooltipContent>
+                </Tooltip>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>
