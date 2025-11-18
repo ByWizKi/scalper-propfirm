@@ -25,7 +25,8 @@ import {
   Eye,
   Filter,
   ShieldCheck,
-  Percent,
+  TrendingUp,
+  TrendingDown,
 } from "lucide-react"
 import { useAccountsListCache } from "@/hooks/use-data-cache"
 import { useDeleteAccountMutation } from "@/hooks/use-mutation"
@@ -42,7 +43,7 @@ interface PropfirmAccount {
   pricePaid: number
   notes?: string
   createdAt: string
-  pnlEntries?: Array<{ amount: number }>
+  pnlEntries?: Array<{ id?: string; date?: string; amount: number; notes?: string | null }>
   linkedEval?: { pricePaid: number }
 }
 
@@ -131,13 +132,6 @@ export default function AccountsPage() {
       return `${(amount / 1000).toFixed(amount >= 10000 ? 0 : 1)}k $US`
     }
     return formatCurrency(amount)
-  }
-
-  const formatRoi = (roi: number) => {
-    if (Math.abs(roi) >= 1000) {
-      return `${roi >= 0 ? "+" : ""}${(roi / 1000).toFixed(1)}k%`
-    }
-    return `${roi >= 0 ? "+" : ""}${roi.toFixed(1)}%`
   }
 
   // Filtrer et trier les comptes
@@ -250,6 +244,13 @@ export default function AccountsPage() {
     ? `${PROPFIRM_LABELS[lastAccount.propfirm] ?? lastAccount.propfirm} • ${ACCOUNT_TYPE_LABELS[lastAccount.accountType]}`
     : "Aucun compte"
 
+  // Tronquer le nom du compte si trop long
+  const lastAccountName = lastAccount
+    ? lastAccount.name.length > 20
+      ? `${lastAccount.name.substring(0, 20)}...`
+      : lastAccount.name
+    : "—"
+
   const lastValidatedLabel = lastValidatedAccount
     ? format(new Date(lastValidatedAccount.createdAt), "d MMM yyyy", { locale: fr })
     : "—"
@@ -335,7 +336,8 @@ export default function AccountsPage() {
           />
           <StatCard
             title="Dernier ajouté"
-            value={lastAccount ? lastAccount.name : "—"}
+            value={lastAccountName}
+            valueTooltip={lastAccount?.name}
             icon={Target}
             description={lastAccountDescription}
             secondaryText={lastAccountDateLabel}
@@ -543,20 +545,53 @@ export default function AccountsPage() {
               pricePaid: number
               notes?: string | null
               createdAt: string
-              pnlEntries?: Array<{ amount: number }>
+              pnlEntries?: Array<{
+                id?: string
+                date?: string
+                amount: number
+                notes?: string | null
+              }>
               linkedEval?: { pricePaid: number }
             }) => {
               const gradient =
                 STATUS_GRADIENTS[account.status] ?? "from-zinc-500/10 via-zinc-500/5 to-transparent"
 
-              // Calculer le ROI pour ce compte
-              const totalPnl = (account.pnlEntries || []).reduce(
-                (sum, entry) => sum + entry.amount,
-                0
-              )
-              const totalInvested = account.pricePaid + (account.linkedEval?.pricePaid || 0)
-              const netProfit = totalPnl - totalInvested
-              const accountRoi = totalInvested > 0 ? (netProfit / totalInvested) * 100 : 0
+              // Obtenir le dernier PnL entré sur ce compte
+              let lastPnlEntry = null
+              let lastPnlAmount = 0
+
+              try {
+                if (
+                  account.pnlEntries &&
+                  Array.isArray(account.pnlEntries) &&
+                  account.pnlEntries.length > 0
+                ) {
+                  const validEntries = account.pnlEntries.filter(
+                    (entry) =>
+                      entry && typeof entry === "object" && typeof entry.amount === "number"
+                  )
+
+                  if (validEntries.length > 0) {
+                    lastPnlEntry = [...validEntries].sort((a, b) => {
+                      // Trier par date décroissante (le plus récent en premier)
+                      // Si pas de date, mettre à la fin
+                      try {
+                        const dateA = a.date ? new Date(a.date).getTime() : 0
+                        const dateB = b.date ? new Date(b.date).getTime() : 0
+                        if (dateA === 0 && dateB === 0) return 0 // Pas de date, garder l'ordre
+                        if (dateA === 0) return 1 // Mettre les entrées sans date à la fin
+                        if (dateB === 0) return -1
+                        return dateB - dateA
+                      } catch {
+                        return 0
+                      }
+                    })[0]
+                    lastPnlAmount = lastPnlEntry?.amount ?? 0
+                  }
+                }
+              } catch {
+                // En cas d'erreur, on continue sans afficher le dernier PnL
+              }
 
               return (
                 <Card key={account.id} className="border-none bg-transparent shadow-none">
@@ -568,8 +603,13 @@ export default function AccountsPage() {
                         <div className="flex items-start justify-between gap-2 min-w-0 w-full">
                           <div className="min-w-0 flex-1 space-y-1.5 sm:space-y-2 overflow-hidden">
                             <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 w-full">
-                              <h3 className="text-sm sm:text-base md:text-lg font-bold text-zinc-900 dark:text-zinc-50 truncate min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap">
-                                {account.name}
+                              <h3
+                                className="text-sm sm:text-base md:text-lg font-bold text-zinc-900 dark:text-zinc-50 truncate min-w-0 flex-1"
+                                title={account.name}
+                              >
+                                {account.name.length > 20
+                                  ? `${account.name.substring(0, 20)}...`
+                                  : account.name}
                               </h3>
                               <span
                                 className={`inline-flex items-center rounded-full px-1.5 sm:px-2 py-0.5 text-[10px] sm:text-xs font-bold shrink-0 ${
@@ -631,16 +671,30 @@ export default function AccountsPage() {
                               {formatCurrencyCompact(account.size)}
                             </span>
                           </div>
-                          <div
-                            className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg font-bold text-xs sm:text-sm shrink-0 ${
-                              accountRoi >= 0
-                                ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400"
-                                : "bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-400"
-                            }`}
-                          >
-                            <Percent className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
-                            <span className="whitespace-nowrap">{formatRoi(accountRoi)}</span>
-                          </div>
+                          {lastPnlEntry ? (
+                            <div
+                              className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg font-bold text-xs sm:text-sm shrink-0 ${
+                                lastPnlAmount >= 0
+                                  ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400"
+                                  : "bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-400"
+                              }`}
+                            >
+                              {lastPnlAmount >= 0 ? (
+                                <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+                              ) : (
+                                <TrendingDown className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+                              )}
+                              <span className="whitespace-nowrap">
+                                {lastPnlAmount >= 0 ? "+" : ""}
+                                {formatCurrencyCompact(lastPnlAmount)}
+                              </span>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg font-bold text-xs sm:text-sm shrink-0 bg-zinc-50 text-zinc-500 dark:bg-zinc-900/50 dark:text-zinc-400">
+                              <Activity className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+                              <span className="whitespace-nowrap">—</span>
+                            </div>
+                          )}
                         </div>
                       </div>
 
