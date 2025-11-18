@@ -25,6 +25,8 @@ export interface StatCardProps {
   className?: string
   /** Taille de la card */
   size?: "sm" | "md" | "lg"
+  /** Texte complet à afficher dans le tooltip (si différent de value) (optionnel) */
+  valueTooltip?: string
 }
 
 /**
@@ -104,12 +106,15 @@ export function StatCard({
   secondaryText,
   className = "",
   size = "md",
+  valueTooltip,
 }: StatCardProps) {
   const styles = variantStyles[variant]
   const sizes = sizeStyles[size]
 
   // Convertir la valeur en string pour l'affichage
   const valueString = typeof value === "number" ? value.toString() : value
+  // Utiliser valueTooltip si fourni, sinon utiliser valueString
+  const tooltipValue = valueTooltip ?? valueString
 
   return (
     <TooltipProvider>
@@ -140,15 +145,15 @@ export function StatCard({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div
-                    className={`${sizes.value} font-bold ${styles.value} break-words leading-tight cursor-help min-w-0`}
+                    className={`${sizes.value} font-bold ${styles.value} break-words leading-tight cursor-help min-w-0 truncate`}
                   >
                     {value}
                   </div>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p className="font-bold break-words max-w-xs">{valueString}</p>
+                  <p className="font-bold wrap-break-word max-w-xs">{tooltipValue}</p>
                   {secondaryText && (
-                    <p className="text-xs mt-1 break-words max-w-xs">{secondaryText}</p>
+                    <p className="text-xs mt-1 wrap-break-word max-w-xs">{secondaryText}</p>
                   )}
                 </TooltipContent>
               </Tooltip>
