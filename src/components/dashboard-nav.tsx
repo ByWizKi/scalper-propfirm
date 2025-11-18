@@ -5,7 +5,16 @@ import { usePathname, useRouter } from "next/navigation"
 import { signOut, useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
-import { LayoutDashboard, Wallet, TrendingUp, DollarSign, LogOut, User, Menu } from "lucide-react"
+import {
+  LayoutDashboard,
+  Wallet,
+  TrendingUp,
+  DollarSign,
+  LogOut,
+  User,
+  Menu,
+  Calculator,
+} from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useState } from "react"
 
@@ -14,6 +23,7 @@ export const navigation = [
   { name: "Comptes", href: "/dashboard/accounts", icon: Wallet },
   { name: "PnL", href: "/dashboard/pnl", icon: TrendingUp },
   { name: "Retraits", href: "/dashboard/withdrawals", icon: DollarSign },
+  { name: "Calculateurs", href: "/dashboard/calculations", icon: Calculator },
   { name: "Profil", href: "/dashboard/profile", icon: User },
 ]
 

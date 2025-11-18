@@ -47,8 +47,7 @@ export function getPropfirmLabel(propfirm: string): string {
     TOPSTEP: "Topstep",
     TAKEPROFITTRADER: "TakeProfit Trader",
     APEX: "Apex Trader Funding",
-    FTMO: "FTMO",
-    MYFUNDEDFUTURES: "MyFundedFutures",
+    BULENOX: "Bulenox",
     OTHER: "Autre",
   }
   return labels[propfirm] || propfirm
@@ -72,5 +71,3 @@ export function getStatusBadge(status: string): {
 export function getAccountTypeLabel(type: string): string {
   return type === "EVAL" ? "Évaluation" : "Financé"
 }
-
-
