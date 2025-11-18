@@ -532,11 +532,11 @@ export default function CalculationsPage() {
       {/* Affichage du taux de conversion */}
       <Card className="rounded-2xl border border-zinc-200/70 dark:border-zinc-800/70 bg-white/85 dark:bg-zinc-950/70 backdrop-blur-sm shadow-sm">
         <CardContent className="p-3 sm:p-4 md:p-6">
-          <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3">
+          <div className="flex items-center sm:items-start gap-2 sm:gap-3">
             <Info className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0 text-zinc-500 dark:text-zinc-400" />
-            <p className="flex-1 text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 break-words text-center sm:text-left">
-              Taux de conversion utilisé :{" "}
-              <strong className="text-zinc-900 dark:text-zinc-50 font-semibold whitespace-nowrap">
+            <p className="flex-1 min-w-0 text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 text-center sm:text-left">
+              <span className="block sm:inline">Taux de conversion utilisé : </span>
+              <strong className="text-zinc-900 dark:text-zinc-50 font-semibold block sm:inline break-all sm:break-normal">
                 1 USD = {USD_TO_EUR.toFixed(4)} EUR
               </strong>
             </p>
