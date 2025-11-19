@@ -14,6 +14,7 @@ import {
   User,
   Menu,
   Calculator,
+  BarChart3,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useState } from "react"
@@ -23,6 +24,7 @@ export const navigation = [
   { name: "Comptes", href: "/dashboard/accounts", icon: Wallet },
   { name: "PnL", href: "/dashboard/pnl", icon: TrendingUp },
   { name: "Retraits", href: "/dashboard/withdrawals", icon: DollarSign },
+  { name: "Visualisations", href: "/dashboard/visualization", icon: BarChart3 },
   { name: "Calculateurs", href: "/dashboard/calculations", icon: Calculator },
   { name: "Profil", href: "/dashboard/profile", icon: User },
 ]

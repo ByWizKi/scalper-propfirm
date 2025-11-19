@@ -9,6 +9,7 @@ export enum PropfirmType {
   FTMO = "FTMO",
   MYFUNDEDFUTURES = "MYFUNDEDFUTURES",
   BULENOX = "BULENOX",
+  PHIDIAS = "PHIDIAS",
   OTHER = "OTHER",
 }
 

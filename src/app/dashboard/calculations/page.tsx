@@ -70,7 +70,7 @@ export default function CalculationsPage() {
   // Obtenir les règles de la propfirm sélectionnée
   const propfirmRules = useMemo(() => {
     const strategy = PropfirmStrategyFactory.getStrategy(propfirm)
-    const withdrawalRules = strategy.getWithdrawalRules()
+    const withdrawalRules = strategy.getWithdrawalRules(accountSize)
     const accountRules = strategy.getAccountRules(accountSize)
 
     // Récupérer toutes les tailles disponibles pour cette propfirm

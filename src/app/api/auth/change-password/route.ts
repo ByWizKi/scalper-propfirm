@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import bcrypt from "bcryptjs"
+import { changePasswordSchema, validateApiRequest } from "@/lib/validation"
 
 export async function PUT(request: Request) {
   try {
@@ -12,22 +13,15 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: "Non authentifié" }, { status: 401 })
     }
 
-    const { currentPassword, newPassword } = await request.json()
+    const body = await request.json()
 
-    // Validation
-    if (!currentPassword || !newPassword) {
-      return NextResponse.json(
-        { error: "Mot de passe actuel et nouveau mot de passe requis" },
-        { status: 400 }
-      )
+    // Validation avec Zod
+    const validation = validateApiRequest(changePasswordSchema, body)
+    if (!validation.success) {
+      return NextResponse.json({ error: validation.error }, { status: validation.status })
     }
 
-    if (newPassword.length < 6) {
-      return NextResponse.json(
-        { error: "Le nouveau mot de passe doit contenir au moins 6 caractères" },
-        { status: 400 }
-      )
-    }
+    const { currentPassword, newPassword } = validation.data
 
     // Récupérer l'utilisateur
     const user = await prisma.user.findUnique({

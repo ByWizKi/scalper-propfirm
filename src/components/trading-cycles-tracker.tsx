@@ -3,6 +3,8 @@
 import * as React from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { CheckCircle2, Calendar, DollarSign, TrendingUp, Info, Shield } from "lucide-react"
+import { getPhidiasAccountSubType } from "@/lib/phidias-account-type"
+import { PropfirmStrategyFactory } from "@/lib/strategies/propfirm-strategy.factory"
 
 interface PnlEntry {
   id: string
@@ -24,9 +26,21 @@ interface TradingCyclesTrackerProps {
   accountSize: number
   propfirm: string
   maxDrawdown?: number
+  accountType?: string
+  accountName?: string
+  notes?: string | null
 }
 
-export function TradingCyclesTracker({ pnlEntries, withdrawals, accountSize, propfirm, maxDrawdown }: TradingCyclesTrackerProps) {
+export function TradingCyclesTracker({
+  pnlEntries,
+  withdrawals,
+  accountSize,
+  propfirm,
+  maxDrawdown,
+  accountType,
+  accountName,
+  notes
+}: TradingCyclesTrackerProps) {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("fr-FR", {
       style: "currency",
@@ -44,6 +58,17 @@ export function TradingCyclesTracker({ pnlEntries, withdrawals, accountSize, pro
   const currentBalance = accountSize + totalPnl - totalWithdrawals
 
   const isTakeProfitTrader = propfirm === "TAKEPROFITTRADER"
+  const isPhidias = propfirm === "PHIDIAS"
+
+  // Déterminer le sous-type Phidias
+  const phidiasSubType = isPhidias && accountType
+    ? getPhidiasAccountSubType(accountType, accountName, notes)
+    : null
+
+  // Pour Phidias, obtenir la stratégie pour les calculs
+  const phidiasStrategy = isPhidias
+    ? PropfirmStrategyFactory.getStrategy(propfirm)
+    : null
 
   // Pour TopStep : un retrait réinitialise le cycle
   // On doit calculer uniquement depuis le dernier retrait
@@ -71,31 +96,56 @@ export function TradingCyclesTracker({ pnlEntries, withdrawals, accountSize, pro
   // Trier les dates
   const sortedDates = Object.keys(dailyPnl).sort()
 
-  // Trouver les cycles de 5 jours consécutifs avec au moins $150 par jour
+  // Déterminer les règles de cycle selon la propfirm
+  let daysPerCycle = 5 // TopStep par défaut
+  let minDailyProfit = 150 // TopStep par défaut
+
+  if (isPhidias) {
+    if (phidiasSubType === "CASH" && accountSize === 25000) {
+      // 25K Static CASH : pas de cycles requis
+      daysPerCycle = 0
+      minDailyProfit = 0
+    } else if (phidiasSubType === "CASH" && accountSize !== 25000) {
+      // 50K, 100K, 150K CASH : cycles de 10 jours
+      daysPerCycle = 10
+      minDailyProfit = accountSize === 50000 ? 150 : accountSize === 100000 ? 200 : 250
+    } else if (phidiasSubType === "LIVE") {
+      // LIVE : pas de cycles requis
+      daysPerCycle = 0
+      minDailyProfit = 0
+    }
+  }
+
+  // Trouver les cycles selon les règles de la propfirm
   const cycles: { startDate: string, endDate: string, valid: boolean, days: { date: string, amount: number }[] }[] = []
 
   let currentCycle: { date: string, amount: number }[] = []
 
-  sortedDates.forEach((date) => {
-    const amount = dailyPnl[date]
+  // Pour Phidias 25K Static CASH et LIVE : pas de cycles
+  if (daysPerCycle === 0) {
+    // Pas de cycles à calculer
+  } else {
+    sortedDates.forEach((date) => {
+      const amount = dailyPnl[date]
 
-    if (amount >= 150) {
-      currentCycle.push({ date, amount })
+      if (amount >= minDailyProfit) {
+        currentCycle.push({ date, amount })
 
-      if (currentCycle.length === 5) {
-        cycles.push({
-          startDate: currentCycle[0].date,
-          endDate: currentCycle[4].date,
-          valid: true,
-          days: [...currentCycle]
-        })
+        if (currentCycle.length === daysPerCycle) {
+          cycles.push({
+            startDate: currentCycle[0].date,
+            endDate: currentCycle[currentCycle.length - 1].date,
+            valid: true,
+            days: [...currentCycle]
+          })
+          currentCycle = []
+        }
+      } else {
+        // Réinitialiser si on a un jour < minDailyProfit
         currentCycle = []
       }
-    } else {
-      // Réinitialiser si on a un jour < $150
-      currentCycle = []
-    }
-  })
+    })
+  }
 
   const completedCycles = cycles.length
 
@@ -108,7 +158,26 @@ export function TradingCyclesTracker({ pnlEntries, withdrawals, accountSize, pro
   let bufferReached = false
   let taxRate = 0
 
-  if (isTakeProfitTrader) {
+  if (isPhidias && phidiasStrategy) {
+    // Utiliser la stratégie Phidias pour calculer le montant disponible
+    const normalizedPnlEntries = pnlEntries.map((entry) => ({
+      date: new Date(entry.date),
+      amount: entry.amount,
+    }))
+
+    availableForWithdrawal = phidiasStrategy.calculateAvailableForWithdrawal(
+      accountSize,
+      totalPnl,
+      totalWithdrawals,
+      normalizedPnlEntries,
+      accountType,
+      accountName,
+      notes
+    )
+
+    const withdrawalRules = phidiasStrategy.getWithdrawalRules(accountSize, accountType, accountName, notes)
+    taxRate = withdrawalRules.taxRate || 0.2
+  } else if (isTakeProfitTrader) {
     // TakeProfitTrader: Buffer = Balance initiale + Drawdown
     buffer = accountSize + (maxDrawdown || 0)
     bufferReached = currentBalance >= buffer
@@ -130,33 +199,50 @@ export function TradingCyclesTracker({ pnlEntries, withdrawals, accountSize, pro
       : 0
   }
 
+  // Titre et description selon la propfirm
+  let title = "Cycles de Trading"
+  let description = "Complétez des cycles de 5 jours avec minimum $150/jour pour débloquer les retraits"
+
+  if (isTakeProfitTrader) {
+    title = "Règles de Retrait"
+    description = "Atteignez le buffer pour débloquer les retraits"
+  } else if (isPhidias) {
+    if (phidiasSubType === "CASH" && accountSize === 25000) {
+      title = "Règles de Retrait"
+      description = "Retrait possible dès J+1, pas de restriction de période"
+    } else if (phidiasSubType === "CASH" && accountSize !== 25000) {
+      title = "Cycles de Trading"
+      description = `Complétez des cycles de 10 jours avec minimum ${formatCurrency(minDailyProfit)}/jour pour les 3 premiers retraits`
+    } else if (phidiasSubType === "LIVE") {
+      title = "Règles de Retrait"
+      description = "Retrait chaque jour sans limite maximum (min 500$), solde min = initial + 100$"
+    }
+  }
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{isTakeProfitTrader ? "Règles de Retrait" : "Cycles de Trading"}</CardTitle>
-        <CardDescription>
-          {isTakeProfitTrader
-            ? "Atteignez le buffer pour débloquer les retraits"
-            : "Complétez des cycles de 5 jours avec minimum $150/jour pour débloquer les retraits"
-          }
-        </CardDescription>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Résumé */}
-        {isTakeProfitTrader ? (
+        {(isTakeProfitTrader || (isPhidias && phidiasSubType === "LIVE") || (isPhidias && phidiasSubType === "CASH" && accountSize === 25000)) ? (
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-            <div className="bg-blue-50 dark:bg-blue-950 rounded-lg p-3 sm:p-4">
-              <div className="flex items-center gap-2 mb-1">
-                <Shield className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-600 flex-shrink-0" />
-                <p className="text-[10px] sm:text-xs text-zinc-600 dark:text-zinc-400 truncate">Buffer requis</p>
+            {isTakeProfitTrader && (
+              <div className="bg-blue-50 dark:bg-blue-950 rounded-lg p-3 sm:p-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <Shield className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-600 flex-shrink-0" />
+                  <p className="text-[10px] sm:text-xs text-zinc-600 dark:text-zinc-400 truncate">Buffer requis</p>
+                </div>
+                <p className="text-lg sm:text-xl lg:text-2xl font-bold text-blue-600 dark:text-blue-400 truncate">
+                  {formatCurrency(buffer)}
+                </p>
+                <p className="text-[10px] sm:text-xs text-zinc-500 mt-1 truncate">
+                  Balance initiale + DD
+                </p>
               </div>
-              <p className="text-lg sm:text-xl lg:text-2xl font-bold text-blue-600 dark:text-blue-400 truncate">
-                {formatCurrency(buffer)}
-              </p>
-              <p className="text-[10px] sm:text-xs text-zinc-500 mt-1 truncate">
-                Balance initiale + DD
-              </p>
-            </div>
+            )}
 
             <div className="bg-green-50 dark:bg-green-950 rounded-lg p-3 sm:p-4">
               <div className="flex items-center gap-2 mb-1">
@@ -166,9 +252,16 @@ export function TradingCyclesTracker({ pnlEntries, withdrawals, accountSize, pro
               <p className="text-lg sm:text-xl lg:text-2xl font-bold text-green-600 dark:text-green-400 truncate">
                 {formatCurrency(currentBalance)}
               </p>
-              <p className="text-[10px] sm:text-xs text-zinc-500 mt-1 truncate">
-                {bufferReached ? "✓ Buffer atteint" : `Reste ${formatCurrency(buffer - currentBalance)}`}
-              </p>
+              {isTakeProfitTrader && (
+                <p className="text-[10px] sm:text-xs text-zinc-500 mt-1 truncate">
+                  {bufferReached ? "✓ Buffer atteint" : `Reste ${formatCurrency(buffer - currentBalance)}`}
+                </p>
+              )}
+              {isPhidias && phidiasSubType === "LIVE" && (
+                <p className="text-[10px] sm:text-xs text-zinc-500 mt-1 truncate">
+                  Solde min: {formatCurrency(accountSize + 100)}
+                </p>
+              )}
             </div>
 
             <div className="bg-purple-50 dark:bg-purple-950 rounded-lg p-3 sm:p-4">
@@ -180,7 +273,7 @@ export function TradingCyclesTracker({ pnlEntries, withdrawals, accountSize, pro
                 {formatCurrency(Math.max(0, availableForWithdrawal * (1 - taxRate)))}
               </p>
               <p className="text-[10px] sm:text-xs text-zinc-500 mt-1 truncate">
-                Après taxe de 20%
+                Après taxe de {Math.round(taxRate * 100)}%
               </p>
             </div>
           </div>
@@ -190,13 +283,23 @@ export function TradingCyclesTracker({ pnlEntries, withdrawals, accountSize, pro
               <div className="bg-blue-50 dark:bg-blue-950 rounded-lg p-3 sm:p-4">
                 <div className="flex items-center gap-2 mb-1">
                   <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-600 flex-shrink-0" />
-                  <p className="text-[10px] sm:text-xs text-zinc-600 dark:text-zinc-400 truncate">Cycles complétés</p>
+                  <p className="text-[10px] sm:text-xs text-zinc-600 dark:text-zinc-400 truncate">
+                    {isPhidias && phidiasSubType === "CASH" && accountSize !== 25000
+                      ? "Cycles complétés (10j)"
+                      : "Cycles complétés"}
+                  </p>
                 </div>
                 <p className="text-lg sm:text-xl lg:text-2xl font-bold text-blue-600 dark:text-blue-400">
                   {completedCycles}
                 </p>
                 <p className="text-[10px] sm:text-xs text-zinc-500 mt-1 truncate">
-                  {lastWithdrawalDate ? "Depuis le dernier retrait" : "Total"}
+                  {isPhidias && phidiasSubType === "CASH" && accountSize !== 25000
+                    ? withdrawals.length < 3
+                      ? `${withdrawals.length}/3 premiers retraits`
+                      : "Une fois par mois"
+                    : lastWithdrawalDate
+                      ? "Depuis le dernier retrait"
+                      : "Total"}
                 </p>
               </div>
 
@@ -247,7 +350,68 @@ export function TradingCyclesTracker({ pnlEntries, withdrawals, accountSize, pro
               <p className="text-xs sm:text-sm font-medium text-zinc-900 dark:text-zinc-100 mb-1 sm:mb-2">
                 Règles de retrait
               </p>
-              {isTakeProfitTrader ? (
+              {isPhidias && phidiasSubType === "CASH" && accountSize === 25000 ? (
+                <ul className="space-y-1 text-[10px] sm:text-xs text-zinc-600 dark:text-zinc-400">
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-600 mt-0.5 flex-shrink-0">•</span>
+                    <span className="break-words">Retrait possible dès J+1 du compte CASH</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-600 mt-0.5 flex-shrink-0">•</span>
+                    <span className="break-words">Pas de restriction de période, pas de minimum de montant</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-600 mt-0.5 flex-shrink-0">•</span>
+                    <span className="break-words">Taxe de 20% : si vous retirez $100, vous recevez $80</span>
+                  </li>
+                </ul>
+              ) : isPhidias && phidiasSubType === "CASH" && accountSize !== 25000 ? (
+                <ul className="space-y-1 text-[10px] sm:text-xs text-zinc-600 dark:text-zinc-400">
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-600 mt-0.5 flex-shrink-0">•</span>
+                    <span className="break-words">Un cycle = 10 jours de trading avec PnL positif ≥ {formatCurrency(minDailyProfit)} par jour</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-600 mt-0.5 flex-shrink-0">•</span>
+                    <span className="break-words">Minimum 10 jours de trading pour les 3 premiers retraits</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-600 mt-0.5 flex-shrink-0">•</span>
+                    <span className="break-words">Après les 3 premiers retraits : une demande par mois</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-600 mt-0.5 flex-shrink-0">•</span>
+                    <span className="break-words">Seuil minimum requis : {accountSize === 50000 ? "52 600$" : accountSize === 100000 ? "103 700$" : "154 500$"}</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-600 mt-0.5 flex-shrink-0">•</span>
+                    <span className="break-words">Montant max par période : {accountSize === 50000 ? "2 000$" : accountSize === 100000 ? "2 500$" : "2 750$"}</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-600 mt-0.5 flex-shrink-0">•</span>
+                    <span className="break-words">Taxe de 20% sur tous les retraits</span>
+                  </li>
+                </ul>
+              ) : isPhidias && phidiasSubType === "LIVE" ? (
+                <ul className="space-y-1 text-[10px] sm:text-xs text-zinc-600 dark:text-zinc-400">
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-600 mt-0.5 flex-shrink-0">•</span>
+                    <span className="break-words">Payout possible chaque jour sans limite maximum</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-600 mt-0.5 flex-shrink-0">•</span>
+                    <span className="break-words">Minimum 500$ par retrait</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-600 mt-0.5 flex-shrink-0">•</span>
+                    <span className="break-words">Solde minimum : solde initial ({formatCurrency(accountSize)}) + 100$</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-600 mt-0.5 flex-shrink-0">•</span>
+                    <span className="break-words">Taxe de 20% : si vous retirez $100, vous recevez $80</span>
+                  </li>
+                </ul>
+              ) : isTakeProfitTrader ? (
                 <ul className="space-y-1 text-[10px] sm:text-xs text-zinc-600 dark:text-zinc-400">
                   <li className="flex items-start gap-2">
                     <span className="text-blue-600 mt-0.5 flex-shrink-0">•</span>
@@ -270,7 +434,7 @@ export function TradingCyclesTracker({ pnlEntries, withdrawals, accountSize, pro
                 <ul className="space-y-1 text-[10px] sm:text-xs text-zinc-600 dark:text-zinc-400">
                   <li className="flex items-start gap-2">
                     <span className="text-blue-600 mt-0.5 flex-shrink-0">•</span>
-                    <span className="break-words">Un cycle = 5 jours consécutifs avec minimum $150 de profit par jour</span>
+                    <span className="break-words">Un cycle = {daysPerCycle} jours consécutifs avec minimum {formatCurrency(minDailyProfit)} de profit par jour</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-blue-600 mt-0.5 flex-shrink-0">•</span>
@@ -295,8 +459,8 @@ export function TradingCyclesTracker({ pnlEntries, withdrawals, accountSize, pro
           </div>
         </div>
 
-        {/* Cycle en cours - TopStep uniquement */}
-        {!isTakeProfitTrader && currentCycle.length > 0 && (
+        {/* Cycle en cours - TopStep et Phidias CASH (50K+) uniquement */}
+        {!isTakeProfitTrader && !(isPhidias && (phidiasSubType === "LIVE" || (phidiasSubType === "CASH" && accountSize === 25000))) && currentCycle.length > 0 && daysPerCycle > 0 && (
           <div className="border-t border-zinc-200 dark:border-zinc-800 pt-4">
             <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100 mb-3">
               Cycle en cours {lastWithdrawalDate && "(depuis le dernier retrait)"}
@@ -306,7 +470,7 @@ export function TradingCyclesTracker({ pnlEntries, withdrawals, accountSize, pro
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4 text-blue-600" />
                   <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
-                    {currentCycle.length} / 5 jours
+                    {currentCycle.length} / {daysPerCycle} jours
                   </span>
                 </div>
                 <div className="text-xs text-blue-600 dark:text-blue-400">
@@ -314,7 +478,7 @@ export function TradingCyclesTracker({ pnlEntries, withdrawals, accountSize, pro
                 </div>
               </div>
               <div className="flex gap-1">
-                {[1, 2, 3, 4, 5].map((day) => (
+                {Array.from({ length: daysPerCycle }, (_, i) => i + 1).map((day) => (
                   <div
                     key={day}
                     className={`h-2 flex-1 rounded ${
@@ -329,8 +493,8 @@ export function TradingCyclesTracker({ pnlEntries, withdrawals, accountSize, pro
           </div>
         )}
 
-        {/* Liste des cycles complétés - TopStep uniquement */}
-        {!isTakeProfitTrader && cycles.length > 0 && (
+        {/* Liste des cycles complétés - TopStep et Phidias CASH (50K+) uniquement */}
+        {!isTakeProfitTrader && !(isPhidias && (phidiasSubType === "LIVE" || (phidiasSubType === "CASH" && accountSize === 25000))) && cycles.length > 0 && (
           <div className="border-t border-zinc-200 dark:border-zinc-800 pt-4">
             <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100 mb-3">
               {lastWithdrawalDate ? "Cycle complété (dernier retrait effectué)" : "Cycles complétés"}
@@ -357,7 +521,7 @@ export function TradingCyclesTracker({ pnlEntries, withdrawals, accountSize, pro
                       {formatCurrency(cycle.days.reduce((sum, d) => sum + d.amount, 0))}
                     </p>
                     <p className="text-xs text-green-600 dark:text-green-400">
-                      5 jours
+                      {daysPerCycle} jours
                     </p>
                   </div>
                 </div>
@@ -366,8 +530,8 @@ export function TradingCyclesTracker({ pnlEntries, withdrawals, accountSize, pro
           </div>
         )}
 
-        {/* Message si pas de cycles - TopStep uniquement */}
-        {!isTakeProfitTrader && cycles.length === 0 && currentCycle.length === 0 && (
+        {/* Message si pas de cycles - TopStep et Phidias CASH (50K+) uniquement */}
+        {!isTakeProfitTrader && !(isPhidias && (phidiasSubType === "LIVE" || (phidiasSubType === "CASH" && accountSize === 25000))) && cycles.length === 0 && currentCycle.length === 0 && daysPerCycle > 0 && (
           <div className="border-t border-zinc-200 dark:border-zinc-800 pt-4">
             <div className="text-center py-4">
               <Calendar className="h-12 w-12 text-zinc-400 mx-auto mb-2" />
@@ -378,7 +542,7 @@ export function TradingCyclesTracker({ pnlEntries, withdrawals, accountSize, pro
                 }
               </p>
               <p className="text-xs text-zinc-500 mt-1">
-                Tradez pendant 5 jours consécutifs avec au moins $150/jour
+                Tradez pendant {daysPerCycle} jours consécutifs avec au moins {formatCurrency(minDailyProfit)}/jour
               </p>
             </div>
           </div>

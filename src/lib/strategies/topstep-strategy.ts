@@ -35,11 +35,21 @@ export class TopStepStrategy implements PropfirmStrategy {
     return "TopStep"
   }
 
-  getAccountRules(accountSize: number): AccountRules | null {
+  getAccountRules(
+    accountSize: number,
+    _accountType?: string,
+    _accountName?: string,
+    _notes?: string | null
+  ): AccountRules | null {
     return this.rulesConfig[accountSize] || null
   }
 
-  getWithdrawalRules(): WithdrawalRules {
+  getWithdrawalRules(
+    _accountSize?: number,
+    _accountType?: string,
+    _accountName?: string,
+    _notes?: string | null
+  ): WithdrawalRules {
     return {
       taxRate: 0, // Pas de taxe chez TopStep
       requiresCycles: true,
@@ -60,7 +70,10 @@ export class TopStepStrategy implements PropfirmStrategy {
     accountSize: number,
     totalPnl: number,
     totalWithdrawals: number,
-    pnlEntries: Array<{ date: Date; amount: number }>
+    pnlEntries: Array<{ date: Date; amount: number }>,
+    _accountType?: string,
+    _accountName?: string,
+    _notes?: string | null
   ): number {
     // Grouper les PnL par jour
     const dailyPnl: Record<string, number> = {}
@@ -99,7 +112,10 @@ export class TopStepStrategy implements PropfirmStrategy {
 
   isEligibleForValidation(
     accountSize: number,
-    pnlEntries: Array<{ date: Date; amount: number }>
+    pnlEntries: Array<{ date: Date; amount: number }>,
+    _accountType?: string,
+    _accountName?: string,
+    _notes?: string | null
   ): boolean {
     const rules = this.getAccountRules(accountSize)
     if (!rules) return false

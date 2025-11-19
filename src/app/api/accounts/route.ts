@@ -2,8 +2,34 @@ import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { PropfirmType, AccountType, AccountStatus } from "@prisma/client"
+import { createAccountSchema, validateApiRequest } from "@/lib/validation"
 
-// GET - Récupérer tous les comptes de l'utilisateur
+/**
+ * @swagger
+ * /api/accounts:
+ *   get:
+ *     summary: Récupère tous les comptes de l'utilisateur authentifié
+ *     tags: [Accounts]
+ *     security:
+ *       - bearerAuth: []
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Liste des comptes
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Account'
+ *       401:
+ *         description: Non authentifié
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 export async function GET() {
   try {
     const session = (await getServerSession(authOptions)) as { user?: { id?: string } } | null
@@ -36,7 +62,86 @@ export async function GET() {
   }
 }
 
-// POST - Créer un nouveau compte
+/**
+ * @swagger
+ * /api/accounts:
+ *   post:
+ *     summary: Crée un nouveau compte prop firm
+ *     tags: [Accounts]
+ *     security:
+ *       - bearerAuth: []
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - propfirm
+ *               - size
+ *               - accountType
+ *               - pricePaid
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 minLength: 1
+ *                 maxLength: 100
+ *                 example: "Mon Compte Apex"
+ *               propfirm:
+ *                 type: string
+ *                 enum: [TOPSTEP, TAKEPROFITTRADER, APEX, BULENOX, PHIDIAS, FTMO, MYFUNDEDFUTURES, OTHER]
+ *                 example: "APEX"
+ *               size:
+ *                 type: integer
+ *                 minimum: 1
+ *                 maximum: 1000000
+ *                 example: 50000
+ *               accountType:
+ *                 type: string
+ *                 enum: [EVAL, FUNDED]
+ *                 example: "EVAL"
+ *               status:
+ *                 type: string
+ *                 enum: [ACTIVE, VALIDATED, FAILED, ARCHIVED]
+ *                 default: ACTIVE
+ *                 example: "ACTIVE"
+ *               pricePaid:
+ *                 type: number
+ *                 minimum: 0
+ *                 maximum: 100000
+ *                 example: 100
+ *               linkedEvalId:
+ *                 type: string
+ *                 format: uuid
+ *                 nullable: true
+ *                 example: null
+ *               notes:
+ *                 type: string
+ *                 maxLength: 1000
+ *                 nullable: true
+ *                 example: "Notes sur le compte"
+ *     responses:
+ *       201:
+ *         description: Compte créé avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Account'
+ *       400:
+ *         description: Données invalides
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       401:
+ *         description: Non authentifié
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 export async function POST(request: Request) {
   try {
     const session = (await getServerSession(authOptions)) as { user?: { id?: string } } | null
@@ -46,33 +151,35 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const { name, propfirm, size, accountType, status, pricePaid, linkedEvalId, notes } = body
 
-    // Validation
-    if (!name || !propfirm || !size || !accountType || pricePaid === undefined) {
-      return NextResponse.json(
-        { message: "Tous les champs requis doivent être renseignés" },
-        { status: 400 }
-      )
+    // Validation avec Zod
+    const validation = validateApiRequest(createAccountSchema, body)
+    if (!validation.success) {
+      return NextResponse.json({ message: validation.error }, { status: validation.status })
     }
+
+    const { name, propfirm, size, accountType, status, pricePaid, linkedEvalId, notes } =
+      validation.data
 
     const account = await prisma.propfirmAccount.create({
       data: {
         userId: session.user.id,
         name,
-        propfirm,
-        size: parseInt(size),
-        accountType,
-        status: status || "ACTIVE",
-        pricePaid: parseFloat(pricePaid),
+        propfirm: propfirm as PropfirmType,
+        size,
+        accountType: accountType as AccountType,
+        status: (status || "ACTIVE") as AccountStatus,
+        pricePaid,
         linkedEvalId: linkedEvalId || null,
         notes: notes || null,
       },
     })
 
     return NextResponse.json(account, { status: 201 })
-  } catch (_error) {
-    console.error("API Error:", _error)
-    return NextResponse.json({ message: "Erreur lors de la création du compte" }, { status: 500 })
+  } catch (error) {
+    console.error("API Error:", error)
+    const errorMessage =
+      error instanceof Error ? error.message : "Erreur lors de la création du compte"
+    return NextResponse.json({ message: errorMessage }, { status: 500 })
   }
 }

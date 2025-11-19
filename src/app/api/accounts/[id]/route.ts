@@ -2,6 +2,8 @@ import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { updateAccountSchema, idSchema, validateApiRequest } from "@/lib/validation"
+import { PropfirmType, AccountType, AccountStatus } from "@prisma/client"
 
 // GET - Récupérer un compte spécifique
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -15,6 +17,12 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     }
 
     const { id } = await params
+
+    // Validation de l'ID
+    const idValidation = validateApiRequest(idSchema, id)
+    if (!idValidation.success) {
+      return NextResponse.json({ message: idValidation.error }, { status: idValidation.status })
+    }
 
     const account = await prisma.propfirmAccount.findFirst({
       where: {
@@ -57,8 +65,20 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     }
 
     const { id } = await params
+
+    // Validation de l'ID
+    const idValidation = validateApiRequest(idSchema, id)
+    if (!idValidation.success) {
+      return NextResponse.json({ message: idValidation.error }, { status: idValidation.status })
+    }
+
     const body = await request.json()
-    const { name, propfirm, size, accountType, status, pricePaid, linkedEvalId, notes } = body
+
+    // Validation avec Zod
+    const validation = validateApiRequest(updateAccountSchema, body)
+    if (!validation.success) {
+      return NextResponse.json({ message: validation.error }, { status: validation.status })
+    }
 
     // Vérifier que le compte appartient à l'utilisateur
     const existingAccount = await prisma.propfirmAccount.findFirst({
@@ -72,20 +92,35 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       return NextResponse.json({ message: "Compte non trouvé" }, { status: 404 })
     }
 
+    const updateData: {
+      name?: string
+      propfirm?: PropfirmType
+      size?: number
+      accountType?: AccountType
+      status?: AccountStatus
+      pricePaid?: number
+      linkedEvalId?: string | null
+      notes?: string | null
+    } = {}
+
+    if (validation.data.name !== undefined) updateData.name = validation.data.name
+    if (validation.data.propfirm !== undefined)
+      updateData.propfirm = validation.data.propfirm as PropfirmType
+    if (validation.data.size !== undefined) updateData.size = validation.data.size
+    if (validation.data.accountType !== undefined)
+      updateData.accountType = validation.data.accountType as AccountType
+    if (validation.data.status !== undefined)
+      updateData.status = validation.data.status as AccountStatus
+    if (validation.data.pricePaid !== undefined) updateData.pricePaid = validation.data.pricePaid
+    if (validation.data.linkedEvalId !== undefined)
+      updateData.linkedEvalId = validation.data.linkedEvalId || null
+    if (validation.data.notes !== undefined) updateData.notes = validation.data.notes || null
+
     const account = await prisma.propfirmAccount.update({
       where: {
         id,
       },
-      data: {
-        name,
-        propfirm,
-        size: size ? parseInt(size) : undefined,
-        accountType,
-        status,
-        pricePaid: pricePaid !== undefined ? parseFloat(pricePaid) : undefined,
-        linkedEvalId: linkedEvalId || null,
-        notes,
-      },
+      data: updateData,
     })
 
     return NextResponse.json(account)
@@ -108,6 +143,12 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     }
 
     const { id } = await params
+
+    // Validation de l'ID
+    const idValidation = validateApiRequest(idSchema, id)
+    if (!idValidation.success) {
+      return NextResponse.json({ message: idValidation.error }, { status: idValidation.status })
+    }
 
     // Vérifier que le compte appartient à l'utilisateur
     const existingAccount = await prisma.propfirmAccount.findFirst({
