@@ -25,6 +25,7 @@ import {
   useCreateMultipleWithdrawalsMutation,
 } from "@/hooks/use-mutation"
 import { PropfirmStrategyFactory } from "@/lib/strategies/propfirm-strategy.factory"
+import { toast } from "@/hooks/use-toast"
 
 interface Withdrawal {
   id: string
@@ -228,7 +229,7 @@ export function WithdrawalFormDialog({
     e.preventDefault()
 
     try {
-      // Mode édition (pas encore supporté par les mutations, à faire plus tard)
+      // Mode édition
       if (withdrawal) {
         const account = accounts.find((acc) => acc.id === formData.accountId)
         const grossAmount = calculateGrossAmount(
@@ -243,15 +244,22 @@ export function WithdrawalFormDialog({
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            ...formData,
+            date: formData.date,
             amount: grossAmount,
+            notes: formData.notes || undefined,
           }),
         })
 
         if (!response.ok) {
           const data = await response.json()
-          throw new Error(data.message)
+          throw new Error(data.message || "Erreur lors de la modification")
         }
+
+        // Succès
+        toast({
+          title: "Retrait modifié",
+          description: "Le retrait a été modifié avec succès",
+        })
       }
       // Mode multiple
       else if (multipleMode && selectedAccountIds.length > 0) {
@@ -294,7 +302,12 @@ export function WithdrawalFormDialog({
       onSuccess()
       onOpenChange(false)
     } catch (_error) {
-      // Les erreurs sont déjà gérées par les mutations
+      const error = _error instanceof Error ? _error : new Error("Erreur inconnue")
+      toast({
+        title: "Erreur",
+        description: error.message,
+        variant: "destructive",
+      })
       console.error(_error)
     }
   }

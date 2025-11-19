@@ -110,8 +110,8 @@ export function PnlFormDialog({
           },
           body: JSON.stringify({
             date: formData.date,
-            amount: formData.amount,
-            notes: formData.notes,
+            amount: parseFloat(formData.amount) || 0,
+            notes: formData.notes || undefined,
           }),
         })
 
