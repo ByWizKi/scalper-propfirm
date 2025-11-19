@@ -4,7 +4,6 @@
 
 import {
   createAccountSchema,
-  updateAccountSchema,
   createPnlSchema,
   createWithdrawalSchema,
   changePasswordSchema,
@@ -417,4 +416,3 @@ describe("Validation Zod - IDs", () => {
     })
   })
 })
-

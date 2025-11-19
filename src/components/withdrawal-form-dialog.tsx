@@ -86,7 +86,7 @@ export function WithdrawalFormDialog({
     amount: "",
     notes: "",
   })
-  const [accountData, setAccountData] = useState<AccountData | null>(null)
+  const [_accountData, setAccountData] = useState<AccountData | null>(null)
   const [isLoadingAccount, setIsLoadingAccount] = useState(false)
   const [maxAvailableAmount, setMaxAvailableAmount] = useState<number | null>(null)
 
@@ -95,9 +95,7 @@ export function WithdrawalFormDialog({
   // Filtrer uniquement les comptes financés (FUNDED) et actifs (ACTIVE) avec useMemo pour éviter les recalculs
   const eligibleAccounts = useMemo(
     () =>
-      accounts.filter(
-        (account) => account.accountType === "FUNDED" && account.status === "ACTIVE"
-      ),
+      accounts.filter((account) => account.accountType === "FUNDED" && account.status === "ACTIVE"),
     [accounts]
   )
 
@@ -586,30 +584,33 @@ export function WithdrawalFormDialog({
                     return ""
                   })()}
                 />
-                {!multipleMode && maxAvailableAmount !== null && formData.amount && (() => {
-                  const amountNum = parseFloat(formData.amount)
-                  if (isNaN(amountNum)) return null
-                  const account = eligibleAccounts.find((acc) => acc.id === formData.accountId)
-                  if (!account) return null
+                {!multipleMode &&
+                  maxAvailableAmount !== null &&
+                  formData.amount &&
+                  (() => {
+                    const amountNum = parseFloat(formData.amount)
+                    if (isNaN(amountNum)) return null
+                    const account = eligibleAccounts.find((acc) => acc.id === formData.accountId)
+                    if (!account) return null
 
-                  // Pour TakeProfitTrader, convertir en brut pour la comparaison
-                  let amountToCompare = amountNum
-                  if (account.propfirm === "TAKEPROFITTRADER" && !includeTax) {
-                    amountToCompare = amountNum / 0.8
-                  }
+                    // Pour TakeProfitTrader, convertir en brut pour la comparaison
+                    let amountToCompare = amountNum
+                    if (account.propfirm === "TAKEPROFITTRADER" && !includeTax) {
+                      amountToCompare = amountNum / 0.8
+                    }
 
-                  if (amountToCompare > maxAvailableAmount) {
-                    return (
-                      <div className="flex items-center gap-1 mt-1 text-xs text-red-600 dark:text-red-400">
-                        <AlertCircle className="h-3 w-3" />
-                        <span>
-                          Montant maximum disponible : {formatCurrency(maxAvailableAmount)}
-                        </span>
-                      </div>
-                    )
-                  }
-                  return null
-                })()}
+                    if (amountToCompare > maxAvailableAmount) {
+                      return (
+                        <div className="flex items-center gap-1 mt-1 text-xs text-red-600 dark:text-red-400">
+                          <AlertCircle className="h-3 w-3" />
+                          <span>
+                            Montant maximum disponible : {formatCurrency(maxAvailableAmount)}
+                          </span>
+                        </div>
+                      )
+                    }
+                    return null
+                  })()}
               </div>
               {!multipleMode && maxAvailableAmount !== null && (
                 <p className="text-xs text-zinc-500 dark:text-zinc-400">

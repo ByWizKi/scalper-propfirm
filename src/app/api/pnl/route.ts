@@ -61,7 +61,7 @@ export async function POST(request: Request) {
     const body = await request.json()
 
     // Log pour déboguer (à retirer en production)
-    console.log("API PNL POST - Body reçu:", JSON.stringify(body, null, 2))
+    console.info("API PNL POST - Body reçu:", JSON.stringify(body, null, 2))
 
     // Validation avec Zod
     const validation = validateApiRequest(createPnlSchema, body)
@@ -71,7 +71,7 @@ export async function POST(request: Request) {
     }
 
     const { accountId, date, amount, notes } = validation.data
-    console.log("API PNL POST - Données validées:", { accountId, date, amount, notes })
+    console.info("API PNL POST - Données validées:", { accountId, date, amount, notes })
 
     // Vérifier que le compte appartient à l'utilisateur
     const account = await prisma.propfirmAccount.findFirst({
