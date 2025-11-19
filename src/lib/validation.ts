@@ -16,7 +16,8 @@ export const loginSchema = z.object({
 export const registerSchema = z.object({
   name: z.string().min(2, "Le nom doit contenir au moins 2 caractères").max(100),
   email: z.string().email("Email invalide").max(255),
-  password: z.string()
+  password: z
+    .string()
     .min(8, "Le mot de passe doit contenir au moins 8 caractères")
     .max(100)
     .regex(/[A-Z]/, "Le mot de passe doit contenir au moins une majuscule")
@@ -43,15 +44,23 @@ export const createAccountSchema = z.object({
   accountType: z.enum(["EVAL", "FUNDED"]),
   status: z.enum(["ACTIVE", "VALIDATED", "FAILED", "ARCHIVED"]).optional(),
   pricePaid: z.number().nonnegative("Le prix doit être positif ou nul").max(100000),
-  linkedEvalId: z.string().min(1).refine(
-    (val) => {
-      // Accepter les UUIDs et les CUIDs (format Prisma)
-      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-      const cuidRegex = /^c[a-z0-9]{20,}$/i
-      return uuidRegex.test(val) || cuidRegex.test(val) || val.length >= 20
-    },
-    { message: "ID invalide" }
-  ).optional().or(z.literal("")),
+  linkedEvalId: z
+    .union([
+      z.string().refine(
+        (val) => {
+          // Si vide, c'est valide
+          if (!val || val === "") return true
+          // Accepter les UUIDs et les CUIDs (format Prisma)
+          const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+          const cuidRegex = /^c[a-z0-9]{20,}$/i
+          return uuidRegex.test(val) || cuidRegex.test(val) || val.length >= 20
+        },
+        { message: "ID invalide" }
+      ),
+      z.literal(""),
+      z.null(),
+    ])
+    .optional(),
   notes: z.string().max(1000).optional().nullable(),
 })
 
@@ -71,22 +80,29 @@ export const bulkCreateAccountSchema = z.object({
  * Validation pour les entrées PnL
  */
 export const createPnlSchema = z.object({
-  accountId: z.string().min(1, "ID de compte requis").refine(
-    (val) => {
-      // Accepter les UUIDs et les CUIDs (format Prisma)
-      // UUID: format standard avec tirets (ex: 550e8400-e29b-41d4-a716-446655440000)
-      // CUID: commence par 'c' suivi de caractères alphanumériques (ex: clh1234567890abcdef)
-      // Format CUID: c + 25 caractères alphanumériques (base36)
-      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-      // CUID: commence par 'c' et contient au moins 20 caractères alphanumériques
-      const cuidRegex = /^c[a-z0-9]{20,}$/i
-      // Validation plus permissive pour les IDs Prisma (peut être CUID ou autre format)
-      return uuidRegex.test(val) || cuidRegex.test(val) || val.length >= 20
-    },
-    { message: "ID de compte invalide" }
-  ),
-  date: z.string().datetime("Date invalide").or(z.string().regex(/^\d{4}-\d{2}-\d{2}$/)),
-  amount: z.number()
+  accountId: z
+    .string()
+    .min(1, "ID de compte requis")
+    .refine(
+      (val) => {
+        // Accepter les UUIDs et les CUIDs (format Prisma)
+        // UUID: format standard avec tirets (ex: 550e8400-e29b-41d4-a716-446655440000)
+        // CUID: commence par 'c' suivi de caractères alphanumériques (ex: clh1234567890abcdef)
+        // Format CUID: c + 25 caractères alphanumériques (base36)
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+        // CUID: commence par 'c' et contient au moins 20 caractères alphanumériques
+        const cuidRegex = /^c[a-z0-9]{20,}$/i
+        // Validation plus permissive pour les IDs Prisma (peut être CUID ou autre format)
+        return uuidRegex.test(val) || cuidRegex.test(val) || val.length >= 20
+      },
+      { message: "ID de compte invalide" }
+    ),
+  date: z
+    .string()
+    .datetime("Date invalide")
+    .or(z.string().regex(/^\d{4}-\d{2}-\d{2}$/)),
+  amount: z
+    .number()
     .min(-1000000, "Montant trop bas")
     .max(1000000, "Montant trop élevé")
     .refine((val) => Math.abs(val) > 0.01 || val === 0, "Montant invalide"),
@@ -104,17 +120,23 @@ export const updatePnlBodySchema = createPnlSchema.partial()
  * Validation pour les retraits
  */
 export const createWithdrawalSchema = z.object({
-  accountId: z.string().min(1, "ID de compte requis").refine(
-    (val) => {
-      // Accepter les UUIDs et les CUIDs (format Prisma)
-      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-      const cuidRegex = /^c[a-z0-9]{20,}$/i
-      // Validation plus permissive pour les IDs Prisma
-      return uuidRegex.test(val) || cuidRegex.test(val) || val.length >= 20
-    },
-    { message: "ID de compte invalide" }
-  ),
-  date: z.string().datetime("Date invalide").or(z.string().regex(/^\d{4}-\d{2}-\d{2}$/)),
+  accountId: z
+    .string()
+    .min(1, "ID de compte requis")
+    .refine(
+      (val) => {
+        // Accepter les UUIDs et les CUIDs (format Prisma)
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+        const cuidRegex = /^c[a-z0-9]{20,}$/i
+        // Validation plus permissive pour les IDs Prisma
+        return uuidRegex.test(val) || cuidRegex.test(val) || val.length >= 20
+      },
+      { message: "ID de compte invalide" }
+    ),
+  date: z
+    .string()
+    .datetime("Date invalide")
+    .or(z.string().regex(/^\d{4}-\d{2}-\d{2}$/)),
   amount: z.number().positive("Le montant doit être positif").max(1000000, "Montant trop élevé"),
   notes: z.string().max(500).optional(),
 })
@@ -191,15 +213,19 @@ export async function validateDataAsync<T>(
  * Validation des paramètres de requête
  */
 export const queryParamsSchema = z.object({
-  accountId: z.string().min(1).refine(
-    (val) => {
-      // Accepter les UUIDs et les CUIDs (format Prisma)
-      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-      const cuidRegex = /^c[a-z0-9]{20,}$/i
-      return uuidRegex.test(val) || cuidRegex.test(val) || val.length >= 20
-    },
-    { message: "ID de compte invalide" }
-  ).optional(),
+  accountId: z
+    .string()
+    .min(1)
+    .refine(
+      (val) => {
+        // Accepter les UUIDs et les CUIDs (format Prisma)
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+        const cuidRegex = /^c[a-z0-9]{20,}$/i
+        return uuidRegex.test(val) || cuidRegex.test(val) || val.length >= 20
+      },
+      { message: "ID de compte invalide" }
+    )
+    .optional(),
   limit: z.number().int().positive().max(100).optional(),
   offset: z.number().int().nonnegative().optional(),
 })
@@ -240,15 +266,18 @@ export const reorderCustomStatsSchema = z.object({
   orders: z
     .array(
       z.object({
-        id: z.string().min(1).refine(
-          (val) => {
-            // Accepter les UUIDs et les CUIDs (format Prisma)
-            const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-            const cuidRegex = /^c[a-z0-9]{20,}$/i
-            return uuidRegex.test(val) || cuidRegex.test(val) || val.length >= 20
-          },
-          { message: "ID invalide" }
-        ),
+        id: z
+          .string()
+          .min(1)
+          .refine(
+            (val) => {
+              // Accepter les UUIDs et les CUIDs (format Prisma)
+              const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+              const cuidRegex = /^c[a-z0-9]{20,}$/i
+              return uuidRegex.test(val) || cuidRegex.test(val) || val.length >= 20
+            },
+            { message: "ID invalide" }
+          ),
         order: z.number().int().nonnegative("L'ordre doit être positif ou nul"),
       })
     )
@@ -287,4 +316,3 @@ export function validateApiRequest<T>(
     return { success: false, error: "Erreur de validation", status: 400 }
   }
 }
-

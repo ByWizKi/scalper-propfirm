@@ -181,7 +181,35 @@ export function AccountFormDialog({
 
     try {
       // Pour Phidias, ajouter le type CASH/LIVE dans le nom ou les notes
-      const finalFormData = { ...formData }
+      const finalFormData: {
+        name: string
+        propfirm: string
+        size: string | number
+        accountType: string
+        status: string
+        pricePaid: string | number
+        linkedEvalId: string | null
+        notes: string
+      } = { ...formData }
+
+      // Convertir size et pricePaid en nombres
+      if (finalFormData.size && finalFormData.size !== "") {
+        const sizeNum = Number(finalFormData.size)
+        if (!isNaN(sizeNum) && sizeNum > 0) {
+          finalFormData.size = sizeNum
+        }
+      }
+      if (finalFormData.pricePaid && finalFormData.pricePaid !== "") {
+        const priceNum = Number(finalFormData.pricePaid)
+        if (!isNaN(priceNum) && priceNum >= 0) {
+          finalFormData.pricePaid = priceNum
+        }
+      }
+
+      // Gérer linkedEvalId : convertir chaîne vide en null
+      if (finalFormData.linkedEvalId === "") {
+        finalFormData.linkedEvalId = null
+      }
 
       if (formData.propfirm === "PHIDIAS" && formData.accountType === "FUNDED") {
         // Ajouter le type dans le nom si pas déjà présent
@@ -201,14 +229,71 @@ export function AccountFormDialog({
       }
 
       if (account) {
-        // Mode édition
+        // Mode édition - construire le payload avec seulement les champs valides
+        const updatePayload: Record<string, unknown> = {}
+
+        // Inclure tous les champs modifiables seulement s'ils sont définis et valides
+        if (finalFormData.name !== undefined && finalFormData.name !== "") {
+          updatePayload.name = finalFormData.name
+        }
+        if (finalFormData.propfirm !== undefined) {
+          updatePayload.propfirm = finalFormData.propfirm
+        }
+        if (
+          finalFormData.size !== undefined &&
+          typeof finalFormData.size === "number" &&
+          finalFormData.size > 0
+        ) {
+          updatePayload.size = finalFormData.size
+        }
+        if (finalFormData.accountType !== undefined) {
+          updatePayload.accountType = finalFormData.accountType
+        }
+        if (finalFormData.status !== undefined) {
+          updatePayload.status = finalFormData.status
+        }
+        if (
+          finalFormData.pricePaid !== undefined &&
+          typeof finalFormData.pricePaid === "number" &&
+          finalFormData.pricePaid >= 0
+        ) {
+          updatePayload.pricePaid = finalFormData.pricePaid
+        }
+        // Pour linkedEvalId, inclure null si vide ou null, sinon la valeur
+        if (finalFormData.linkedEvalId !== undefined) {
+          updatePayload.linkedEvalId = finalFormData.linkedEvalId
+        }
+        // Pour notes, toujours l'inclure (peut être null ou string)
+        if (finalFormData.notes !== undefined) {
+          updatePayload.notes = finalFormData.notes || null
+        }
+
         await updateAccount({
           id: account.id,
-          data: finalFormData,
+          data: updatePayload,
         })
       } else {
-        // Mode création
-        await createAccount(finalFormData)
+        // Mode création - convertir les types pour la création
+        const createPayload = {
+          name: finalFormData.name,
+          propfirm: finalFormData.propfirm,
+          size:
+            typeof finalFormData.size === "number"
+              ? finalFormData.size
+              : Number(finalFormData.size),
+          accountType: finalFormData.accountType,
+          status: finalFormData.status || "ACTIVE",
+          pricePaid:
+            typeof finalFormData.pricePaid === "number"
+              ? finalFormData.pricePaid
+              : Number(finalFormData.pricePaid),
+          linkedEvalId:
+            finalFormData.linkedEvalId && finalFormData.linkedEvalId !== ""
+              ? finalFormData.linkedEvalId
+              : undefined,
+          notes: finalFormData.notes || null,
+        }
+        await createAccount(createPayload)
       }
 
       onSuccess()
