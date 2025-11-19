@@ -11,9 +11,19 @@ import dynamic from "next/dynamic"
 const SwaggerUI = dynamic(() => import("swagger-ui-react"), { ssr: false })
 import "swagger-ui-react/swagger-ui.css"
 
+interface SwaggerSpec {
+  openapi?: string
+  swagger?: string
+  info?: {
+    title?: string
+    version?: string
+  }
+  paths?: Record<string, unknown>
+  [key: string]: unknown
+}
+
 export default function ApiDocsPage() {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [spec, setSpec] = useState<any>(null)
+  const [spec, setSpec] = useState<SwaggerSpec | null>(null)
 
   useEffect(() => {
     fetch("/api/docs")

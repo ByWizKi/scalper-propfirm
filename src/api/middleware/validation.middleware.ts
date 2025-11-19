@@ -26,13 +26,11 @@ export function validateRequest<T extends z.ZodSchema>(
 /**
  * Wrapper pour valider le body de la requête
  */
-export function withValidation<T extends z.ZodSchema>(
+export function withValidation<T extends z.ZodSchema, A extends unknown[]>(
   schema: T,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  handler: (data: z.infer<T>, ...args: any[]) => Promise<NextResponse>
+  handler: (data: z.infer<T>, ...args: A) => Promise<NextResponse>
 ) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return async (request: Request, ...args: any[]): Promise<NextResponse> => {
+  return async (request: Request, ...args: A): Promise<NextResponse> => {
     const body = await request.json()
     const validation = validateRequest(schema, body)
     if (!validation.success) {
