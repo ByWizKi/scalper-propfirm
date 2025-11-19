@@ -715,7 +715,7 @@ export default function VisualizationPage() {
             {/* Toggle vue Propfirm / Par compte */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
               <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300 whitespace-nowrap">
-                Mode d'affichage:
+                Mode d&apos;affichage:
               </label>
               <div className="flex gap-2 w-full sm:w-auto">
                 <Button
