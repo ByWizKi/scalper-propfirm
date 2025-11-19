@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { updateWithdrawalBodySchema, idSchema, validateApiRequest } from "@/lib/validation"
 
 // PUT - Mettre à jour un retrait
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -13,8 +14,20 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     }
 
     const { id } = await params
+
+    // Validation de l'ID
+    const idValidation = validateApiRequest(idSchema, id)
+    if (!idValidation.success) {
+      return NextResponse.json({ message: idValidation.error }, { status: idValidation.status })
+    }
+
     const body = await request.json()
-    const { date, amount, notes } = body
+
+    // Validation avec Zod
+    const validation = validateApiRequest(updateWithdrawalBodySchema, body)
+    if (!validation.success) {
+      return NextResponse.json({ message: validation.error }, { status: validation.status })
+    }
 
     // Vérifier que le retrait appartient à l'utilisateur
     const existingWithdrawal = await prisma.withdrawal.findFirst({
@@ -28,15 +41,21 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       return NextResponse.json({ message: "Retrait non trouvé" }, { status: 404 })
     }
 
+    const updateData: {
+      date?: Date
+      amount?: number
+      notes?: string | null
+    } = {}
+
+    if (validation.data.date !== undefined) updateData.date = new Date(validation.data.date)
+    if (validation.data.amount !== undefined) updateData.amount = validation.data.amount
+    if (validation.data.notes !== undefined) updateData.notes = validation.data.notes || null
+
     const withdrawal = await prisma.withdrawal.update({
       where: {
         id,
       },
-      data: {
-        date: date ? new Date(date) : undefined,
-        amount: amount !== undefined ? parseFloat(amount) : undefined,
-        notes,
-      },
+      data: updateData,
       include: {
         account: true,
       },
@@ -62,6 +81,12 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     }
 
     const { id } = await params
+
+    // Validation de l'ID
+    const idValidation = validateApiRequest(idSchema, id)
+    if (!idValidation.success) {
+      return NextResponse.json({ message: idValidation.error }, { status: idValidation.status })
+    }
 
     // Vérifier que le retrait appartient à l'utilisateur
     const existingWithdrawal = await prisma.withdrawal.findFirst({

@@ -24,6 +24,9 @@ export function calculateWithdrawalTax(
     case "TAKEPROFITTRADER":
       taxRate = 0.20 // 20% de taxe
       break
+    case "PHIDIAS":
+      taxRate = 0.20 // 20% de taxe (trader garde 80%)
+      break
     case "TOPSTEP":
     default:
       taxRate = 0 // Pas de taxe

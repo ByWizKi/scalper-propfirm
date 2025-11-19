@@ -102,6 +102,7 @@ enum PropfirmType {
   FTMO
   MYFUNDEDFUTURES
   BULENOX
+  PHIDIAS
   OTHER
 }
 

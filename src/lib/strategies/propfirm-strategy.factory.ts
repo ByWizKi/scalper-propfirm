@@ -8,6 +8,7 @@ import { TopStepStrategy } from "./topstep-strategy"
 import { TakeProfitTraderStrategy } from "./takeprofittrader-strategy"
 import { ApexStrategy } from "./apex-strategy"
 import { BulenoxStrategy } from "./bulenox-strategy"
+import { PhidiasStrategy } from "./phidias-strategy"
 import { PropfirmType } from "@/types/account.types"
 
 /**
@@ -44,6 +45,9 @@ export class PropfirmStrategyFactory {
       case PropfirmType.BULENOX:
         strategy = new BulenoxStrategy()
         break
+      case PropfirmType.PHIDIAS:
+        strategy = new PhidiasStrategy()
+        break
       // Ajouter d'autres propfirms ici
       default:
         // Stratégie par défaut (pas de règles spéciales)
@@ -72,11 +76,21 @@ class DefaultStrategy implements PropfirmStrategy {
     return "Default"
   }
 
-  getAccountRules(): null {
+  getAccountRules(
+    _accountSize: number,
+    _accountType?: string,
+    _accountName?: string,
+    _notes?: string | null
+  ): null {
     return null
   }
 
-  getWithdrawalRules() {
+  getWithdrawalRules(
+    _accountSize?: number,
+    _accountType?: string,
+    _accountName?: string,
+    _notes?: string | null
+  ) {
     return {
       taxRate: 0,
       requiresCycles: false,
@@ -84,15 +98,29 @@ class DefaultStrategy implements PropfirmStrategy {
     }
   }
 
-  calculateBuffer(): number {
+  calculateBuffer(_accountSize: number): number {
     return 0
   }
 
-  calculateAvailableForWithdrawal(): number {
+  calculateAvailableForWithdrawal(
+    _accountSize: number,
+    _totalPnl: number,
+    _totalWithdrawals: number,
+    _pnlEntries: Array<{ date: Date; amount: number }>,
+    _accountType?: string,
+    _accountName?: string,
+    _notes?: string | null
+  ): number {
     return 0
   }
 
-  isEligibleForValidation(): boolean {
+  isEligibleForValidation(
+    _accountSize: number,
+    _pnlEntries: Array<{ date: Date; amount: number }>,
+    _accountType?: string,
+    _accountName?: string,
+    _notes?: string | null
+  ): boolean {
     return false
   }
 }

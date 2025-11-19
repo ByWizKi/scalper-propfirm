@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { validateFormula } from "@/lib/custom-stat-evaluator"
+import { updateCustomStatSchema, idSchema, validateApiRequest } from "@/lib/validation"
 
 // GET - Récupérer une statistique personnalisée spécifique
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -14,6 +15,15 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     }
 
     const { id } = await params
+
+    // Validation de l'ID
+    const idValidation = validateApiRequest(idSchema, id)
+    if (!idValidation.success) {
+      return NextResponse.json(
+        { message: idValidation.error },
+        { status: idValidation.status }
+      )
+    }
 
     const customStat = await prisma.customStat.findFirst({
       where: {
@@ -49,8 +59,23 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     }
 
     const { id } = await params
+
+    // Validation de l'ID
+    const idValidation = validateApiRequest(idSchema, id)
+    if (!idValidation.success) {
+      return NextResponse.json(
+        { message: idValidation.error },
+        { status: idValidation.status }
+      )
+    }
+
     const body = await request.json()
-    const { title, description, formula, icon, variant, enabled, order } = body
+
+    // Validation avec Zod
+    const validation = validateApiRequest(updateCustomStatSchema, body)
+    if (!validation.success) {
+      return NextResponse.json({ message: validation.error }, { status: validation.status })
+    }
 
     // Vérifier que la statistique appartient à l'utilisateur
     const existingStat = await prisma.customStat.findFirst({
@@ -68,24 +93,38 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     }
 
     // Valider la formule si elle est fournie
-    if (formula) {
-      const validation = validateFormula(formula)
-      if (!validation.valid) {
-        return NextResponse.json({ message: validation.error }, { status: 400 })
+    if (validation.data.formula) {
+      const formulaValidation = validateFormula(validation.data.formula)
+      if (!formulaValidation.valid) {
+        return NextResponse.json(
+          { message: formulaValidation.error || "Formule invalide" },
+          { status: 400 }
+        )
       }
     }
 
+    const updateData: {
+      title?: string
+      description?: string | null
+      formula?: string
+      icon?: string | null
+      variant?: string | null
+      enabled?: boolean
+      order?: number
+    } = {}
+
+    if (validation.data.title !== undefined) updateData.title = validation.data.title
+    if (validation.data.description !== undefined)
+      updateData.description = validation.data.description || null
+    if (validation.data.formula !== undefined) updateData.formula = validation.data.formula
+    if (validation.data.icon !== undefined) updateData.icon = validation.data.icon || null
+    if (validation.data.variant !== undefined) updateData.variant = validation.data.variant || null
+    if (validation.data.enabled !== undefined) updateData.enabled = validation.data.enabled
+    if (validation.data.order !== undefined) updateData.order = validation.data.order
+
     const customStat = await prisma.customStat.update({
       where: { id },
-      data: {
-        title: title !== undefined ? title : existingStat.title,
-        description: description !== undefined ? description : existingStat.description,
-        formula: formula !== undefined ? formula : existingStat.formula,
-        icon: icon !== undefined ? icon : existingStat.icon,
-        variant: variant !== undefined ? variant : existingStat.variant,
-        enabled: enabled !== undefined ? enabled : existingStat.enabled,
-        order: order !== undefined ? order : existingStat.order,
-      },
+      data: updateData,
     })
 
     return NextResponse.json(customStat)
@@ -109,6 +148,15 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
     }
 
     const { id } = await params
+
+    // Validation de l'ID
+    const idValidation = validateApiRequest(idSchema, id)
+    if (!idValidation.success) {
+      return NextResponse.json(
+        { message: idValidation.error },
+        { status: idValidation.status }
+      )
+    }
 
     // Vérifier que la statistique appartient à l'utilisateur
     const existingStat = await prisma.customStat.findFirst({

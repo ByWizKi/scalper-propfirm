@@ -196,6 +196,36 @@ const RULES_CONFIG: Record<
       maxContracts: { mini: 25, micro: 250 },
     },
   },
+  PHIDIAS: {
+    25000: {
+      maxDrawdown: 500, // Perte statique de 500$ (pas de trailing)
+      dailyLossLimit: 0,
+      profitTarget: 1500,
+      consistencyRule: 0, // Pas de règle de cohérence
+      minTradingDays: 0, // Pas de minimum de jours de trading
+    },
+    50000: {
+      maxDrawdown: 2500,
+      dailyLossLimit: 0,
+      profitTarget: 3000,
+      consistencyRule: 0,
+      minTradingDays: 1,
+    },
+    100000: {
+      maxDrawdown: 3000,
+      dailyLossLimit: 0,
+      profitTarget: 6000,
+      consistencyRule: 0,
+      minTradingDays: 1,
+    },
+    150000: {
+      maxDrawdown: 4500,
+      dailyLossLimit: 0,
+      profitTarget: 9000,
+      consistencyRule: 0,
+      minTradingDays: 1,
+    },
+  },
 }
 
 export function AccountRulesTracker({
@@ -259,20 +289,29 @@ export function AccountRulesTracker({
   const consistencyStatus = consistencyPercentage <= rules.consistencyRule || totalPnl <= 0
   const minTradingDaysStatus = rules.minTradingDays ? tradingDays >= rules.minTradingDays : true
 
-  // Pour Apex et Bulenox, utiliser la logique de trailing drawdown de la stratégie
+  // Pour Apex, Bulenox et Phidias, utiliser la logique de la stratégie
+  // Phidias utilise une perte statique (pas de trailing)
   // Pour les autres, utiliser la logique end-of-day
-  const useStrategyEligibility = propfirm === "APEX" || propfirm === "BULENOX"
+  const useStrategyEligibility = propfirm === "APEX" || propfirm === "BULENOX" || propfirm === "PHIDIAS"
 
   // Calculer l'éligibilité selon la méthode appropriée
   let isEligible: boolean
   if (useStrategyEligibility) {
-    // Utiliser la stratégie pour calculer l'éligibilité avec trailing drawdown
+    // Utiliser la stratégie pour calculer l'éligibilité
+    // Apex/Bulenox : trailing drawdown
+    // Phidias : perte statique (pas de trailing)
     const strategy = PropfirmStrategyFactory.getStrategy(propfirm as PropfirmType)
     const normalizedPnlEntries = pnlEntries.map((entry) => ({
       date: new Date(entry.date),
       amount: entry.amount,
     }))
-    isEligible = strategy.isEligibleForValidation(accountSize, normalizedPnlEntries)
+    isEligible = strategy.isEligibleForValidation(
+      accountSize,
+      normalizedPnlEntries,
+      accountType,
+      undefined, // accountName non disponible dans ce composant
+      undefined // notes non disponible dans ce composant
+    )
   } else {
     // Logique end-of-day pour TopStep et TakeProfitTrader
     isEligible =

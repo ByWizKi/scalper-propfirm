@@ -11,6 +11,7 @@ export const PROPFIRM_LABELS: Record<PropfirmType, string> = {
   [PropfirmType.TAKEPROFITTRADER]: "Take Profit Trader",
   [PropfirmType.APEX]: "Apex",
   [PropfirmType.BULENOX]: "Bulenox",
+  [PropfirmType.PHIDIAS]: "Phidias",
   [PropfirmType.OTHER]: "Autre",
   // Propfirms non utilisées (gardées pour compatibilité DB)
   [PropfirmType.FTMO]: "FTMO",
@@ -23,6 +24,7 @@ export const AVAILABLE_PROPFIRMS = [
   PropfirmType.TAKEPROFITTRADER,
   PropfirmType.APEX,
   PropfirmType.BULENOX,
+  PropfirmType.PHIDIAS,
   PropfirmType.OTHER,
 ] as const
 
@@ -80,6 +82,12 @@ export const ACCOUNT_SIZES_BY_PROPFIRM: Record<
     { value: "150000", label: "150K" },
     { value: "250000", label: "250K" },
   ],
+  [PropfirmType.PHIDIAS]: [
+    { value: "25000", label: "25K" },
+    { value: "50000", label: "50K" },
+    { value: "100000", label: "100K" },
+    { value: "150000", label: "150K" },
+  ],
   [PropfirmType.OTHER]: [],
   // Propfirms non utilisées (gardées pour compatibilité DB)
   [PropfirmType.FTMO]: [],
@@ -125,6 +133,10 @@ export const ACCOUNT_PRICES: Record<
     [AccountType.FUNDED]: {},
   },
   [PropfirmType.BULENOX]: {
+    [AccountType.EVAL]: {},
+    [AccountType.FUNDED]: {},
+  },
+  [PropfirmType.PHIDIAS]: {
     [AccountType.EVAL]: {},
     [AccountType.FUNDED]: {},
   },

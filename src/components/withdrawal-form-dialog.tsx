@@ -19,11 +19,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Check } from "lucide-react"
+import { Check, Maximize2, AlertCircle } from "lucide-react"
 import {
   useCreateWithdrawalMutation,
   useCreateMultipleWithdrawalsMutation,
 } from "@/hooks/use-mutation"
+import { PropfirmStrategyFactory } from "@/lib/strategies/propfirm-strategy.factory"
 
 interface Withdrawal {
   id: string
@@ -39,6 +40,19 @@ interface PropfirmAccount {
   accountType: string
   propfirm: string
   size: number
+  status?: string
+  notes?: string | null
+}
+
+interface AccountData {
+  id: string
+  name: string
+  accountType: string
+  propfirm: string
+  size: number
+  notes?: string | null
+  pnlEntries: Array<{ date: string; amount: number }>
+  withdrawals: Array<{ amount: number }>
 }
 
 interface WithdrawalFormDialogProps {
@@ -72,17 +86,75 @@ export function WithdrawalFormDialog({
     amount: "",
     notes: "",
   })
+  const [accountData, setAccountData] = useState<AccountData | null>(null)
+  const [isLoadingAccount, setIsLoadingAccount] = useState(false)
+  const [maxAvailableAmount, setMaxAvailableAmount] = useState<number | null>(null)
 
-  const isLoading = isCreating || isCreatingMultiple
+  const isLoading = isCreating || isCreatingMultiple || isLoadingAccount
 
-  // Filtrer uniquement les comptes financés (FUNDED) avec useMemo pour éviter les recalculs
+  // Filtrer uniquement les comptes financés (FUNDED) et actifs (ACTIVE) avec useMemo pour éviter les recalculs
   const eligibleAccounts = useMemo(
-    () => accounts.filter((account) => account.accountType === "FUNDED"),
+    () =>
+      accounts.filter(
+        (account) => account.accountType === "FUNDED" && account.status === "ACTIVE"
+      ),
     [accounts]
   )
 
+  // Fonction pour charger les données du compte et calculer le montant maximum disponible
+  const loadAccountData = async (accountId: string) => {
+    if (!accountId) {
+      setAccountData(null)
+      setMaxAvailableAmount(null)
+      return
+    }
+
+    setIsLoadingAccount(true)
+    try {
+      const response = await fetch(`/api/accounts/${accountId}`)
+      if (response.ok) {
+        const data: AccountData = await response.json()
+        setAccountData(data)
+
+        // Calculer le montant maximum disponible avec la stratégie
+        const strategy = PropfirmStrategyFactory.getStrategy(data.propfirm)
+        const totalPnl = data.pnlEntries.reduce((sum, entry) => sum + entry.amount, 0)
+        const totalWithdrawals = data.withdrawals.reduce((sum, w) => sum + w.amount, 0)
+        const normalizedPnlEntries = data.pnlEntries.map((entry) => ({
+          date: new Date(entry.date),
+          amount: entry.amount,
+        }))
+
+        const available = strategy.calculateAvailableForWithdrawal(
+          data.size,
+          totalPnl,
+          totalWithdrawals,
+          normalizedPnlEntries,
+          data.accountType,
+          data.name,
+          data.notes
+        )
+
+        setMaxAvailableAmount(available)
+      } else {
+        setAccountData(null)
+        setMaxAvailableAmount(null)
+      }
+    } catch (error) {
+      console.error("Erreur lors du chargement des données du compte:", error)
+      setAccountData(null)
+      setMaxAvailableAmount(null)
+    } finally {
+      setIsLoadingAccount(false)
+    }
+  }
+
   useEffect(() => {
-    if (!open) return
+    if (!open) {
+      setAccountData(null)
+      setMaxAvailableAmount(null)
+      return
+    }
 
     if (withdrawal) {
       setFormData({
@@ -94,6 +166,7 @@ export function WithdrawalFormDialog({
       setMultipleMode(false)
       setSelectedAccountIds([])
       setIncludeTax(true) // Par défaut, on suppose que les montants existants incluent les taxes
+      loadAccountData(withdrawal.accountId)
     } else if (eligibleAccounts.length > 0) {
       setFormData({
         accountId: eligibleAccounts[0].id,
@@ -106,6 +179,7 @@ export function WithdrawalFormDialog({
       setFilterPropfirm("all")
       setIncludeTax(true)
       setMultipleIncludeTax(true)
+      loadAccountData(eligibleAccounts[0].id)
     } else {
       setFormData({
         accountId: "",
@@ -118,29 +192,38 @@ export function WithdrawalFormDialog({
       setFilterPropfirm("all")
       setIncludeTax(true)
       setMultipleIncludeTax(true)
+      setAccountData(null)
+      setMaxAvailableAmount(null)
     }
   }, [open, withdrawal, eligibleAccounts])
+
+  // Recharger les données quand le compte sélectionné change
+  useEffect(() => {
+    if (!multipleMode && formData.accountId && open) {
+      loadAccountData(formData.accountId)
+    }
+  }, [formData.accountId, multipleMode, open])
 
   // Fonction pour calculer le montant brut à enregistrer
   const calculateGrossAmount = (
     amount: string,
     propfirm: string,
     includeTaxes: boolean
-  ): string => {
+  ): number => {
     const amountNum = parseFloat(amount)
-    if (isNaN(amountNum) || amountNum <= 0) return amount
+    if (isNaN(amountNum) || amountNum <= 0) return parseFloat(amount) || 0
 
     // Pour TakeProfitTrader uniquement
     if (propfirm === "TAKEPROFITTRADER") {
       // Si includeTaxes = false, le montant entré est net, on doit convertir en brut
       if (!includeTaxes) {
         // net = brut * 0.8, donc brut = net / 0.8
-        return (amountNum / 0.8).toString()
+        return amountNum / 0.8
       }
       // Si includeTaxes = true, le montant entré est déjà brut
     }
     // Pour les autres propfirms, pas de conversion
-    return amount
+    return amountNum
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -182,7 +265,7 @@ export function WithdrawalFormDialog({
           (acc) => acc.propfirm === "TAKEPROFITTRADER"
         )
 
-        let amountToSend = formData.amount
+        let amountToSend: number = parseFloat(formData.amount) || 0
         if (hasTakeProfitTrader && !multipleIncludeTax) {
           // Si au moins un compte est TakeProfitTrader et que le montant est net, convertir en brut
           amountToSend = calculateGrossAmount(formData.amount, "TAKEPROFITTRADER", false)
@@ -191,7 +274,7 @@ export function WithdrawalFormDialog({
         await createMultipleWithdrawals({
           accountIds: selectedAccountIds,
           date: formData.date,
-          amount: amountToSend,
+          amount: amountToSend.toString(),
           notes: formData.notes,
         })
       }
@@ -307,7 +390,10 @@ export function WithdrawalFormDialog({
                 </Label>
                 <Select
                   value={formData.accountId}
-                  onValueChange={(value) => setFormData({ ...formData, accountId: value })}
+                  onValueChange={(value) => {
+                    setFormData({ ...formData, accountId: value, amount: "" })
+                    loadAccountData(value)
+                  }}
                   required
                 >
                   <SelectTrigger id="accountId">
@@ -426,8 +512,8 @@ export function WithdrawalFormDialog({
             {eligibleAccounts.length === 0 && !withdrawal && (
               <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-900 rounded-lg">
                 <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                  Aucun compte financé disponible. Les retraits ne sont possibles que sur les
-                  comptes financés.
+                  Aucun compte financé et actif disponible. Les retraits ne sont possibles que sur
+                  les comptes financés avec le statut ACTIVE.
                 </p>
               </div>
             )}
@@ -444,18 +530,92 @@ export function WithdrawalFormDialog({
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="amount" className="text-xs sm:text-sm">
-                Montant (USD) *
-              </Label>
-              <Input
-                id="amount"
-                type="number"
-                step="0.01"
-                placeholder="1000.00"
-                value={formData.amount}
-                onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                required
-              />
+              <div className="flex items-center justify-between">
+                <Label htmlFor="amount" className="text-xs sm:text-sm">
+                  Montant (USD) *
+                </Label>
+                {!multipleMode && maxAvailableAmount !== null && maxAvailableAmount > 0 && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const account = eligibleAccounts.find((acc) => acc.id === formData.accountId)
+                      if (account && maxAvailableAmount > 0) {
+                        // Pour TakeProfitTrader, si includeTax est false, on doit convertir le montant net en brut
+                        let amountToSet = maxAvailableAmount.toString()
+                        if (account.propfirm === "TAKEPROFITTRADER" && !includeTax) {
+                          // Le montant disponible est brut, on doit le convertir en net pour l'affichage
+                          amountToSet = (maxAvailableAmount * 0.8).toString()
+                        }
+                        setFormData({ ...formData, amount: amountToSet })
+                      }
+                    }}
+                    className="h-7 text-xs gap-1"
+                    title={`Définir le montant maximum disponible: ${formatCurrency(maxAvailableAmount)}`}
+                  >
+                    <Maximize2 className="h-3 w-3" />
+                    Max ({formatCurrency(maxAvailableAmount)})
+                  </Button>
+                )}
+              </div>
+              <div className="relative">
+                <Input
+                  id="amount"
+                  type="number"
+                  step="0.01"
+                  placeholder="1000.00"
+                  value={formData.amount}
+                  onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                  required
+                  className={(() => {
+                    if (!multipleMode && maxAvailableAmount !== null && formData.amount) {
+                      const amountNum = parseFloat(formData.amount)
+                      const account = eligibleAccounts.find((acc) => acc.id === formData.accountId)
+                      if (account) {
+                        // Pour TakeProfitTrader, convertir en brut pour la comparaison
+                        let amountToCompare = amountNum
+                        if (account.propfirm === "TAKEPROFITTRADER" && !includeTax) {
+                          amountToCompare = amountNum / 0.8
+                        }
+                        if (amountToCompare > maxAvailableAmount) {
+                          return "border-red-500 focus-visible:ring-red-500"
+                        }
+                      }
+                    }
+                    return ""
+                  })()}
+                />
+                {!multipleMode && maxAvailableAmount !== null && formData.amount && (() => {
+                  const amountNum = parseFloat(formData.amount)
+                  if (isNaN(amountNum)) return null
+                  const account = eligibleAccounts.find((acc) => acc.id === formData.accountId)
+                  if (!account) return null
+
+                  // Pour TakeProfitTrader, convertir en brut pour la comparaison
+                  let amountToCompare = amountNum
+                  if (account.propfirm === "TAKEPROFITTRADER" && !includeTax) {
+                    amountToCompare = amountNum / 0.8
+                  }
+
+                  if (amountToCompare > maxAvailableAmount) {
+                    return (
+                      <div className="flex items-center gap-1 mt-1 text-xs text-red-600 dark:text-red-400">
+                        <AlertCircle className="h-3 w-3" />
+                        <span>
+                          Montant maximum disponible : {formatCurrency(maxAvailableAmount)}
+                        </span>
+                      </div>
+                    )
+                  }
+                  return null
+                })()}
+              </div>
+              {!multipleMode && maxAvailableAmount !== null && (
+                <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                  Disponible : {formatCurrency(maxAvailableAmount)}
+                </p>
+              )}
               {/* Option pour TakeProfitTrader : inclure ou non les 20% */}
               {!withdrawal &&
                 (() => {

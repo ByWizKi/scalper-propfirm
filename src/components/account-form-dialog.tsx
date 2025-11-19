@@ -53,6 +53,12 @@ const ACCOUNT_TYPES = [
   { value: "FUNDED", label: "Financé" },
 ]
 
+// Types de comptes Phidias pour les comptes financés
+const PHIDIAS_FUNDED_TYPES = [
+  { value: "CASH", label: "CASH" },
+  { value: "LIVE", label: "LIVE" },
+]
+
 const ACCOUNT_STATUSES = [
   { value: "ACTIVE", label: "Actif" },
   { value: "VALIDATED", label: "Validé" },
@@ -71,6 +77,7 @@ export function AccountFormDialog({
   const { mutate: updateAccount, isLoading: isUpdating } = useUpdateAccountMutation()
 
   const [evalAccounts, setEvalAccounts] = useState<PropfirmAccount[]>([])
+  const [phidiasFundedType, setPhidiasFundedType] = useState<"CASH" | "LIVE">("CASH")
   const [formData, setFormData] = useState({
     name: "",
     propfirm: "TOPSTEP",
@@ -86,6 +93,12 @@ export function AccountFormDialog({
 
   useEffect(() => {
     if (account) {
+      // Détecter le type Phidias (CASH ou LIVE) depuis le nom ou les notes
+      const isPhidias = account.propfirm === "PHIDIAS"
+      const nameLower = (account.name || "").toLowerCase()
+      const notesLower = (account.notes || "").toLowerCase()
+      const isLive = isPhidias && (nameLower.includes("live") || notesLower.includes("live"))
+
       setFormData({
         name: account.name,
         propfirm: account.propfirm,
@@ -96,6 +109,10 @@ export function AccountFormDialog({
         linkedEvalId: account.linkedEvalId || "",
         notes: account.notes || "",
       })
+
+      if (isPhidias && account.accountType === "FUNDED") {
+        setPhidiasFundedType(isLive ? "LIVE" : "CASH")
+      }
     } else {
       setFormData({
         name: "",
@@ -107,6 +124,7 @@ export function AccountFormDialog({
         linkedEvalId: "",
         notes: "",
       })
+      setPhidiasFundedType("CASH")
     }
   }, [account, open])
 
@@ -151,21 +169,46 @@ export function AccountFormDialog({
       propfirm: value,
       size: currentSizeAvailable ? formData.size : "",
     })
+
+    // Réinitialiser le type Phidias si on change de propfirm
+    if (value !== "PHIDIAS") {
+      setPhidiasFundedType("CASH")
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     try {
+      // Pour Phidias, ajouter le type CASH/LIVE dans le nom ou les notes
+      const finalFormData = { ...formData }
+
+      if (formData.propfirm === "PHIDIAS" && formData.accountType === "FUNDED") {
+        // Ajouter le type dans le nom si pas déjà présent
+        const nameLower = formData.name.toLowerCase()
+        const hasTypeInName = nameLower.includes("cash") || nameLower.includes("live")
+
+        if (!hasTypeInName) {
+          finalFormData.name = `${formData.name} ${phidiasFundedType}`
+        }
+
+        // S'assurer que les notes contiennent le type si nécessaire
+        if (phidiasFundedType === "LIVE" && !formData.notes.toLowerCase().includes("live")) {
+          finalFormData.notes = formData.notes
+            ? `${formData.notes} - Compte ${phidiasFundedType}`
+            : `Compte ${phidiasFundedType}`
+        }
+      }
+
       if (account) {
         // Mode édition
         await updateAccount({
           id: account.id,
-          data: formData,
+          data: finalFormData,
         })
       } else {
         // Mode création
-        await createAccount(formData)
+        await createAccount(finalFormData)
       }
 
       onSuccess()
@@ -252,7 +295,13 @@ export function AccountFormDialog({
                 </Label>
                 <Select
                   value={formData.accountType}
-                  onValueChange={(value) => setFormData({ ...formData, accountType: value })}
+                  onValueChange={(value) => {
+                    setFormData({ ...formData, accountType: value })
+                    // Réinitialiser le type Phidias si on passe de FUNDED à EVAL
+                    if (value === "EVAL" && formData.propfirm === "PHIDIAS") {
+                      setPhidiasFundedType("CASH")
+                    }
+                  }}
                 >
                   <SelectTrigger id="accountType">
                     <SelectValue />
@@ -288,6 +337,35 @@ export function AccountFormDialog({
                 </Select>
               </div>
             </div>
+
+            {/* Choix CASH/LIVE pour Phidias FUNDED */}
+            {formData.propfirm === "PHIDIAS" && formData.accountType === "FUNDED" && (
+              <div className="grid gap-2">
+                <Label htmlFor="phidiasFundedType" className="text-xs sm:text-sm">
+                  Type de compte Phidias *
+                </Label>
+                <Select
+                  value={phidiasFundedType}
+                  onValueChange={(value) => setPhidiasFundedType(value as "CASH" | "LIVE")}
+                >
+                  <SelectTrigger id="phidiasFundedType">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PHIDIAS_FUNDED_TYPES.map((type) => (
+                      <SelectItem key={type.value} value={type.value}>
+                        {type.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                  {phidiasFundedType === "CASH"
+                    ? "Compte CASH : retraits selon les règles de votre taille de compte"
+                    : "Compte LIVE : retraits quotidiens (min 500$), solde min = initial + 100$"}
+                </p>
+              </div>
+            )}
 
             {/* Compte d&apos;évaluation lié (seulement pour FUNDED) */}
             {formData.accountType === "FUNDED" && (

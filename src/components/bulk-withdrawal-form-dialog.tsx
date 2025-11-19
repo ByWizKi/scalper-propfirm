@@ -27,6 +27,7 @@ interface Account {
   name: string
   propfirm: string
   accountType: string
+  status?: string
 }
 
 interface WithdrawalRow {
@@ -54,8 +55,10 @@ export function BulkWithdrawalFormDialog({
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
 
-  // Filtrer uniquement les comptes financés
-  const eligibleAccounts = accounts.filter((account) => account.accountType === "FUNDED")
+  // Filtrer uniquement les comptes financés (FUNDED) et actifs (ACTIVE)
+  const eligibleAccounts = accounts.filter(
+    (account) => account.accountType === "FUNDED" && account.status === "ACTIVE"
+  )
 
   // Initialiser avec une ligne vide
   const [rows, setRows] = useState<WithdrawalRow[]>([

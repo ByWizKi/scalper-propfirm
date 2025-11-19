@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { validateFormula } from "@/lib/custom-stat-evaluator"
+import { createCustomStatSchema, validateApiRequest } from "@/lib/validation"
 
 // GET - Récupérer toutes les statistiques personnalisées de l'utilisateur
 export async function GET() {
@@ -42,17 +43,22 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const { title, description, formula, icon, variant, enabled, order } = body
 
-    // Validation
-    if (!title || !formula) {
-      return NextResponse.json({ message: "Le titre et la formule sont requis" }, { status: 400 })
+    // Validation avec Zod
+    const validation = validateApiRequest(createCustomStatSchema, body)
+    if (!validation.success) {
+      return NextResponse.json({ message: validation.error }, { status: validation.status })
     }
 
+    const { title, description, formula, icon, variant, enabled, order } = validation.data
+
     // Valider la formule
-    const validation = validateFormula(formula)
-    if (!validation.valid) {
-      return NextResponse.json({ message: validation.error || "Formule invalide" }, { status: 400 })
+    const formulaValidation = validateFormula(formula)
+    if (!formulaValidation.valid) {
+      return NextResponse.json(
+        { message: formulaValidation.error || "Formule invalide" },
+        { status: 400 }
+      )
     }
 
     // Vérifier que prisma est disponible

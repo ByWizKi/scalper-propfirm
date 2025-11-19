@@ -188,6 +188,9 @@ export default function WithdrawalsPage() {
     return withdrawals.filter((withdrawal) => {
       const account = accounts.find((acc) => acc.id === withdrawal.accountId)
 
+      // Uniquement les comptes ACTIVE
+      if (account?.status !== "ACTIVE") return false
+
       // Filtre par type de compte
       if (accountTypeFilter === "eval" && account?.accountType !== "EVAL") return false
       if (accountTypeFilter === "funded" && account?.accountType !== "FUNDED") return false
@@ -253,8 +256,10 @@ export default function WithdrawalsPage() {
     .filter((w) => new Date(w.date) >= thirtyDaysAgo)
     .reduce((sum, w) => sum + getNetWithdrawalAmount(w.amount, w.account.propfirm), 0)
 
-  // Obtenir les comptes éligibles (FUNDED uniquement)
-  const eligibleAccounts = accounts.filter((account) => account.accountType === "FUNDED")
+  // Obtenir les comptes éligibles (FUNDED et ACTIVE uniquement)
+  const eligibleAccounts = accounts.filter(
+    (account) => account.accountType === "FUNDED" && account.status === "ACTIVE"
+  )
 
   if (isLoading) {
     return (
@@ -496,7 +501,7 @@ export default function WithdrawalsPage() {
           <div className="space-y-2">
             <h3 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">Aucun compte</h3>
             <p className="text-sm text-zinc-600 dark:text-zinc-400">
-              Créez un compte financé pour commencer
+              Créez un compte financé et actif pour commencer
             </p>
           </div>
         </div>
@@ -515,7 +520,7 @@ export default function WithdrawalsPage() {
           </Button>
         </div>
       ) : (
-        <div className="grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 items-start">
           {(() => {
             // Regrouper les retraits par compte
             const withdrawalsByAccount = filteredWithdrawals.reduce(
@@ -550,9 +555,9 @@ export default function WithdrawalsPage() {
               const gradient = "from-emerald-500/10 via-emerald-500/5 to-transparent"
 
               return (
-                <Card key={accountId} className="border-none bg-transparent shadow-none">
-                  <CardContent className="p-0">
-                    <div className="overflow-hidden rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 bg-white/90 dark:bg-zinc-950/80 shadow-sm w-full">
+                <Card key={accountId} className="border-none bg-transparent shadow-none h-full">
+                  <CardContent className="p-0 h-full flex flex-col">
+                    <div className="overflow-hidden rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 bg-white/90 dark:bg-zinc-950/80 shadow-sm w-full h-full flex flex-col">
                       {/* Header de la card avec infos du compte */}
                       <div
                         className={`flex flex-col gap-2 sm:gap-3 border-b border-zinc-200/70 dark:border-zinc-800/60 bg-linear-to-r ${gradient} p-3 sm:p-4`}
@@ -562,7 +567,7 @@ export default function WithdrawalsPage() {
                             <div className="flex items-start gap-1.5 sm:gap-2 min-w-0 w-full">
                               <div className="min-w-0 flex-1 overflow-hidden">
                                 <h3
-                                  className="text-base sm:text-lg md:text-xl font-bold text-zinc-900 dark:text-zinc-50 truncate min-w-0 flex-1"
+                                  className="text-xs sm:text-sm md:text-base font-bold text-zinc-900 dark:text-zinc-50 truncate min-w-0 flex-1"
                                   title={account.name}
                                 >
                                   {account.name.length > 20
@@ -763,14 +768,14 @@ export default function WithdrawalsPage() {
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         withdrawal={selectedWithdrawal}
-        accounts={accounts}
+        accounts={eligibleAccounts}
         onSuccess={fetchData}
       />
 
       <BulkWithdrawalFormDialog
         open={bulkDialogOpen}
         onOpenChange={setBulkDialogOpen}
-        accounts={accounts}
+        accounts={eligibleAccounts}
         onSuccess={fetchData}
       />
     </div>

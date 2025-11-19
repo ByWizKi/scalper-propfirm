@@ -60,22 +60,22 @@ const variantStyles = {
  */
 const sizeStyles = {
   sm: {
-    value: "text-lg sm:text-xl",
-    title: "text-sm font-semibold",
-    icon: "h-4 w-4",
+    value: "text-sm sm:text-base",
+    title: "text-xs sm:text-sm font-semibold",
+    icon: "h-4 w-4 sm:h-5 sm:w-5",
     description: "text-xs",
     secondary: "text-xs",
   },
   md: {
-    value: "text-xl sm:text-2xl",
-    title: "text-sm font-semibold",
+    value: "text-base sm:text-lg md:text-xl",
+    title: "text-xs sm:text-sm font-semibold",
     icon: "h-4 w-4 sm:h-5 sm:w-5",
     description: "text-xs",
     secondary: "text-xs",
   },
   lg: {
-    value: "text-2xl sm:text-3xl",
-    title: "text-sm font-semibold",
+    value: "text-lg sm:text-xl md:text-2xl",
+    title: "text-xs sm:text-sm font-semibold",
     icon: "h-5 w-5 sm:h-6 sm:w-6",
     description: "text-xs sm:text-sm",
     secondary: "text-xs sm:text-sm",

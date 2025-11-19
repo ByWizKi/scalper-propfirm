@@ -60,11 +60,21 @@ export class BulenoxStrategy implements PropfirmStrategy {
     return "Bulenox"
   }
 
-  getAccountRules(accountSize: number): AccountRules | null {
+  getAccountRules(
+    accountSize: number,
+    _accountType?: string,
+    _accountName?: string,
+    _notes?: string | null
+  ): AccountRules | null {
     return this.rulesConfig[accountSize] || null
   }
 
-  getWithdrawalRules(): WithdrawalRules {
+  getWithdrawalRules(
+    _accountSize?: number,
+    _accountType?: string,
+    _accountName?: string,
+    _notes?: string | null
+  ): WithdrawalRules {
     return {
       taxRate: 0, // Pas de taxe mentionnée
       requiresCycles: false, // Pas de système de cycles mentionné
@@ -80,7 +90,10 @@ export class BulenoxStrategy implements PropfirmStrategy {
     _accountSize: number,
     totalPnl: number,
     _totalWithdrawals: number,
-    _pnlEntries: Array<{ date: Date; amount: number }>
+    _pnlEntries: Array<{ date: Date; amount: number }>,
+    _accountType?: string,
+    _accountName?: string,
+    _notes?: string | null
   ): number {
     // Pas de règles de retrait spécifiques mentionnées
     return Math.max(0, totalPnl)
@@ -88,7 +101,10 @@ export class BulenoxStrategy implements PropfirmStrategy {
 
   isEligibleForValidation(
     accountSize: number,
-    pnlEntries: Array<{ date: Date; amount: number }>
+    pnlEntries: Array<{ date: Date; amount: number }>,
+    _accountType?: string,
+    _accountName?: string,
+    _notes?: string | null
   ): boolean {
     const rules = this.getAccountRules(accountSize)
     if (!rules) return false
