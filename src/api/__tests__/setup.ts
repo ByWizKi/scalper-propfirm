@@ -2,22 +2,22 @@
  * Configuration pour les tests d'API
  */
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // Mock des APIs Web pour Node.js
 global.Request = class Request {
   constructor(
     public input: RequestInfo | URL,
-    public init?: RequestInit
+    public _init?: RequestInit
   ) {}
 } as any
 
 global.Response = class Response {
   constructor(
     public body?: BodyInit | null,
-    public init?: ResponseInit
+    public _init?: ResponseInit
   ) {}
 } as any
 
 global.Headers = class Headers {
-  constructor(init?: HeadersInit) {}
+  constructor(_init?: HeadersInit) {}
 } as any
-

@@ -60,7 +60,9 @@ export class AccountService {
       totalWithdrawals,
       normalizedPnlEntries,
       account.accountType,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (account as any).name,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (account as any).notes
     )
 
@@ -69,7 +71,9 @@ export class AccountService {
     const withdrawalRules = strategy.getWithdrawalRules(
       account.size,
       account.accountType,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (account as any).name,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (account as any).notes
     )
     if (account.accountType === "FUNDED" && withdrawalRules.hasBuffer) {
@@ -111,7 +115,9 @@ export class AccountService {
       account.size,
       normalizedPnlEntries,
       account.accountType,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (account as any).name,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (account as any).notes
     )
   }
@@ -144,4 +150,3 @@ export class AccountService {
     return strategy.getWithdrawalRules(accountSize, accountType, accountName, notes)
   }
 }
-

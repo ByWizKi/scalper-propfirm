@@ -17,10 +17,7 @@ export function validateRequest<T extends z.ZodSchema>(
   if (!validation.success) {
     return {
       success: false,
-      response: NextResponse.json(
-        { message: validation.error },
-        { status: validation.status }
-      ),
+      response: NextResponse.json({ message: validation.error }, { status: validation.status }),
     }
   }
   return { success: true, data: validation.data as z.infer<T> }
@@ -31,8 +28,10 @@ export function validateRequest<T extends z.ZodSchema>(
  */
 export function withValidation<T extends z.ZodSchema>(
   schema: T,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   handler: (data: z.infer<T>, ...args: any[]) => Promise<NextResponse>
 ) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return async (request: Request, ...args: any[]): Promise<NextResponse> => {
     const body = await request.json()
     const validation = validateRequest(schema, body)
@@ -42,4 +41,3 @@ export function withValidation<T extends z.ZodSchema>(
     return handler(validation.data, ...args)
   }
 }
-

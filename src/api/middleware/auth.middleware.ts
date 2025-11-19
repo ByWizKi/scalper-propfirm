@@ -45,6 +45,7 @@ export async function requireAuth(): Promise<
 /**
  * Wrapper pour les handlers API qui nécessitent une authentification
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function withAuth<T extends any[]>(
   handler: (userId: string, ...args: T) => Promise<NextResponse>
 ) {
@@ -56,4 +57,3 @@ export function withAuth<T extends any[]>(
     return handler(authResult.userId, ...args)
   }
 }
-
