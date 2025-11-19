@@ -101,13 +101,11 @@ const CustomTooltip = (props: CustomTooltipProps) => {
 
   return (
     <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-2 sm:p-3 shadow-lg max-w-[200px] sm:max-w-none">
-      <p className="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-zinc-50 mb-1 sm:mb-2">{label}</p>
+      <p className="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-zinc-50 mb-1 sm:mb-2">
+        {label}
+      </p>
       {payload.map((entry, index) => (
-        <p
-          key={index}
-          className="text-[10px] sm:text-xs"
-          style={{ color: entry.color }}
-        >
+        <p key={index} className="text-[10px] sm:text-xs" style={{ color: entry.color }}>
           {entry.name}: {typeof entry.value === "number" ? entry.value.toFixed(2) : entry.value} $
         </p>
       ))}
@@ -177,20 +175,28 @@ export default function VisualizationPage() {
         const enrichedAccounts = accountsData.map((account: Account) => ({
           ...account,
           pnlEntries: pnlData.filter((pnl: { accountId: string }) => pnl.accountId === account.id),
-          withdrawals: withdrawalsData.filter((w: { accountId: string }) => w.accountId === account.id),
+          withdrawals: withdrawalsData.filter(
+            (w: { accountId: string }) => w.accountId === account.id
+          ),
         }))
 
-        const totalPnl = pnlData.reduce((sum: number, entry: { amount: number }) => sum + entry.amount, 0)
+        const totalPnl = pnlData.reduce(
+          (sum: number, entry: { amount: number }) => sum + entry.amount,
+          0
+        )
         const totalWithdrawals = withdrawalsData.reduce(
           (sum: number, w: { amount: number }) => sum + w.amount,
           0
         )
-        const totalNetWithdrawals = withdrawalsData.reduce((sum: number, w: { accountId: string; amount: number }) => {
-          const account = enrichedAccounts.find((a: Account) => a.id === w.accountId)
-          if (!account) return sum
-          const netAmount = w.amount * (account.propfirm === "TAKEPROFITTRADER" ? 0.8 : 1)
-          return sum + netAmount
-        }, 0)
+        const totalNetWithdrawals = withdrawalsData.reduce(
+          (sum: number, w: { accountId: string; amount: number }) => {
+            const account = enrichedAccounts.find((a: Account) => a.id === w.accountId)
+            if (!account) return sum
+            const netAmount = w.amount * (account.propfirm === "TAKEPROFITTRADER" ? 0.8 : 1)
+            return sum + netAmount
+          },
+          0
+        )
 
         const totalCapitalUnderManagement = enrichedAccounts
           .filter((a: Account) => a.status === "ACTIVE")
@@ -232,7 +238,8 @@ export default function VisualizationPage() {
     if (!data || filteredAccounts.length === 0) return []
 
     const now = new Date()
-    const daysAgo = dateRange === "7days" ? 7 : dateRange === "30days" ? 30 : dateRange === "90days" ? 90 : 365
+    const daysAgo =
+      dateRange === "7days" ? 7 : dateRange === "30days" ? 30 : dateRange === "90days" ? 90 : 365
     const startDate = new Date(now)
     startDate.setDate(startDate.getDate() - daysAgo)
 
@@ -280,7 +287,8 @@ export default function VisualizationPage() {
     if (!data || filteredAccounts.length === 0) return []
 
     const now = new Date()
-    const daysAgo = dateRange === "7days" ? 7 : dateRange === "30days" ? 30 : dateRange === "90days" ? 90 : 365
+    const daysAgo =
+      dateRange === "7days" ? 7 : dateRange === "30days" ? 30 : dateRange === "90days" ? 90 : 365
     const startDate = new Date(now)
     startDate.setDate(startDate.getDate() - daysAgo)
 
@@ -330,7 +338,8 @@ export default function VisualizationPage() {
     if (!data || filteredAccounts.length === 0) return []
 
     const now = new Date()
-    const monthsAgo = dateRange === "7days" ? 1 : dateRange === "30days" ? 3 : dateRange === "90days" ? 6 : 12
+    const monthsAgo =
+      dateRange === "7days" ? 1 : dateRange === "30days" ? 3 : dateRange === "90days" ? 6 : 12
     const startDate = new Date(now)
     startDate.setMonth(startDate.getMonth() - monthsAgo)
 
@@ -354,8 +363,7 @@ export default function VisualizationPage() {
           if (!monthlyData[monthKey]) {
             monthlyData[monthKey] = { pnl: 0, withdrawals: 0 }
           }
-          const netAmount =
-            withdrawal.amount * (account.propfirm === "TAKEPROFITTRADER" ? 0.8 : 1)
+          const netAmount = withdrawal.amount * (account.propfirm === "TAKEPROFITTRADER" ? 0.8 : 1)
           monthlyData[monthKey].withdrawals += netAmount
         })
     })
@@ -380,7 +388,14 @@ export default function VisualizationPage() {
     })
 
     return Object.entries(statusCount).map(([status, count]) => ({
-      name: status === "ACTIVE" ? "Actifs" : status === "VALIDATED" ? "Validés" : status === "FAILED" ? "Échoués" : "Archivés",
+      name:
+        status === "ACTIVE"
+          ? "Actifs"
+          : status === "VALIDATED"
+            ? "Validés"
+            : status === "FAILED"
+              ? "Échoués"
+              : "Archivés",
       value: count,
       fill: STATUS_COLORS[status] || STATUS_COLORS.ARCHIVED,
     }))
@@ -432,7 +447,8 @@ export default function VisualizationPage() {
     if (!selectedAccount) return []
 
     const now = new Date()
-    const daysAgo = dateRange === "7days" ? 7 : dateRange === "30days" ? 30 : dateRange === "90days" ? 90 : 365
+    const daysAgo =
+      dateRange === "7days" ? 7 : dateRange === "30days" ? 30 : dateRange === "90days" ? 90 : 365
     const startDate = new Date(now)
     startDate.setDate(startDate.getDate() - daysAgo)
 
@@ -462,7 +478,8 @@ export default function VisualizationPage() {
     if (!selectedAccount) return []
 
     const now = new Date()
-    const daysAgo = dateRange === "7days" ? 7 : dateRange === "30days" ? 30 : dateRange === "90days" ? 90 : 365
+    const daysAgo =
+      dateRange === "7days" ? 7 : dateRange === "30days" ? 30 : dateRange === "90days" ? 90 : 365
     const startDate = new Date(now)
     startDate.setDate(startDate.getDate() - daysAgo)
 
@@ -494,7 +511,8 @@ export default function VisualizationPage() {
 
     // Calculer la balance cumulative
     let currentBalance = selectedAccount.size
-    const balanceData: Array<{ date: string; balance: number; pnl: number; withdrawal: number }> = []
+    const balanceData: Array<{ date: string; balance: number; pnl: number; withdrawal: number }> =
+      []
 
     transactions.forEach((tx) => {
       currentBalance += tx.pnl - tx.withdrawal
@@ -514,14 +532,16 @@ export default function VisualizationPage() {
     if (!selectedAccount) return []
 
     const now = new Date()
-    const daysAgo = dateRange === "7days" ? 7 : dateRange === "30days" ? 30 : dateRange === "90days" ? 90 : 365
+    const daysAgo =
+      dateRange === "7days" ? 7 : dateRange === "30days" ? 30 : dateRange === "90days" ? 90 : 365
     const startDate = new Date(now)
     startDate.setDate(startDate.getDate() - daysAgo)
 
     // Calculer le drawdown au fil du temps
     let peakBalance = selectedAccount.size
     let currentBalance = selectedAccount.size
-    const drawdownData: Array<{ date: string; balance: number; drawdown: number; peak: number }> = []
+    const drawdownData: Array<{ date: string; balance: number; drawdown: number; peak: number }> =
+      []
 
     // Trier toutes les transactions par date
     const transactions: Array<{ date: Date; amount: number }> = []
@@ -562,7 +582,8 @@ export default function VisualizationPage() {
     if (!selectedAccount) return []
 
     const now = new Date()
-    const daysAgo = dateRange === "7days" ? 7 : dateRange === "30days" ? 30 : dateRange === "90days" ? 90 : 365
+    const daysAgo =
+      dateRange === "7days" ? 7 : dateRange === "30days" ? 30 : dateRange === "90days" ? 90 : 365
     const startDate = new Date(now)
     startDate.setDate(startDate.getDate() - daysAgo)
 
@@ -588,7 +609,8 @@ export default function VisualizationPage() {
     if (!selectedAccount) return []
 
     const now = new Date()
-    const monthsAgo = dateRange === "7days" ? 1 : dateRange === "30days" ? 3 : dateRange === "90days" ? 6 : 12
+    const monthsAgo =
+      dateRange === "7days" ? 1 : dateRange === "30days" ? 3 : dateRange === "90days" ? 6 : 12
     const startDate = new Date(now)
     startDate.setMonth(startDate.getMonth() - monthsAgo)
 
@@ -670,7 +692,9 @@ export default function VisualizationPage() {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-zinc-900 dark:border-zinc-50 mx-auto"></div>
-          <p className="mt-4 text-sm text-zinc-600 dark:text-zinc-400">Chargement des visualisations...</p>
+          <p className="mt-4 text-sm text-zinc-600 dark:text-zinc-400">
+            Chargement des visualisations...
+          </p>
         </div>
       </div>
     )
@@ -715,7 +739,7 @@ export default function VisualizationPage() {
             {/* Toggle vue Propfirm / Par compte */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
               <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300 whitespace-nowrap">
-                Mode d'affichage:
+                Mode d&apos;affichage:
               </label>
               <div className="flex gap-2 w-full sm:w-auto">
                 <Button
@@ -792,7 +816,12 @@ export default function VisualizationPage() {
                 <label className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
                   Période
                 </label>
-                <Select value={dateRange} onValueChange={(value: "7days" | "30days" | "90days" | "all") => setDateRange(value)}>
+                <Select
+                  value={dateRange}
+                  onValueChange={(value: "7days" | "30days" | "90days" | "all") =>
+                    setDateRange(value)
+                  }
+                >
                   <SelectTrigger className="w-full">
                     <Calendar className="h-4 w-4 mr-2" />
                     <SelectValue />
@@ -813,361 +842,360 @@ export default function VisualizationPage() {
       {/* Affichage conditionnel selon le mode */}
       {viewMode === "propfirm" && (
         <div className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 items-start">
-        {/* Graphique 1: Évolution du PnL */}
-        <Card className="col-span-1 md:col-span-2 lg:col-span-2 xl:col-span-3">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-emerald-500" />
-              Évolution du PnL cumulé
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[250px] sm:h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={pnlEvolutionData}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-zinc-200 dark:stroke-zinc-800" />
-                <XAxis
-                  dataKey="date"
-                  className="text-[10px] sm:text-xs"
-                  tick={{ fill: "currentColor", fontSize: 10 }}
-                  angle={-45}
-                  textAnchor="end"
-                  height={60}
-                  interval="preserveStartEnd"
-                />
-                <YAxis
-                  className="text-[10px] sm:text-xs"
-                  tick={{ fill: "currentColor", fontSize: 10 }}
-                  tickFormatter={(value) => `$${value.toFixed(0)}`}
-                  width={50}
-                />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend wrapperStyle={{ fontSize: "10px" }} iconSize={12} />
-                <Line
-                  type="monotone"
-                  dataKey="pnl"
-                  stroke="#10b981"
-                  strokeWidth={2}
-                  name="PnL journalier"
-                  dot={false}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="cumulative"
-                  stroke="#3b82f6"
-                  strokeWidth={2}
-                  name="PnL cumulé"
-                  dot={false}
-                />
-              </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
+          {/* Graphique 1: Évolution du PnL */}
+          <Card className="col-span-1 md:col-span-2 lg:col-span-2 xl:col-span-3">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="h-5 w-5 text-emerald-500" />
+                Évolution du PnL cumulé
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[250px] sm:h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={pnlEvolutionData}>
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      className="stroke-zinc-200 dark:stroke-zinc-800"
+                    />
+                    <XAxis
+                      dataKey="date"
+                      className="text-[10px] sm:text-xs"
+                      tick={{ fill: "currentColor", fontSize: 10 }}
+                      angle={-45}
+                      textAnchor="end"
+                      height={60}
+                      interval="preserveStartEnd"
+                    />
+                    <YAxis
+                      className="text-[10px] sm:text-xs"
+                      tick={{ fill: "currentColor", fontSize: 10 }}
+                      tickFormatter={(value) => `$${value.toFixed(0)}`}
+                      width={50}
+                    />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend wrapperStyle={{ fontSize: "10px" }} iconSize={12} />
+                    <Line
+                      type="monotone"
+                      dataKey="pnl"
+                      stroke="#10b981"
+                      strokeWidth={2}
+                      name="PnL journalier"
+                      dot={false}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="cumulative"
+                      stroke="#3b82f6"
+                      strokeWidth={2}
+                      name="PnL cumulé"
+                      dot={false}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
 
-        {/* Graphique 2: Répartition par propfirm */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Target className="h-5 w-5 text-blue-500" />
-              Répartition par propfirm
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[250px] sm:h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={propfirmDistributionData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={(props: { name?: string; percent?: number }) => {
-                      const { name, percent } = props
-                      // Sur mobile, afficher seulement le pourcentage pour éviter le débordement
-                      if (isMobile) {
-                        return `${((percent ?? 0) * 100).toFixed(0)}%`
-                      }
-                      return `${name} ${((percent ?? 0) * 100).toFixed(0)}%`
-                    }}
-                    outerRadius={isMobile ? 50 : 60}
-                    fill="#8884d8"
-                    dataKey="value"
+          {/* Graphique 2: Répartition par propfirm */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Target className="h-5 w-5 text-blue-500" />
+                Répartition par propfirm
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[250px] sm:h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={propfirmDistributionData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={(props: { name?: string; percent?: number }) => {
+                        const { name, percent } = props
+                        // Sur mobile, afficher seulement le pourcentage pour éviter le débordement
+                        if (isMobile) {
+                          return `${((percent ?? 0) * 100).toFixed(0)}%`
+                        }
+                        return `${name} ${((percent ?? 0) * 100).toFixed(0)}%`
+                      }}
+                      outerRadius={isMobile ? 50 : 60}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {propfirmDistributionData.map((_entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend
+                      {...legendProps}
+                      verticalAlign="bottom"
+                      height={isMobile ? 80 : 36}
+                      wrapperStyle={{ paddingTop: "10px" }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Graphique 3: Évolution du capital */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Wallet className="h-5 w-5 text-amber-500" />
+                Évolution du capital sous gestion
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[250px] sm:h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={capitalEvolutionData}>
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      className="stroke-zinc-200 dark:stroke-zinc-800"
+                    />
+                    <XAxis dataKey="month" {...getXAxisProps()} />
+                    <YAxis {...getYAxisProps((value) => `$${(value / 1000).toFixed(0)}k`)} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Area
+                      type="monotone"
+                      dataKey="capital"
+                      stroke="#f59e0b"
+                      fill="#f59e0b"
+                      fillOpacity={0.3}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Graphique 4: Top comptes par PnL */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Activity className="h-5 w-5 text-purple-500" />
+                Top 10 comptes par PnL
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[250px] sm:h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={topAccountsByPnlData}
+                    layout="vertical"
+                    margin={{ left: 0, right: 5, top: 5, bottom: 5 }}
                   >
-                    {propfirmDistributionData.map((_entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip content={<CustomTooltip />} />
-                  <Legend
-                    {...legendProps}
-                    verticalAlign="bottom"
-                    height={isMobile ? 80 : 36}
-                    wrapperStyle={{ paddingTop: "10px" }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      className="stroke-zinc-200 dark:stroke-zinc-800"
+                    />
+                    <XAxis type="number" {...getYAxisProps()} />
+                    <YAxis
+                      dataKey="name"
+                      type="category"
+                      width={isMobile ? 80 : 100}
+                      className="text-[9px] sm:text-[10px] md:text-xs"
+                      tick={{ fill: "currentColor", fontSize: isMobile ? 9 : 10 }}
+                      tickFormatter={(value) => {
+                        // Tronquer les noms longs sur mobile
+                        if (isMobile && value.length > 12) {
+                          return `${value.substring(0, 10)}...`
+                        }
+                        return value
+                      }}
+                    />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Bar dataKey="pnl" fill="#8b5cf6" radius={[0, 4, 4, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
 
-        {/* Graphique 3: Évolution du capital */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Wallet className="h-5 w-5 text-amber-500" />
-              Évolution du capital sous gestion
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[250px] sm:h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={capitalEvolutionData}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-zinc-200 dark:stroke-zinc-800" />
-                <XAxis
-                  dataKey="month"
-                  {...getXAxisProps()}
-                />
-                <YAxis
-                  {...getYAxisProps((value) => `$${(value / 1000).toFixed(0)}k`)}
-                />
-                <Tooltip content={<CustomTooltip />} />
-                <Area
-                  type="monotone"
-                  dataKey="capital"
-                  stroke="#f59e0b"
-                  fill="#f59e0b"
-                  fillOpacity={0.3}
-                />
-              </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
+          {/* Graphique 5: Retraits vs PnL mensuel */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <DollarSign className="h-5 w-5 text-emerald-500" />
+                Retraits vs PnL mensuel
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[250px] sm:h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={withdrawalsVsPnlData}>
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      className="stroke-zinc-200 dark:stroke-zinc-800"
+                    />
+                    <XAxis dataKey="month" {...getXAxisProps()} />
+                    <YAxis {...getYAxisProps((value) => `$${(value / 1000).toFixed(0)}k`)} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend {...legendProps} />
+                    <Bar dataKey="pnl" fill="#10b981" name="PnL" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="retraits" fill="#3b82f6" name="Retraits" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
 
-        {/* Graphique 4: Top comptes par PnL */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Activity className="h-5 w-5 text-purple-500" />
-              Top 10 comptes par PnL
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[250px] sm:h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={topAccountsByPnlData} layout="vertical" margin={{ left: 0, right: 5, top: 5, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-zinc-200 dark:stroke-zinc-800" />
-                <XAxis
-                  type="number"
-                  {...getYAxisProps()}
-                />
-                <YAxis
-                  dataKey="name"
-                  type="category"
-                  width={isMobile ? 80 : 100}
-                  className="text-[9px] sm:text-[10px] md:text-xs"
-                  tick={{ fill: "currentColor", fontSize: isMobile ? 9 : 10 }}
-                  tickFormatter={(value) => {
-                    // Tronquer les noms longs sur mobile
-                    if (isMobile && value.length > 12) {
-                      return `${value.substring(0, 10)}...`
-                    }
-                    return value
-                  }}
-                />
-                <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="pnl" fill="#8b5cf6" radius={[0, 4, 4, 0]} />
-              </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
+          {/* Graphique 6: État des comptes */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Target className="h-5 w-5 text-red-500" />
+                État des comptes
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[250px] sm:h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={accountStatusData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={(props: { name?: string; percent?: number }) => {
+                        const { name, percent } = props
+                        // Sur mobile, afficher seulement le pourcentage
+                        if (isMobile) {
+                          return `${((percent ?? 0) * 100).toFixed(0)}%`
+                        }
+                        return `${name} ${((percent ?? 0) * 100).toFixed(0)}%`
+                      }}
+                      outerRadius={isMobile ? 50 : 60}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {accountStatusData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.fill} />
+                      ))}
+                    </Pie>
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend
+                      {...legendProps}
+                      verticalAlign="bottom"
+                      height={isMobile ? 80 : 36}
+                      wrapperStyle={{ paddingTop: "10px" }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
 
-        {/* Graphique 5: Retraits vs PnL mensuel */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <DollarSign className="h-5 w-5 text-emerald-500" />
-              Retraits vs PnL mensuel
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[250px] sm:h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={withdrawalsVsPnlData}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-zinc-200 dark:stroke-zinc-800" />
-                <XAxis
-                  dataKey="month"
-                  {...getXAxisProps()}
-                />
-                <YAxis
-                  {...getYAxisProps((value) => `$${(value / 1000).toFixed(0)}k`)}
-                />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend {...legendProps} />
-                <Bar dataKey="pnl" fill="#10b981" name="PnL" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="retraits" fill="#3b82f6" name="Retraits" radius={[4, 4, 0, 0]} />
-              </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Graphique 6: État des comptes */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Target className="h-5 w-5 text-red-500" />
-              État des comptes
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[250px] sm:h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={accountStatusData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={(props: { name?: string; percent?: number }) => {
-                      const { name, percent } = props
-                      // Sur mobile, afficher seulement le pourcentage
-                      if (isMobile) {
-                        return `${((percent ?? 0) * 100).toFixed(0)}%`
-                      }
-                      return `${name} ${((percent ?? 0) * 100).toFixed(0)}%`
-                    }}
-                    outerRadius={isMobile ? 50 : 60}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {accountStatusData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.fill} />
-                    ))}
-                  </Pie>
-                  <Tooltip content={<CustomTooltip />} />
-                  <Legend
-                    {...legendProps}
-                    verticalAlign="bottom"
-                    height={isMobile ? 80 : 36}
-                    wrapperStyle={{ paddingTop: "10px" }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Graphique 7: PnL par propfirm */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BarChart2 className="h-5 w-5 text-indigo-500" />
-              PnL total par propfirm
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[250px] sm:h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={pnlByPropfirmData}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-zinc-200 dark:stroke-zinc-800" />
-                <XAxis
-                  dataKey="name"
-                  {...getXAxisProps()}
-                />
-                <YAxis
-                  {...getYAxisProps((value) => `$${(value / 1000).toFixed(0)}k`)}
-                />
-                <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="pnl" fill="#6366f1" radius={[4, 4, 0, 0]} />
-              </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+          {/* Graphique 7: PnL par propfirm */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart2 className="h-5 w-5 text-indigo-500" />
+                PnL total par propfirm
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[250px] sm:h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={pnlByPropfirmData}>
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      className="stroke-zinc-200 dark:stroke-zinc-800"
+                    />
+                    <XAxis dataKey="name" {...getXAxisProps()} />
+                    <YAxis {...getYAxisProps((value) => `$${(value / 1000).toFixed(0)}k`)} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Bar dataKey="pnl" fill="#6366f1" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       )}
       {viewMode === "account" && selectedAccount && accountStats && (
-          <div className="space-y-6">
-            {/* Statistiques du compte */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-                    Compte sélectionné
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-lg font-bold text-zinc-900 dark:text-zinc-50">
-                    {selectedAccount.name}
-                  </p>
-                  <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
-                    {PROPFIRM_LABELS[selectedAccount.propfirm] || selectedAccount.propfirm}
-                  </p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-                    PnL total
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-lg font-bold text-zinc-900 dark:text-zinc-50">
-                    ${accountStats.totalPnl.toFixed(2)}
-                  </p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-                    Balance actuelle
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-lg font-bold text-zinc-900 dark:text-zinc-50">
-                    ${accountStats.currentBalance.toFixed(2)}
-                  </p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-                    Drawdown max
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-lg font-bold text-red-600 dark:text-red-400">
-                    ${accountStats.maxDrawdown.toFixed(2)}
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
+        <div className="space-y-6">
+          {/* Statistiques du compte */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                  Compte sélectionné
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-lg font-bold text-zinc-900 dark:text-zinc-50">
+                  {selectedAccount.name}
+                </p>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+                  {PROPFIRM_LABELS[selectedAccount.propfirm] || selectedAccount.propfirm}
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                  PnL total
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-lg font-bold text-zinc-900 dark:text-zinc-50">
+                  ${accountStats.totalPnl.toFixed(2)}
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                  Balance actuelle
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-lg font-bold text-zinc-900 dark:text-zinc-50">
+                  ${accountStats.currentBalance.toFixed(2)}
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                  Drawdown max
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-lg font-bold text-red-600 dark:text-red-400">
+                  ${accountStats.maxDrawdown.toFixed(2)}
+                </p>
+              </CardContent>
+            </Card>
+          </div>
 
-            {/* Grille de graphiques pour le compte */}
-            <div className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 items-start">
-              {/* Graphique 1: Évolution PnL du compte */}
-              <Card className="col-span-1 md:col-span-2 lg:col-span-2 xl:col-span-3">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <TrendingUp className="h-5 w-5 text-emerald-500" />
-                    Évolution du PnL du compte
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-[250px] sm:h-[300px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={accountPnlEvolutionData}>
-                      <CartesianGrid strokeDasharray="3 3" className="stroke-zinc-200 dark:stroke-zinc-800" />
-                      <XAxis
-                        dataKey="date"
-                        {...getXAxisProps()}
+          {/* Grille de graphiques pour le compte */}
+          <div className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 items-start">
+            {/* Graphique 1: Évolution PnL du compte */}
+            <Card className="col-span-1 md:col-span-2 lg:col-span-2 xl:col-span-3">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5 text-emerald-500" />
+                  Évolution du PnL du compte
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-[250px] sm:h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={accountPnlEvolutionData}>
+                      <CartesianGrid
+                        strokeDasharray="3 3"
+                        className="stroke-zinc-200 dark:stroke-zinc-800"
                       />
-                      <YAxis
-                        {...getYAxisProps((value) => `$${value.toFixed(0)}`)}
-                      />
+                      <XAxis dataKey="date" {...getXAxisProps()} />
+                      <YAxis {...getYAxisProps((value) => `$${value.toFixed(0)}`)} />
                       <Tooltip content={<CustomTooltip />} />
                       <Legend {...legendProps} />
                       <Line
@@ -1187,31 +1215,29 @@ export default function VisualizationPage() {
                         dot={false}
                       />
                     </LineChart>
-                    </ResponsiveContainer>
-                  </div>
-                </CardContent>
-              </Card>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
 
-              {/* Graphique 2: Évolution de la balance */}
-              <Card className="col-span-1 md:col-span-2">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Wallet className="h-5 w-5 text-amber-500" />
-                    Évolution de la balance
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-[250px] sm:h-[300px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <ComposedChart data={accountBalanceEvolutionData}>
-                      <CartesianGrid strokeDasharray="3 3" className="stroke-zinc-200 dark:stroke-zinc-800" />
-                      <XAxis
-                        dataKey="date"
-                        {...getXAxisProps()}
+            {/* Graphique 2: Évolution de la balance */}
+            <Card className="col-span-1 md:col-span-2">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Wallet className="h-5 w-5 text-amber-500" />
+                  Évolution de la balance
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-[250px] sm:h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <ComposedChart data={accountBalanceEvolutionData}>
+                      <CartesianGrid
+                        strokeDasharray="3 3"
+                        className="stroke-zinc-200 dark:stroke-zinc-800"
                       />
-                      <YAxis
-                        {...getYAxisProps((value) => `$${value.toFixed(0)}`)}
-                      />
+                      <XAxis dataKey="date" {...getXAxisProps()} />
+                      <YAxis {...getYAxisProps((value) => `$${value.toFixed(0)}`)} />
                       <Tooltip content={<CustomTooltip />} />
                       <Legend {...legendProps} />
                       <Area
@@ -1225,31 +1251,29 @@ export default function VisualizationPage() {
                       <Bar dataKey="pnl" fill="#10b981" name="PnL" />
                       <Bar dataKey="withdrawal" fill="#ef4444" name="Retrait" />
                     </ComposedChart>
-                    </ResponsiveContainer>
-                  </div>
-                </CardContent>
-              </Card>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
 
-              {/* Graphique 3: Drawdown */}
-              <Card className="col-span-1 md:col-span-2">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <TrendingDown className="h-5 w-5 text-red-500" />
-                    Drawdown au fil du temps
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-[250px] sm:h-[300px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <ComposedChart data={accountDrawdownData}>
-                      <CartesianGrid strokeDasharray="3 3" className="stroke-zinc-200 dark:stroke-zinc-800" />
-                      <XAxis
-                        dataKey="date"
-                        {...getXAxisProps()}
+            {/* Graphique 3: Drawdown */}
+            <Card className="col-span-1 md:col-span-2">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingDown className="h-5 w-5 text-red-500" />
+                  Drawdown au fil du temps
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-[250px] sm:h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <ComposedChart data={accountDrawdownData}>
+                      <CartesianGrid
+                        strokeDasharray="3 3"
+                        className="stroke-zinc-200 dark:stroke-zinc-800"
                       />
-                      <YAxis
-                        {...getYAxisProps((value) => `$${value.toFixed(0)}`)}
-                      />
+                      <XAxis dataKey="date" {...getXAxisProps()} />
+                      <YAxis {...getYAxisProps((value) => `$${value.toFixed(0)}`)} />
                       <Tooltip content={<CustomTooltip />} />
                       <Legend {...legendProps} />
                       <Area
@@ -1277,75 +1301,71 @@ export default function VisualizationPage() {
                         dot={false}
                       />
                     </ComposedChart>
-                    </ResponsiveContainer>
-                  </div>
-                </CardContent>
-              </Card>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
 
-              {/* Graphique 4: Performance journalière */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Activity className="h-5 w-5 text-purple-500" />
-                    Performance journalière
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-[250px] sm:h-[300px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={accountDailyPerformanceData}>
-                      <CartesianGrid strokeDasharray="3 3" className="stroke-zinc-200 dark:stroke-zinc-800" />
-                      <XAxis
-                        dataKey="date"
-                        {...getXAxisProps()}
+            {/* Graphique 4: Performance journalière */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Activity className="h-5 w-5 text-purple-500" />
+                  Performance journalière
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-[250px] sm:h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={accountDailyPerformanceData}>
+                      <CartesianGrid
+                        strokeDasharray="3 3"
+                        className="stroke-zinc-200 dark:stroke-zinc-800"
                       />
-                      <YAxis
-                        {...getYAxisProps((value) => `$${value.toFixed(0)}`)}
-                      />
+                      <XAxis dataKey="date" {...getXAxisProps()} />
+                      <YAxis {...getYAxisProps((value) => `$${value.toFixed(0)}`)} />
                       <Tooltip content={<CustomTooltip />} />
-                      <Bar
-                        dataKey="pnl"
-                        fill="#8b5cf6"
-                        radius={[4, 4, 0, 0]}
-                        name="PnL"
-                      />
+                      <Bar dataKey="pnl" fill="#8b5cf6" radius={[4, 4, 0, 0]} name="PnL" />
                     </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </CardContent>
-              </Card>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
 
-              {/* Graphique 5: Retraits vs PnL mensuel */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <DollarSign className="h-5 w-5 text-emerald-500" />
-                    Retraits vs PnL mensuel
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-[250px] sm:h-[300px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={accountWithdrawalsVsPnlData}>
-                      <CartesianGrid strokeDasharray="3 3" className="stroke-zinc-200 dark:stroke-zinc-800" />
-                      <XAxis
-                        dataKey="month"
-                        {...getXAxisProps()}
+            {/* Graphique 5: Retraits vs PnL mensuel */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <DollarSign className="h-5 w-5 text-emerald-500" />
+                  Retraits vs PnL mensuel
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-[250px] sm:h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={accountWithdrawalsVsPnlData}>
+                      <CartesianGrid
+                        strokeDasharray="3 3"
+                        className="stroke-zinc-200 dark:stroke-zinc-800"
                       />
-                      <YAxis
-                        {...getYAxisProps((value) => `$${value.toFixed(0)}`)}
-                      />
+                      <XAxis dataKey="month" {...getXAxisProps()} />
+                      <YAxis {...getYAxisProps((value) => `$${value.toFixed(0)}`)} />
                       <Tooltip content={<CustomTooltip />} />
                       <Legend {...legendProps} />
                       <Bar dataKey="pnl" fill="#10b981" name="PnL" radius={[4, 4, 0, 0]} />
-                      <Bar dataKey="retraits" fill="#3b82f6" name="Retraits" radius={[4, 4, 0, 0]} />
+                      <Bar
+                        dataKey="retraits"
+                        fill="#3b82f6"
+                        name="Retraits"
+                        radius={[4, 4, 0, 0]}
+                      />
                     </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
           </div>
+        </div>
       )}
       {viewMode === "account" && (!selectedAccount || !accountStats) && (
         <div className="flex items-center justify-center min-h-[400px]">
@@ -1363,4 +1383,3 @@ export default function VisualizationPage() {
     </div>
   )
 }
-

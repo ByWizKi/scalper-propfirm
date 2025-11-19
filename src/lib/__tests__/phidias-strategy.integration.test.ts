@@ -116,7 +116,7 @@ describe("Phidias Strategy - Tests d'intégration", () => {
     test("devrait permettre une perte de 500$ exactement", () => {
       const pnlEntries = [{ date: new Date("2024-01-01"), amount: -500 }]
 
-      const isEligible = strategy.isEligibleForValidation(
+      const _isEligible = strategy.isEligibleForValidation(
         accountSize,
         pnlEntries,
         accountType,
@@ -143,9 +143,7 @@ describe("Phidias Strategy - Tests d'intégration", () => {
     })
 
     test("ne devrait pas permettre de retrait pour un compte EVAL", () => {
-      const pnlEntries = [
-        { date: new Date("2024-01-01"), amount: 2000 },
-      ]
+      const pnlEntries = [{ date: new Date("2024-01-01"), amount: 2000 }]
 
       const available = strategy.calculateAvailableForWithdrawal(
         accountSize,
@@ -161,7 +159,13 @@ describe("Phidias Strategy - Tests d'intégration", () => {
     })
 
     test("ne devrait pas avoir de bonus de validation pour EVAL", () => {
-      const bonus = (strategy as any).getValidationBonus(accountSize, accountType, accountName, null)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const bonus = (strategy as any).getValidationBonus(
+        accountSize,
+        accountType,
+        accountName,
+        null
+      )
       expect(bonus).toBe(0)
     })
   })
@@ -179,9 +183,7 @@ describe("Phidias Strategy - Tests d'intégration", () => {
     })
 
     test("devrait permettre le retrait dès J+1 avec profit", () => {
-      const pnlEntries = [
-        { date: new Date("2024-01-01"), amount: 1000 },
-      ]
+      const pnlEntries = [{ date: new Date("2024-01-01"), amount: 1000 }]
 
       const available = strategy.calculateAvailableForWithdrawal(
         accountSize,
@@ -197,9 +199,7 @@ describe("Phidias Strategy - Tests d'intégration", () => {
     })
 
     test("devrait permettre le retrait même avec un seul jour de trading", () => {
-      const pnlEntries = [
-        { date: new Date("2024-01-01"), amount: 500 },
-      ]
+      const pnlEntries = [{ date: new Date("2024-01-01"), amount: 500 }]
 
       const available = strategy.calculateAvailableForWithdrawal(
         accountSize,
@@ -215,19 +215,24 @@ describe("Phidias Strategy - Tests d'intégration", () => {
     })
 
     test("devrait calculer le bonus de validation de 1000$ pour CASH validé", () => {
-      const bonus = (strategy as any).getValidationBonus(accountSize, accountType, accountName, null)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const bonus = (strategy as any).getValidationBonus(
+        accountSize,
+        accountType,
+        accountName,
+        null
+      )
       expect(bonus).toBe(1000)
     })
 
     test("devrait calculer le crédit LIVE de 500$ pour CASH validé", () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const credit = (strategy as any).getLiveCredit(accountSize, accountType, accountName, null)
       expect(credit).toBe(500)
     })
 
     test("ne devrait pas être éligible à la validation (déjà financé)", () => {
-      const pnlEntries = [
-        { date: new Date("2024-01-01"), amount: 2000 },
-      ]
+      const pnlEntries = [{ date: new Date("2024-01-01"), amount: 2000 }]
 
       const isEligible = strategy.isEligibleForValidation(
         accountSize,
@@ -241,7 +246,12 @@ describe("Phidias Strategy - Tests d'intégration", () => {
     })
 
     test("devrait appliquer la taxe de 20% sur les retraits", () => {
-      const withdrawalRules = strategy.getWithdrawalRules(accountSize, accountType, accountName, null)
+      const withdrawalRules = strategy.getWithdrawalRules(
+        accountSize,
+        accountType,
+        accountName,
+        null
+      )
       expect(withdrawalRules.taxRate).toBe(0.2)
     })
   })
@@ -259,13 +269,11 @@ describe("Phidias Strategy - Tests d'intégration", () => {
     })
 
     test("devrait permettre le retrait chaque jour avec minimum 500$", () => {
-      const pnlEntries = [
-        { date: new Date("2024-01-01"), amount: 1000 },
-      ]
+      const pnlEntries = [{ date: new Date("2024-01-01"), amount: 1000 }]
 
       const currentBalance = accountSize + 1000 // 26000
       const minBalance = accountSize + 100 // 25100
-      const availableAfterMin = currentBalance - minBalance // 900
+      const _availableAfterMin = currentBalance - minBalance // 900
 
       const available = strategy.calculateAvailableForWithdrawal(
         accountSize,
@@ -319,9 +327,7 @@ describe("Phidias Strategy - Tests d'intégration", () => {
     })
 
     test("devrait respecter le solde minimum (solde initial + 100$)", () => {
-      const pnlEntries = [
-        { date: new Date("2024-01-01"), amount: 2000 },
-      ]
+      const pnlEntries = [{ date: new Date("2024-01-01"), amount: 2000 }]
 
       // Retrait de 1000$
       const available = strategy.calculateAvailableForWithdrawal(
@@ -341,9 +347,7 @@ describe("Phidias Strategy - Tests d'intégration", () => {
     })
 
     test("ne devrait pas permettre de retrait si le solde tombe sous le minimum", () => {
-      const pnlEntries = [
-        { date: new Date("2024-01-01"), amount: 500 },
-      ]
+      const pnlEntries = [{ date: new Date("2024-01-01"), amount: 500 }]
 
       // Retrait de 400$ (ce qui laisserait seulement 100$ au-dessus du minimum)
       const available = strategy.calculateAvailableForWithdrawal(
@@ -363,14 +367,17 @@ describe("Phidias Strategy - Tests d'intégration", () => {
     })
 
     test("devrait appliquer la taxe de 20% sur les retraits", () => {
-      const withdrawalRules = strategy.getWithdrawalRules(accountSize, accountType, accountName, null)
+      const withdrawalRules = strategy.getWithdrawalRules(
+        accountSize,
+        accountType,
+        accountName,
+        null
+      )
       expect(withdrawalRules.taxRate).toBe(0.2)
     })
 
     test("ne devrait pas être éligible à la validation (déjà financé)", () => {
-      const pnlEntries = [
-        { date: new Date("2024-01-01"), amount: 5000 },
-      ]
+      const pnlEntries = [{ date: new Date("2024-01-01"), amount: 5000 }]
 
       const isEligible = strategy.isEligibleForValidation(
         accountSize,
@@ -384,7 +391,13 @@ describe("Phidias Strategy - Tests d'intégration", () => {
     })
 
     test("ne devrait pas avoir de bonus de validation pour LIVE", () => {
-      const bonus = (strategy as any).getValidationBonus(accountSize, accountType, accountName, null)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const bonus = (strategy as any).getValidationBonus(
+        accountSize,
+        accountType,
+        accountName,
+        null
+      )
       expect(bonus).toBe(0)
     })
   })
@@ -404,9 +417,7 @@ describe("Phidias Strategy - Tests d'intégration", () => {
         const rules = strategy.getAccountRules(size, "EVAL", `Phidias ${size}`, null)
         if (!rules) return
 
-        const pnlEntries = [
-          { date: new Date("2024-01-01"), amount: rules.profitTarget },
-        ]
+        const pnlEntries = [{ date: new Date("2024-01-01"), amount: rules.profitTarget }]
 
         const isEligible = strategy.isEligibleForValidation(
           size,
@@ -424,9 +435,7 @@ describe("Phidias Strategy - Tests d'intégration", () => {
   describe("Scénarios de retraits complexes", () => {
     test("CASH: devrait permettre plusieurs retraits successifs", () => {
       const accountName = "Phidias 25K CASH"
-      const pnlEntries = [
-        { date: new Date("2024-01-01"), amount: 5000 },
-      ]
+      const pnlEntries = [{ date: new Date("2024-01-01"), amount: 5000 }]
 
       // Premier retrait de 2000$
       const available1 = strategy.calculateAvailableForWithdrawal(
@@ -457,9 +466,7 @@ describe("Phidias Strategy - Tests d'intégration", () => {
 
     test("LIVE: devrait calculer correctement avec retraits multiples", () => {
       const accountName = "Phidias LIVE"
-      const pnlEntries = [
-        { date: new Date("2024-01-01"), amount: 10000 },
-      ]
+      const pnlEntries = [{ date: new Date("2024-01-01"), amount: 10000 }]
 
       // Après retrait de 5000$
       const available = strategy.calculateAvailableForWithdrawal(
@@ -480,9 +487,7 @@ describe("Phidias Strategy - Tests d'intégration", () => {
 
     test("LIVE: ne devrait pas permettre de retrait si le solde serait sous le minimum", () => {
       const accountName = "Phidias LIVE"
-      const pnlEntries = [
-        { date: new Date("2024-01-01"), amount: 1000 },
-      ]
+      const pnlEntries = [{ date: new Date("2024-01-01"), amount: 1000 }]
 
       // Tentative de retrait qui laisserait le solde sous le minimum
       const available = strategy.calculateAvailableForWithdrawal(
@@ -629,9 +634,7 @@ describe("Phidias Strategy - Tests d'intégration", () => {
 
     test("50K CASH: devrait respecter le solde minimum après retrait (50 100$)", () => {
       const accountName = "Phidias 50K CASH"
-      const pnlEntries = [
-        { date: new Date("2024-01-01"), amount: 5000 },
-      ]
+      const pnlEntries = [{ date: new Date("2024-01-01"), amount: 5000 }]
 
       // Après retrait de 1000$, balance = 54 000$
       // Balance >= 52 600$ (seuil minimum) ✓
@@ -652,9 +655,7 @@ describe("Phidias Strategy - Tests d'intégration", () => {
 
     test("50K CASH: ne devrait pas permettre de retrait si balance sous le seuil minimum", () => {
       const accountName = "Phidias 50K CASH"
-      const pnlEntries = [
-        { date: new Date("2024-01-01"), amount: 5000 },
-      ]
+      const pnlEntries = [{ date: new Date("2024-01-01"), amount: 5000 }]
 
       // Après retrait de 3000$, balance = 52 000$
       // Balance < 52 600$ (seuil minimum) → pas de retrait possible
@@ -693,9 +694,7 @@ describe("Phidias Strategy - Tests d'intégration", () => {
 
     test("100K CASH: devrait permettre le retrait avec limite de 2 500$ par période", () => {
       const accountName = "Phidias 100K CASH"
-      const pnlEntries = [
-        { date: new Date("2024-01-01"), amount: 5000 },
-      ]
+      const pnlEntries = [{ date: new Date("2024-01-01"), amount: 5000 }]
 
       // Balance = 100 000 + 5000 = 105 000$ >= 103 700$ (seuil minimum)
       // Disponible = 105 000 - 100 100 (solde min) = 4 900$
@@ -735,9 +734,7 @@ describe("Phidias Strategy - Tests d'intégration", () => {
 
     test("150K CASH: devrait permettre le retrait avec limite de 2 750$ par période", () => {
       const accountName = "Phidias 150K CASH"
-      const pnlEntries = [
-        { date: new Date("2024-01-01"), amount: 6000 },
-      ]
+      const pnlEntries = [{ date: new Date("2024-01-01"), amount: 6000 }]
 
       // Balance = 150 000 + 6000 = 156 000$ >= 154 500$ (seuil minimum)
       // Disponible = 156 000 - 150 100 (solde min) = 5 900$
@@ -763,12 +760,22 @@ describe("Phidias Strategy - Tests d'intégration", () => {
     })
 
     test("100K CASH: devrait avoir minDailyProfit de 200$", () => {
-      const withdrawalRules = strategy.getWithdrawalRules(100000, "FUNDED", "Phidias 100K CASH", null)
+      const withdrawalRules = strategy.getWithdrawalRules(
+        100000,
+        "FUNDED",
+        "Phidias 100K CASH",
+        null
+      )
       expect(withdrawalRules.cycleRequirements?.minDailyProfit).toBe(200) // 200$ pour 100K
     })
 
     test("150K CASH: devrait avoir minDailyProfit de 250$", () => {
-      const withdrawalRules = strategy.getWithdrawalRules(150000, "FUNDED", "Phidias 150K CASH", null)
+      const withdrawalRules = strategy.getWithdrawalRules(
+        150000,
+        "FUNDED",
+        "Phidias 150K CASH",
+        null
+      )
       expect(withdrawalRules.cycleRequirements?.minDailyProfit).toBe(250) // 250$ pour 150K
     })
   })
@@ -790,4 +797,3 @@ describe("Phidias Strategy - Tests d'intégration", () => {
     })
   })
 })
-

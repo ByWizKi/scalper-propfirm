@@ -26,8 +26,7 @@
 
 import { PropfirmStrategy } from "./propfirm-strategy.interface"
 import { AccountRules, WithdrawalRules } from "@/types/account.types"
-import { format } from "date-fns"
-import { getPhidiasAccountSubType, PhidiasAccountSubType } from "@/lib/phidias-account-type"
+import { getPhidiasAccountSubType } from "@/lib/phidias-account-type"
 
 export class PhidiasStrategy implements PropfirmStrategy {
   private readonly rulesConfig: Record<number, AccountRules> = {
@@ -66,7 +65,12 @@ export class PhidiasStrategy implements PropfirmStrategy {
     return "Phidias"
   }
 
-  getAccountRules(accountSize: number, accountType?: string, accountName?: string, notes?: string | null): AccountRules | null {
+  getAccountRules(
+    accountSize: number,
+    accountType?: string,
+    accountName?: string,
+    notes?: string | null
+  ): AccountRules | null {
     const rules = this.rulesConfig[accountSize]
     if (!rules) return null
 
@@ -89,7 +93,12 @@ export class PhidiasStrategy implements PropfirmStrategy {
     return rules
   }
 
-  getWithdrawalRules(accountSize?: number, accountType?: string, accountName?: string, notes?: string | null): WithdrawalRules {
+  getWithdrawalRules(
+    accountSize?: number,
+    accountType?: string,
+    accountName?: string,
+    notes?: string | null
+  ): WithdrawalRules {
     const subType = accountType ? getPhidiasAccountSubType(accountType, accountName, notes) : "EVAL"
 
     // Règles de retrait selon le type de compte
@@ -272,7 +281,12 @@ export class PhidiasStrategy implements PropfirmStrategy {
    * Calcule le bonus de validation pour un compte 25K Static
    * Bonus de 1000$ à la validation (seulement pour CASH)
    */
-  getValidationBonus(accountSize: number, accountType?: string, accountName?: string, notes?: string | null): number {
+  getValidationBonus(
+    accountSize: number,
+    accountType?: string,
+    accountName?: string,
+    notes?: string | null
+  ): number {
     const subType = accountType ? getPhidiasAccountSubType(accountType, accountName, notes) : "EVAL"
 
     // Bonus seulement pour les comptes CASH validés
@@ -286,7 +300,12 @@ export class PhidiasStrategy implements PropfirmStrategy {
    * Calcule le crédit LIVE pour un compte 25K Static validé
    * Chaque compte CASH validé crédite le compte LIVE de 500$
    */
-  getLiveCredit(accountSize: number, accountType?: string, accountName?: string, notes?: string | null): number {
+  getLiveCredit(
+    accountSize: number,
+    accountType?: string,
+    accountName?: string,
+    notes?: string | null
+  ): number {
     const subType = accountType ? getPhidiasAccountSubType(accountType, accountName, notes) : "EVAL"
 
     // Crédit seulement pour les comptes CASH validés
@@ -296,4 +315,3 @@ export class PhidiasStrategy implements PropfirmStrategy {
     return 0
   }
 }
-
