@@ -624,7 +624,7 @@ export default function PnlPage() {
           </Button>
         </div>
       ) : (
-        <div className="grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 items-start">
           {(() => {
             // Regrouper les entrées par compte
             const entriesByAccount = filteredEntries.reduce(
@@ -657,9 +657,9 @@ export default function PnlPage() {
                 : "from-rose-500/10 via-rose-500/5 to-transparent"
 
               return (
-                <Card key={accountId} className="border-none bg-transparent shadow-none">
-                  <CardContent className="p-0">
-                    <div className="overflow-hidden rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 bg-white/90 dark:bg-zinc-950/80 shadow-sm w-full">
+                <Card key={accountId} className="border-none bg-transparent shadow-none h-full">
+                  <CardContent className="p-0 h-full flex flex-col">
+                    <div className="overflow-hidden rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 bg-white/90 dark:bg-zinc-950/80 shadow-sm w-full h-full flex flex-col">
                       {/* Header de la card avec infos du compte */}
                       <div
                         className={`flex flex-col gap-2 sm:gap-3 border-b border-zinc-200/70 dark:border-zinc-800/60 bg-linear-to-r ${gradient} p-3 sm:p-4`}
@@ -669,7 +669,7 @@ export default function PnlPage() {
                             <div className="flex items-start gap-1.5 sm:gap-2 min-w-0 w-full">
                               <div className="min-w-0 flex-1 overflow-hidden">
                                 <h3
-                                  className="text-base sm:text-lg md:text-xl font-bold text-zinc-900 dark:text-zinc-50 truncate min-w-0 flex-1"
+                                  className="text-xs sm:text-sm md:text-base font-bold text-zinc-900 dark:text-zinc-50 truncate min-w-0 flex-1"
                                   title={account.name}
                                 >
                                   {account.name.length > 20

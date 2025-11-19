@@ -211,10 +211,21 @@ export function useDeleteAccountMutation() {
 export function useCreatePnlMutation() {
   return useMutation(
     async (data: any) => {
+      // Convertir le montant en nombre si c'est une string
+      const payload = {
+        ...data,
+        amount: typeof data.amount === "string" ? parseFloat(data.amount) : data.amount,
+      }
+
+      // Valider que le montant est un nombre valide
+      if (isNaN(payload.amount)) {
+        throw new Error("Montant invalide")
+      }
+
       const response = await fetch("/api/pnl", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify(payload),
       })
 
       if (!response.ok) {
@@ -272,6 +283,11 @@ export function useDeletePnlMutation() {
 export function useCreateMultiplePnlMutation() {
   return useMutation(
     async (data: { accountIds: string[]; date: string; amount: string; notes: string }) => {
+      const amountNumber = parseFloat(data.amount)
+      if (isNaN(amountNumber)) {
+        throw new Error("Montant invalide")
+      }
+
       const promises = data.accountIds.map(accountId =>
         fetch("/api/pnl", {
           method: "POST",
@@ -279,7 +295,7 @@ export function useCreateMultiplePnlMutation() {
           body: JSON.stringify({
             accountId,
             date: data.date,
-            amount: data.amount,
+            amount: amountNumber,
             notes: data.notes,
           }),
         }).then(async (response) => {
@@ -379,6 +395,11 @@ export function useDeleteWithdrawalMutation() {
 export function useCreateMultipleWithdrawalsMutation() {
   return useMutation(
     async (data: { accountIds: string[]; date: string; amount: string; notes: string }) => {
+      const amountNum = parseFloat(data.amount)
+      if (isNaN(amountNum) || amountNum <= 0) {
+        throw new Error("Montant invalide")
+      }
+
       const promises = data.accountIds.map(accountId =>
         fetch("/api/withdrawals", {
           method: "POST",
@@ -386,7 +407,7 @@ export function useCreateMultipleWithdrawalsMutation() {
           body: JSON.stringify({
             accountId,
             date: data.date,
-            amount: data.amount,
+            amount: amountNum,
             notes: data.notes,
           }),
         }).then(async (response) => {

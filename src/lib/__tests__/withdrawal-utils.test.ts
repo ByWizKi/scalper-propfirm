@@ -18,6 +18,14 @@ describe('Withdrawal Utils', () => {
       expect(result.hasTax).toBe(false)
     })
 
+    it('should return correct tax info for PHIDIAS', () => {
+      const result = calculateWithdrawalTax(100, 'PHIDIAS')
+      expect(result.taxRate).toBe(0.2)
+      expect(result.taxAmount).toBe(20)
+      expect(result.netAmount).toBe(80)
+      expect(result.hasTax).toBe(true)
+    })
+
     it('should return correct tax info for other propfirms', () => {
       const resultApex = calculateWithdrawalTax(100, 'APEX')
       expect(resultApex.taxRate).toBe(0)
@@ -38,6 +46,11 @@ describe('Withdrawal Utils', () => {
     it('should not apply tax for TOPSTEP', () => {
       expect(getNetWithdrawalAmount(100, 'TOPSTEP')).toBe(100)
       expect(getNetWithdrawalAmount(1000, 'TOPSTEP')).toBe(1000)
+    })
+
+    it('should apply 20% tax for PHIDIAS', () => {
+      expect(getNetWithdrawalAmount(100, 'PHIDIAS')).toBe(80)
+      expect(getNetWithdrawalAmount(1000, 'PHIDIAS')).toBe(800)
     })
 
     it('should not apply tax for other propfirms', () => {

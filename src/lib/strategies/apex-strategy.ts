@@ -69,11 +69,21 @@ export class ApexStrategy implements PropfirmStrategy {
     return "Apex Trader Funding"
   }
 
-  getAccountRules(accountSize: number): AccountRules | null {
+  getAccountRules(
+    accountSize: number,
+    _accountType?: string,
+    _accountName?: string,
+    _notes?: string | null
+  ): AccountRules | null {
     return this.rulesConfig[accountSize] || null
   }
 
-  getWithdrawalRules(): WithdrawalRules {
+  getWithdrawalRules(
+    _accountSize?: number,
+    _accountType?: string,
+    _accountName?: string,
+    _notes?: string | null
+  ): WithdrawalRules {
     return {
       taxRate: 0, // Pas de taxe chez Apex
       requiresCycles: true, // Système de cycles de 8 jours
@@ -97,7 +107,10 @@ export class ApexStrategy implements PropfirmStrategy {
     accountSize: number,
     totalPnl: number,
     totalWithdrawals: number,
-    pnlEntries: Array<{ date: Date; amount: number }>
+    pnlEntries: Array<{ date: Date; amount: number }>,
+    _accountType?: string,
+    _accountName?: string,
+    _notes?: string | null
   ): number {
     const buffer = this.calculateBuffer(accountSize)
     const currentBalance = accountSize + totalPnl - totalWithdrawals
@@ -128,7 +141,10 @@ export class ApexStrategy implements PropfirmStrategy {
 
   isEligibleForValidation(
     accountSize: number,
-    pnlEntries: Array<{ date: Date; amount: number }>
+    pnlEntries: Array<{ date: Date; amount: number }>,
+    _accountType?: string,
+    _accountName?: string,
+    _notes?: string | null
   ): boolean {
     const rules = this.getAccountRules(accountSize)
     if (!rules) return false

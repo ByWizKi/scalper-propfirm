@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { createPnlSchema, queryParamsSchema, validateApiRequest } from "@/lib/validation"
 
 // GET - Récupérer toutes les entrées PnL de l'utilisateur
 export async function GET(request: Request) {
@@ -14,6 +15,17 @@ export async function GET(request: Request) {
 
     const { searchParams } = new URL(request.url)
     const accountId = searchParams.get("accountId")
+
+    // Validation des paramètres de requête
+    if (accountId) {
+      const queryValidation = validateApiRequest(queryParamsSchema, { accountId })
+      if (!queryValidation.success) {
+        return NextResponse.json(
+          { message: queryValidation.error },
+          { status: queryValidation.status }
+        )
+      }
+    }
 
     const where = {
       userId: session.user.id,
@@ -47,15 +59,19 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const { accountId, date, amount, notes } = body
 
-    // Validation
-    if (!accountId || !date || amount === undefined) {
-      return NextResponse.json(
-        { message: "Tous les champs requis doivent être renseignés" },
-        { status: 400 }
-      )
+    // Log pour déboguer (à retirer en production)
+    console.log("API PNL POST - Body reçu:", JSON.stringify(body, null, 2))
+
+    // Validation avec Zod
+    const validation = validateApiRequest(createPnlSchema, body)
+    if (!validation.success) {
+      console.error("API PNL POST - Erreur de validation:", validation.error)
+      return NextResponse.json({ message: validation.error }, { status: validation.status })
     }
+
+    const { accountId, date, amount, notes } = validation.data
+    console.log("API PNL POST - Données validées:", { accountId, date, amount, notes })
 
     // Vérifier que le compte appartient à l'utilisateur
     const account = await prisma.propfirmAccount.findFirst({
@@ -74,7 +90,7 @@ export async function POST(request: Request) {
         userId: session.user.id,
         accountId,
         date: new Date(date),
-        amount: parseFloat(amount),
+        amount,
         notes: notes || null,
       },
       include: {

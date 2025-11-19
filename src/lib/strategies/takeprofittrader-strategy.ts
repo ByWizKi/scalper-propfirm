@@ -49,11 +49,21 @@ export class TakeProfitTraderStrategy implements PropfirmStrategy {
     return "TakeProfitTrader"
   }
 
-  getAccountRules(accountSize: number): AccountRules | null {
+  getAccountRules(
+    accountSize: number,
+    _accountType?: string,
+    _accountName?: string,
+    _notes?: string | null
+  ): AccountRules | null {
     return this.rulesConfig[accountSize] || null
   }
 
-  getWithdrawalRules(): WithdrawalRules {
+  getWithdrawalRules(
+    _accountSize?: number,
+    _accountType?: string,
+    _accountName?: string,
+    _notes?: string | null
+  ): WithdrawalRules {
     return {
       taxRate: 0.2, // 20% de taxe
       requiresCycles: false,
@@ -71,7 +81,10 @@ export class TakeProfitTraderStrategy implements PropfirmStrategy {
     accountSize: number,
     totalPnl: number,
     totalWithdrawals: number,
-    _pnlEntries: Array<{ date: Date; amount: number }>
+    _pnlEntries: Array<{ date: Date; amount: number }>,
+    _accountType?: string,
+    _accountName?: string,
+    _notes?: string | null
   ): number {
     const buffer = this.calculateBuffer(accountSize)
     const currentBalance = accountSize + totalPnl - totalWithdrawals
@@ -82,7 +95,10 @@ export class TakeProfitTraderStrategy implements PropfirmStrategy {
 
   isEligibleForValidation(
     accountSize: number,
-    pnlEntries: Array<{ date: Date; amount: number }>
+    pnlEntries: Array<{ date: Date; amount: number }>,
+    _accountType?: string,
+    _accountName?: string,
+    _notes?: string | null
   ): boolean {
     const rules = this.getAccountRules(accountSize)
     if (!rules) return false

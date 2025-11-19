@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { updatePnlBodySchema, idSchema, validateApiRequest } from "@/lib/validation"
 
 // PUT - Mettre à jour une entrée PnL
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -13,8 +14,20 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     }
 
     const { id } = await params
+
+    // Validation de l'ID
+    const idValidation = validateApiRequest(idSchema, id)
+    if (!idValidation.success) {
+      return NextResponse.json({ message: idValidation.error }, { status: idValidation.status })
+    }
+
     const body = await request.json()
-    const { date, amount, notes } = body
+
+    // Validation avec Zod
+    const validation = validateApiRequest(updatePnlBodySchema, body)
+    if (!validation.success) {
+      return NextResponse.json({ message: validation.error }, { status: validation.status })
+    }
 
     // Vérifier que l'entrée appartient à l'utilisateur
     const existingEntry = await prisma.pnlEntry.findFirst({
@@ -28,15 +41,21 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       return NextResponse.json({ message: "Entrée PnL non trouvée" }, { status: 404 })
     }
 
+    const updateData: {
+      date?: Date
+      amount?: number
+      notes?: string | null
+    } = {}
+
+    if (validation.data.date !== undefined) updateData.date = new Date(validation.data.date)
+    if (validation.data.amount !== undefined) updateData.amount = validation.data.amount
+    if (validation.data.notes !== undefined) updateData.notes = validation.data.notes || null
+
     const pnlEntry = await prisma.pnlEntry.update({
       where: {
         id,
       },
-      data: {
-        date: date ? new Date(date) : undefined,
-        amount: amount !== undefined ? parseFloat(amount) : undefined,
-        notes,
-      },
+      data: updateData,
       include: {
         account: true,
       },
@@ -59,6 +78,12 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     }
 
     const { id } = await params
+
+    // Validation de l'ID
+    const idValidation = validateApiRequest(idSchema, id)
+    if (!idValidation.success) {
+      return NextResponse.json({ message: idValidation.error }, { status: idValidation.status })
+    }
 
     // Vérifier que l'entrée appartient à l'utilisateur
     const existingEntry = await prisma.pnlEntry.findFirst({

@@ -58,12 +58,21 @@ export class AccountService {
       account.size,
       totalPnl,
       totalWithdrawals,
-      normalizedPnlEntries
+      normalizedPnlEntries,
+      account.accountType,
+      (account as any).name,
+      (account as any).notes
     )
 
     // Calcul du profit net
     let netProfit: number
-    if (account.accountType === "FUNDED" && strategy.getWithdrawalRules().hasBuffer) {
+    const withdrawalRules = strategy.getWithdrawalRules(
+      account.size,
+      account.accountType,
+      (account as any).name,
+      (account as any).notes
+    )
+    if (account.accountType === "FUNDED" && withdrawalRules.hasBuffer) {
       // Pour les comptes avec buffer : ne compter que ce qui est au-dessus du buffer
       netProfit = Math.max(0, currentBalance - buffer) - totalInvested
     } else {
@@ -98,23 +107,41 @@ export class AccountService {
       amount: entry.amount,
     }))
 
-    return strategy.isEligibleForValidation(account.size, normalizedPnlEntries)
+    return strategy.isEligibleForValidation(
+      account.size,
+      normalizedPnlEntries,
+      account.accountType,
+      (account as any).name,
+      (account as any).notes
+    )
   }
 
   /**
    * Obtient les règles d'un compte
    */
-  static getAccountRules(propfirm: PropfirmType | string, accountSize: number) {
+  static getAccountRules(
+    propfirm: PropfirmType | string,
+    accountSize: number,
+    accountType?: string,
+    accountName?: string,
+    notes?: string | null
+  ) {
     const strategy = PropfirmStrategyFactory.getStrategy(propfirm)
-    return strategy.getAccountRules(accountSize)
+    return strategy.getAccountRules(accountSize, accountType, accountName, notes)
   }
 
   /**
    * Obtient les règles de retrait d'une propfirm
    */
-  static getWithdrawalRules(propfirm: PropfirmType | string) {
+  static getWithdrawalRules(
+    propfirm: PropfirmType | string,
+    accountSize?: number,
+    accountType?: string,
+    accountName?: string,
+    notes?: string | null
+  ) {
     const strategy = PropfirmStrategyFactory.getStrategy(propfirm)
-    return strategy.getWithdrawalRules()
+    return strategy.getWithdrawalRules(accountSize, accountType, accountName, notes)
   }
 }
 

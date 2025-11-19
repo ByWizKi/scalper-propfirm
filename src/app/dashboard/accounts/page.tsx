@@ -711,7 +711,7 @@ export default function AccountsPage() {
                                 Type
                               </p>
                             </div>
-                            <p className="text-xs sm:text-sm font-bold text-zinc-900 dark:text-zinc-50 break-words">
+                            <p className="text-xs sm:text-sm font-bold text-zinc-900 dark:text-zinc-50 wrap-break-word">
                               {ACCOUNT_TYPE_LABELS[account.accountType]}
                             </p>
                           </div>
@@ -722,7 +722,7 @@ export default function AccountsPage() {
                                 Prix payé
                               </p>
                             </div>
-                            <p className="text-xs sm:text-sm font-bold text-zinc-900 dark:text-zinc-50 text-right break-words">
+                            <p className="text-xs sm:text-sm font-bold text-zinc-900 dark:text-zinc-50 text-right wrap-break-word">
                               {formatCurrencyCompact(account.pricePaid)}
                             </p>
                           </div>
@@ -733,7 +733,7 @@ export default function AccountsPage() {
                             <p className="text-[10px] sm:text-xs font-semibold text-zinc-600 dark:text-zinc-400 mb-1 sm:mb-1.5 uppercase tracking-wide">
                               Notes
                             </p>
-                            <p className="text-xs sm:text-sm text-zinc-700 dark:text-zinc-300 whitespace-pre-wrap line-clamp-2 break-words">
+                            <p className="text-xs sm:text-sm text-zinc-700 dark:text-zinc-300 whitespace-pre-wrap line-clamp-2 wrap-break-word">
                               {account.notes}
                             </p>
                           </div>

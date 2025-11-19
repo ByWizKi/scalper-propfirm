@@ -24,6 +24,10 @@ import { MonthlyCalendar } from "@/components/monthly-calendar"
 import { AccountRulesTracker } from "@/components/account-rules-tracker"
 import { TradingCyclesTracker } from "@/components/trading-cycles-tracker"
 import { ApexPaRulesTracker } from "@/components/apex-pa-rules-tracker"
+import { PhidiasFundedTracker } from "@/components/phidias-funded-tracker"
+import { PropfirmStrategyFactory } from "@/lib/strategies/propfirm-strategy.factory"
+import { Gift, CreditCard, Info } from "lucide-react"
+import { getPhidiasAccountSubType, getPhidiasAccountSubTypeLabel } from "@/lib/phidias-account-type"
 
 // ⚡ CODE SPLITTING: Lazy load dialogs only (opened on user action)
 const AccountFormDialog = dynamic(() =>
@@ -41,6 +45,7 @@ const PROPFIRM_LABELS: Record<string, string> = {
   TAKEPROFITTRADER: "Take Profit Trader",
   APEX: "Apex",
   BULENOX: "Bulenox",
+  PHIDIAS: "Phidias",
   OTHER: "Autre",
 }
 
@@ -206,9 +211,51 @@ export default function AccountDetailPage() {
         150000: 4500,
         250000: 5500,
       },
+      PHIDIAS: {
+        25000: 500, // Perte statique de 500$ pour le 25K Static
+      },
     }
     return drawdownConfig[propfirm]?.[size] || 0
   }
+
+  // Obtenir la stratégie Phidias pour les informations spécifiques
+  const phidiasStrategy =
+    account.propfirm === "PHIDIAS" ? PropfirmStrategyFactory.getStrategy(account.propfirm) : null
+
+  // Déterminer le sous-type de compte Phidias
+  const phidiasSubType =
+    account.propfirm === "PHIDIAS"
+      ? getPhidiasAccountSubType(account.accountType, account.name, account.notes)
+      : null
+
+  // Calculer le bonus et crédit LIVE pour Phidias 25K Static CASH
+  const validationBonus =
+    phidiasStrategy &&
+    account.size === 25000 &&
+    account.status === "VALIDATED" &&
+    phidiasSubType === "CASH"
+      ? (phidiasStrategy as any).getValidationBonus?.(
+          account.size,
+          account.accountType,
+          account.name,
+          account.notes
+        ) || 0
+      : 0
+
+  const liveCredit =
+    phidiasStrategy &&
+    account.size === 25000 &&
+    account.status === "VALIDATED" &&
+    phidiasSubType === "CASH"
+      ? (phidiasStrategy as any).getLiveCredit?.(
+          account.size,
+          account.accountType,
+          account.name,
+          account.notes
+        ) || 0
+      : 0
+
+  const isPhidias25KStatic = account.propfirm === "PHIDIAS" && account.size === 25000
 
   // Calculer le total des dépenses (incluant le compte d'évaluation lié si applicable)
   const totalInvested = account.pricePaid + (account.linkedEval?.pricePaid || 0)
@@ -261,12 +308,16 @@ export default function AccountDetailPage() {
   // Obtenir les 6 derniers mois
   const _last6Months = monthlyPnlArray.slice(0, 6)
 
+  // Calculer la balance actuelle
+  const currentBalance = account.size + totalPnl - totalWithdrawals
+
   return (
     <div className="space-y-6 sm:space-y-8 p-4 sm:p-6 lg:p-8">
-      {/* Header */}
+      {/* Header avec informations principales */}
       <section className="rounded-2xl border border-zinc-200/70 dark:border-zinc-800/70 bg-white/85 dark:bg-zinc-950/70 backdrop-blur-sm p-4 sm:p-5 shadow-sm">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+        <div className="flex flex-col gap-4">
+          {/* Bouton retour et titre */}
+          <div className="flex items-center gap-2 sm:gap-3">
             <Button
               variant="ghost"
               size="icon"
@@ -275,16 +326,80 @@ export default function AccountDetailPage() {
             >
               <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
             </Button>
-            <div className="min-w-0 flex-1 overflow-hidden">
-              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-zinc-900 dark:text-zinc-50 truncate">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-sm sm:text-base md:text-lg font-bold text-zinc-900 dark:text-zinc-50 truncate">
                 {account.name}
               </h1>
-              <p className="text-sm sm:text-base text-zinc-600 dark:text-zinc-400 mt-1 truncate">
+              <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 mt-1">
                 {PROPFIRM_LABELS[account.propfirm]} • {formatCurrency(account.size)}
               </p>
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+
+          {/* Informations principales en cartes */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            {/* Balance actuelle */}
+            <StatCard
+              title="Balance actuelle"
+              value={formatCurrency(currentBalance)}
+              icon={DollarSign}
+              variant={currentBalance >= account.size ? "success" : "default"}
+              description={
+                currentBalance >= account.size
+                  ? `+${formatCurrency(currentBalance - account.size)}`
+                  : formatCurrency(currentBalance - account.size)
+              }
+              size="lg"
+              className="min-w-0"
+            />
+
+            {/* PnL Total */}
+            <StatCard
+              title="PnL Total"
+              value={formatCurrency(totalPnl)}
+              icon={totalPnl >= 0 ? TrendingUp : TrendingDown}
+              variant={useStatVariant(totalPnl)}
+              description={`${tradingDays} jour${tradingDays > 1 ? "s" : ""} de trading`}
+              size="lg"
+              className="min-w-0"
+            />
+
+            {/* Retraits (si financé) */}
+            {account.accountType === "FUNDED" && (
+              <StatCard
+                title="Retraits"
+                value={formatCurrency(totalWithdrawals)}
+                icon={DollarSign}
+                variant="neutral"
+                description={`${account.withdrawals.length} retrait${account.withdrawals.length > 1 ? "s" : ""}`}
+                size="lg"
+                className="min-w-0"
+              />
+            )}
+
+            {/* Type et Statut */}
+            <div className="bg-zinc-50 dark:bg-zinc-900/50 rounded-xl p-4 border border-zinc-200 dark:border-zinc-800">
+              <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 mb-2">Type</p>
+              <div className="flex flex-col gap-1.5">
+                <p className="text-sm sm:text-base font-semibold text-zinc-900 dark:text-zinc-50">
+                  {ACCOUNT_TYPE_LABELS[account.accountType]}
+                </p>
+                {phidiasSubType && (
+                  <span className="inline-block px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-300 w-fit">
+                    {getPhidiasAccountSubTypeLabel(phidiasSubType)}
+                  </span>
+                )}
+                <span
+                  className={`inline-block px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold w-fit ${STATUS_COLORS[account.status]}`}
+                >
+                  {STATUS_LABELS[account.status]}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 pt-2 border-t border-zinc-200/70 dark:border-zinc-800/70">
             {account.accountType === "EVAL" &&
               account.status === "ACTIVE" &&
               isEligibleForValidation && (
@@ -321,129 +436,76 @@ export default function AccountDetailPage() {
         </div>
       </section>
 
-      {/* Informations du compte */}
+      {/* Informations complémentaires */}
       <section className="rounded-2xl border border-zinc-200/70 dark:border-zinc-800/70 bg-white/85 dark:bg-zinc-950/70 backdrop-blur-sm shadow-sm">
         <div className="px-5 sm:px-6 py-4 border-b border-zinc-200/70 dark:border-zinc-800/70">
-          <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-            Informations du compte
+          <h2 className="text-xs sm:text-sm md:text-base font-semibold text-zinc-900 dark:text-zinc-50">
+            Informations complémentaires
           </h2>
         </div>
         <div className="p-4 sm:p-5 lg:p-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             <div>
-              <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 mb-1">Type</p>
-              <p className="text-sm sm:text-base font-semibold text-zinc-900 dark:text-zinc-50">
-                {ACCOUNT_TYPE_LABELS[account.accountType]}
+              <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 mb-2 font-medium">
+                Investissement total
               </p>
-            </div>
-            <div>
-              <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 mb-1">Statut</p>
-              <span
-                className={`inline-block px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold ${STATUS_COLORS[account.status]}`}
-              >
-                {STATUS_LABELS[account.status]}
-              </span>
-            </div>
-            <div>
-              <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 mb-1">
-                {account.linkedEval ? "Total investi" : "Prix payé"}
-              </p>
-              <p className="text-sm sm:text-base font-semibold text-zinc-900 dark:text-zinc-50">
+              <p className="text-sm sm:text-base md:text-lg font-bold text-zinc-900 dark:text-zinc-50">
                 {formatCurrency(totalInvested)}
               </p>
-              <p className="text-[10px] sm:text-xs text-zinc-500 mt-0.5">
+              <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-1">
                 {formatCurrencyEUR(totalInvested * USD_TO_EUR)}
               </p>
               {account.linkedEval && (
-                <p className="text-[10px] sm:text-xs text-zinc-500 mt-1 break-words">
-                  Compte: {formatCurrency(account.pricePaid)} + Eval:{" "}
-                  {formatCurrency(account.linkedEval.pricePaid)}
-                </p>
-              )}
-            </div>
-            <div>
-              <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 mb-1">
-                Date de création
-              </p>
-              <p className="text-sm sm:text-base font-semibold text-zinc-900 dark:text-zinc-50">
-                {format(new Date(account.createdAt), "d MMM yyyy", { locale: fr })}
-              </p>
-            </div>
-          </div>
-          {account.linkedEval && (
-            <div className="mt-4 pt-4 border-t border-zinc-200/70 dark:border-zinc-800/70">
-              <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 mb-2">
-                Compte d&apos;évaluation lié
-              </p>
-              <div className="flex items-center justify-between gap-2">
-                <p className="text-sm sm:text-base font-semibold text-zinc-900 dark:text-zinc-50 truncate min-w-0 flex-1">
-                  {account.linkedEval.name}
-                </p>
-                <div className="text-right shrink-0">
-                  <p className="text-sm sm:text-base font-semibold text-zinc-900 dark:text-zinc-50">
-                    {formatCurrency(account.linkedEval.pricePaid)}
+                <div className="mt-2 pt-2 border-t border-zinc-200/50 dark:border-zinc-800/50">
+                  <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400">
+                    Compte: {formatCurrency(account.pricePaid)}
                   </p>
-                  <p className="text-[10px] sm:text-xs text-zinc-500">
-                    {formatCurrencyEUR(account.linkedEval.pricePaid * USD_TO_EUR)}
+                  <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400">
+                    Évaluation: {formatCurrency(account.linkedEval.pricePaid)}
                   </p>
                 </div>
-              </div>
+              )}
             </div>
-          )}
+
+            <div>
+              <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 mb-2 font-medium">
+                Date de création
+              </p>
+              <p className="text-xs sm:text-sm md:text-base font-bold text-zinc-900 dark:text-zinc-50">
+                {format(new Date(account.createdAt), "d MMMM yyyy", { locale: fr })}
+              </p>
+              <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-1">
+                {format(new Date(account.createdAt), "HH:mm", { locale: fr })}
+              </p>
+            </div>
+
+            {account.linkedEval && (
+              <div>
+                <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 mb-2 font-medium">
+                  Compte d&apos;évaluation lié
+                </p>
+                <p className="text-xs sm:text-sm md:text-base font-semibold text-zinc-900 dark:text-zinc-50 wrap-break-word">
+                  {account.linkedEval.name}
+                </p>
+                <p className="text-xs sm:text-sm md:text-base font-bold text-zinc-700 dark:text-zinc-300 mt-1">
+                  {formatCurrency(account.linkedEval.pricePaid)}
+                </p>
+              </div>
+            )}
+          </div>
+
           {account.notes && (
-            <div className="mt-4 pt-4 border-t border-zinc-200/70 dark:border-zinc-800/70">
-              <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 mb-2">Notes</p>
-              <p className="text-xs sm:text-sm text-zinc-700 dark:text-zinc-300 whitespace-pre-wrap break-words">
+            <div className="mt-6 pt-6 border-t border-zinc-200/70 dark:border-zinc-800/70">
+              <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 mb-2 font-medium">
+                Notes
+              </p>
+              <p className="text-xs sm:text-sm text-zinc-700 dark:text-zinc-300 whitespace-pre-wrap wrap-break-word bg-zinc-50 dark:bg-zinc-900/50 rounded-lg p-3 sm:p-4">
                 {account.notes}
               </p>
             </div>
           )}
         </div>
       </section>
-
-      {/* Statistiques */}
-      <div
-        className={`grid gap-3 sm:gap-4 md:gap-6 ${account.accountType === "EVAL" ? "grid-cols-1 sm:grid-cols-2 md:grid-cols-3" : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"}`}
-      >
-        <StatCard
-          title="PnL Total"
-          value={formatCurrency(totalPnl)}
-          icon={totalPnl >= 0 ? TrendingUp : TrendingDown}
-          variant={useStatVariant(totalPnl)}
-          description={`${tradingDays} jour${tradingDays > 1 ? "s" : ""} de trading`}
-          className="min-w-0"
-        />
-
-        {account.accountType !== "EVAL" && (
-          <StatCard
-            title="Retraits"
-            value={formatCurrency(totalWithdrawals)}
-            icon={DollarSign}
-            variant="success"
-            secondaryText={formatCurrencyEUR(totalWithdrawals * USD_TO_EUR)}
-            description={`${account.withdrawals.length} retrait${account.withdrawals.length > 1 ? "s" : ""}`}
-            className="min-w-0"
-          />
-        )}
-
-        <StatCard
-          title="Meilleur Jour"
-          value={formatCurrency(bestDay)}
-          icon={TrendingUp}
-          variant="success"
-          description="Plus haut PnL quotidien"
-          className="min-w-0"
-        />
-
-        <StatCard
-          title="Moyenne/Jour"
-          value={formatCurrency(avgPerDay)}
-          icon={Calendar}
-          variant={useStatVariant(avgPerDay)}
-          description="PnL moyen par jour"
-          className="min-w-0"
-        />
-      </div>
 
       {/* Règles de validation */}
       {account.accountType === "EVAL" && (
@@ -458,18 +520,37 @@ export default function AccountDetailPage() {
         </section>
       )}
 
-      {/* Cycles de trading pour comptes financés */}
-      {account.accountType === "FUNDED" && account.propfirm !== "APEX" && (
+      {/* Tableau de bord Phidias pour comptes financés */}
+      {account.accountType === "FUNDED" && account.propfirm === "PHIDIAS" && (
         <section className="rounded-2xl border border-zinc-200/70 dark:border-zinc-800/70 bg-white/85 dark:bg-zinc-950/70 backdrop-blur-sm shadow-sm">
-          <TradingCyclesTracker
+          <PhidiasFundedTracker
+            accountSize={account.size}
+            accountType={account.accountType}
+            accountName={account.name}
+            notes={account.notes}
             pnlEntries={account.pnlEntries}
             withdrawals={account.withdrawals}
-            accountSize={account.size}
-            propfirm={account.propfirm}
-            maxDrawdown={getMaxDrawdown(account.propfirm, account.size)}
           />
         </section>
       )}
+
+      {/* Cycles de trading pour autres comptes financés */}
+      {account.accountType === "FUNDED" &&
+        account.propfirm !== "APEX" &&
+        account.propfirm !== "PHIDIAS" && (
+          <section className="rounded-2xl border border-zinc-200/70 dark:border-zinc-800/70 bg-white/85 dark:bg-zinc-950/70 backdrop-blur-sm shadow-sm">
+            <TradingCyclesTracker
+              pnlEntries={account.pnlEntries}
+              withdrawals={account.withdrawals}
+              accountSize={account.size}
+              propfirm={account.propfirm}
+              maxDrawdown={getMaxDrawdown(account.propfirm, account.size)}
+              accountType={account.accountType}
+              accountName={account.name}
+              notes={account.notes}
+            />
+          </section>
+        )}
 
       {/* Règles PA pour comptes financés Apex */}
       {account.accountType === "FUNDED" && account.propfirm === "APEX" && (
@@ -478,14 +559,7 @@ export default function AccountDetailPage() {
         </section>
       )}
 
-      {/* Vue calendrier mensuelle */}
-      {account.pnlEntries.length > 0 && (
-        <section className="rounded-2xl border border-zinc-200/70 dark:border-zinc-800/70 bg-white/85 dark:bg-zinc-950/70 backdrop-blur-sm shadow-sm">
-          <MonthlyCalendar pnlEntries={account.pnlEntries} />
-        </section>
-      )}
-
-      {/* PnL et Retraits */}
+      {/* Historique PnL et Retraits */}
       <div
         className={`grid gap-4 sm:gap-6 ${account.accountType === "EVAL" ? "md:grid-cols-1" : "md:grid-cols-2"}`}
       >
@@ -493,7 +567,7 @@ export default function AccountDetailPage() {
         <section className="rounded-2xl border border-zinc-200/70 dark:border-zinc-800/70 bg-white/85 dark:bg-zinc-950/70 backdrop-blur-sm shadow-sm">
           <div className="px-5 sm:px-6 py-4 border-b border-zinc-200/70 dark:border-zinc-800/70 flex items-center justify-between gap-4">
             <div>
-              <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+              <h2 className="text-xs sm:text-sm md:text-base font-semibold text-zinc-900 dark:text-zinc-50">
                 Historique PnL
               </h2>
               <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 mt-0.5">
@@ -557,7 +631,7 @@ export default function AccountDetailPage() {
                         </div>
                         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                           <span
-                            className={`text-sm sm:text-base font-bold whitespace-nowrap ${entry.amount >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
+                            className={`text-xs sm:text-sm md:text-base font-bold whitespace-nowrap ${entry.amount >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
                           >
                             {entry.amount >= 0 ? "+" : ""}
                             {formatCurrency(entry.amount)}
@@ -625,7 +699,7 @@ export default function AccountDetailPage() {
           <section className="rounded-2xl border border-zinc-200/70 dark:border-zinc-800/70 bg-white/85 dark:bg-zinc-950/70 backdrop-blur-sm shadow-sm">
             <div className="px-5 sm:px-6 py-4 border-b border-zinc-200/70 dark:border-zinc-800/70 flex items-center justify-between gap-4">
               <div>
-                <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+                <h2 className="text-xs sm:text-sm md:text-base font-semibold text-zinc-900 dark:text-zinc-50">
                   Historique Retraits
                 </h2>
                 <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 mt-0.5">
@@ -684,7 +758,7 @@ export default function AccountDetailPage() {
                             </div>
                             <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                               <div className="text-right">
-                                <p className="text-sm sm:text-base font-bold text-green-600 dark:text-green-400 whitespace-nowrap">
+                                <p className="text-xs sm:text-sm md:text-base font-bold text-green-600 dark:text-green-400 whitespace-nowrap">
                                   {formatCurrency(withdrawal.amount)}
                                 </p>
                                 {isTakeProfitTrader && (
@@ -762,6 +836,159 @@ export default function AccountDetailPage() {
           </section>
         )}
       </div>
+
+      {/* Vue calendrier mensuelle */}
+      {account.pnlEntries.length > 0 && (
+        <section className="rounded-2xl border border-zinc-200/70 dark:border-zinc-800/70 bg-white/85 dark:bg-zinc-950/70 backdrop-blur-sm shadow-sm">
+          <MonthlyCalendar pnlEntries={account.pnlEntries} />
+        </section>
+      )}
+
+      {/* Récapitulatif des règles */}
+      {(() => {
+        const strategy = PropfirmStrategyFactory.getStrategy(account.propfirm)
+        const accountRules = strategy.getAccountRules(
+          account.size,
+          account.accountType,
+          account.name,
+          account.notes
+        )
+        const withdrawalRules = strategy.getWithdrawalRules(
+          account.size,
+          account.accountType,
+          account.name,
+          account.notes
+        )
+
+        // Ne pas afficher si pas de règles
+        if (!accountRules && account.accountType === "EVAL") return null
+        if (account.accountType === "FUNDED" && !withdrawalRules) return null
+
+        // Ne pas afficher dailyLossLimit si égal au maxDrawdown (redondant)
+        const showDailyLossLimit =
+          accountRules &&
+          accountRules.dailyLossLimit > 0 &&
+          accountRules.dailyLossLimit !== accountRules.maxDrawdown
+
+        return (
+          <section className="rounded-2xl border border-zinc-200/70 dark:border-zinc-800/70 bg-white/85 dark:bg-zinc-950/70 backdrop-blur-sm shadow-sm">
+            <div className="px-4 sm:px-5 py-3 sm:py-4">
+              <h3 className="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-zinc-50 mb-3 sm:mb-4">
+                Récapitulatif des règles
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
+                {/* Règles du compte */}
+                {accountRules && account.accountType === "EVAL" && (
+                  <>
+                    <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-zinc-50/50 dark:bg-zinc-900/50 border border-zinc-200/50 dark:border-zinc-800/50">
+                      <span className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400">
+                        Objectif de profit
+                      </span>
+                      <span className="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-zinc-50 ml-2 shrink-0">
+                        {formatCurrency(accountRules.profitTarget)}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-zinc-50/50 dark:bg-zinc-900/50 border border-zinc-200/50 dark:border-zinc-800/50">
+                      <span className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400">
+                        Drawdown max
+                      </span>
+                      <span className="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-zinc-50 ml-2 shrink-0">
+                        {formatCurrency(accountRules.maxDrawdown)}
+                      </span>
+                    </div>
+                    {showDailyLossLimit && (
+                      <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-zinc-50/50 dark:bg-zinc-900/50 border border-zinc-200/50 dark:border-zinc-800/50">
+                        <span className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400">
+                          Perte journalière max
+                        </span>
+                        <span className="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-zinc-50 ml-2 shrink-0">
+                          {formatCurrency(accountRules.dailyLossLimit)}
+                        </span>
+                      </div>
+                    )}
+                    {accountRules.consistencyRule > 0 && (
+                      <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-zinc-50/50 dark:bg-zinc-900/50 border border-zinc-200/50 dark:border-zinc-800/50">
+                        <span className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400">
+                          Cohérence
+                        </span>
+                        <span className="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-zinc-50 ml-2 shrink-0">
+                          {accountRules.consistencyRule}%
+                        </span>
+                      </div>
+                    )}
+                    {accountRules.minTradingDays && accountRules.minTradingDays > 0 && (
+                      <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-zinc-50/50 dark:bg-zinc-900/50 border border-zinc-200/50 dark:border-zinc-800/50">
+                        <span className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400">
+                          Jours min
+                        </span>
+                        <span className="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-zinc-50 ml-2 shrink-0">
+                          {accountRules.minTradingDays}
+                        </span>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* Règles de retrait */}
+                {account.accountType === "FUNDED" && withdrawalRules && (
+                  <>
+                    <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-zinc-50/50 dark:bg-zinc-900/50 border border-zinc-200/50 dark:border-zinc-800/50">
+                      <span className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400">
+                        Taxe
+                      </span>
+                      <span className="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-zinc-50 ml-2 shrink-0">
+                        {Math.round(withdrawalRules.taxRate * 100)}%
+                      </span>
+                    </div>
+                    {withdrawalRules.requiresCycles && withdrawalRules.cycleRequirements && (
+                      <>
+                        <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-zinc-50/50 dark:bg-zinc-900/50 border border-zinc-200/50 dark:border-zinc-800/50">
+                          <span className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400">
+                            Cycles requis
+                          </span>
+                          <span className="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-zinc-50 ml-2 shrink-0">
+                            {withdrawalRules.cycleRequirements.daysPerCycle} jours
+                          </span>
+                        </div>
+                        {withdrawalRules.cycleRequirements.minDailyProfit > 0 && (
+                          <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-zinc-50/50 dark:bg-zinc-900/50 border border-zinc-200/50 dark:border-zinc-800/50">
+                            <span className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400">
+                              PnL min/jour
+                            </span>
+                            <span className="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-zinc-50 ml-2 shrink-0">
+                              {formatCurrency(withdrawalRules.cycleRequirements.minDailyProfit)}
+                            </span>
+                          </div>
+                        )}
+                      </>
+                    )}
+                    {withdrawalRules.hasBuffer && (
+                      <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-zinc-50/50 dark:bg-zinc-900/50 border border-zinc-200/50 dark:border-zinc-800/50">
+                        <span className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400">
+                          Buffer requis
+                        </span>
+                        <span className="text-xs sm:text-sm font-semibold text-green-600 dark:text-green-400 ml-2 shrink-0">
+                          Oui
+                        </span>
+                      </div>
+                    )}
+                    {!withdrawalRules.requiresCycles && !withdrawalRules.hasBuffer && (
+                      <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-zinc-50/50 dark:bg-zinc-900/50 border border-zinc-200/50 dark:border-zinc-800/50">
+                        <span className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400">
+                          Retrait
+                        </span>
+                        <span className="text-xs sm:text-sm font-semibold text-green-600 dark:text-green-400 ml-2 shrink-0">
+                          Libre
+                        </span>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+          </section>
+        )
+      })()}
 
       {/* Dialogs */}
       <AccountFormDialog
