@@ -43,16 +43,13 @@ export function handleApiError(error: unknown): NextResponse {
     )
   }
 
-  return NextResponse.json(
-    { message: "Une erreur inattendue est survenue" },
-    { status: 500 }
-  )
+  return NextResponse.json({ message: "Une erreur inattendue est survenue" }, { status: 500 })
 }
 
 /**
  * Wrapper pour les handlers API avec gestion d'erreurs
  */
-export function withErrorHandling<T extends any[]>(
+export function withErrorHandling<T extends unknown[]>(
   handler: (...args: T) => Promise<NextResponse>
 ) {
   return async (...args: T): Promise<NextResponse> => {
@@ -63,4 +60,3 @@ export function withErrorHandling<T extends any[]>(
     }
   }
 }
-

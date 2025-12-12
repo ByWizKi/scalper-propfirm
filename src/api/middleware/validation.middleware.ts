@@ -17,10 +17,7 @@ export function validateRequest<T extends z.ZodSchema>(
   if (!validation.success) {
     return {
       success: false,
-      response: NextResponse.json(
-        { message: validation.error },
-        { status: validation.status }
-      ),
+      response: NextResponse.json({ message: validation.error }, { status: validation.status }),
     }
   }
   return { success: true, data: validation.data as z.infer<T> }
@@ -31,9 +28,9 @@ export function validateRequest<T extends z.ZodSchema>(
  */
 export function withValidation<T extends z.ZodSchema>(
   schema: T,
-  handler: (data: z.infer<T>, ...args: any[]) => Promise<NextResponse>
+  handler: (data: z.infer<T>, ...args: unknown[]) => Promise<NextResponse>
 ) {
-  return async (request: Request, ...args: any[]): Promise<NextResponse> => {
+  return async (request: Request, ...args: unknown[]): Promise<NextResponse> => {
     const body = await request.json()
     const validation = validateRequest(schema, body)
     if (!validation.success) {
@@ -42,4 +39,3 @@ export function withValidation<T extends z.ZodSchema>(
     return handler(validation.data, ...args)
   }
 }
-

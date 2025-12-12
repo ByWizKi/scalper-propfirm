@@ -45,7 +45,7 @@ export async function requireAuth(): Promise<
 /**
  * Wrapper pour les handlers API qui nécessitent une authentification
  */
-export function withAuth<T extends any[]>(
+export function withAuth<T extends unknown[]>(
   handler: (userId: string, ...args: T) => Promise<NextResponse>
 ) {
   return async (...args: T): Promise<NextResponse> => {
@@ -56,4 +56,3 @@ export function withAuth<T extends any[]>(
     return handler(authResult.userId, ...args)
   }
 }
-

@@ -24,6 +24,8 @@ interface Account {
   size: number
   accountType: string
   pricePaid: number
+  name: string
+  notes?: string | null
   linkedEval?: {
     pricePaid: number
   }
@@ -60,8 +62,8 @@ export class AccountService {
       totalWithdrawals,
       normalizedPnlEntries,
       account.accountType,
-      (account as any).name,
-      (account as any).notes
+      account.name,
+      account.notes ?? null
     )
 
     // Calcul du profit net
@@ -69,8 +71,8 @@ export class AccountService {
     const withdrawalRules = strategy.getWithdrawalRules(
       account.size,
       account.accountType,
-      (account as any).name,
-      (account as any).notes
+      account.name,
+      account.notes ?? null
     )
     if (account.accountType === "FUNDED" && withdrawalRules.hasBuffer) {
       // Pour les comptes avec buffer : ne compter que ce qui est au-dessus du buffer
@@ -111,8 +113,8 @@ export class AccountService {
       account.size,
       normalizedPnlEntries,
       account.accountType,
-      (account as any).name,
-      (account as any).notes
+      account.name,
+      account.notes ?? null
     )
   }
 
@@ -144,4 +146,3 @@ export class AccountService {
     return strategy.getWithdrawalRules(accountSize, accountType, accountName, notes)
   }
 }
-

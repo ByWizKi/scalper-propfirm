@@ -8,16 +8,15 @@ global.Request = class Request {
     public input: RequestInfo | URL,
     public init?: RequestInit
   ) {}
-} as any
+} as typeof Request
 
 global.Response = class Response {
   constructor(
     public body?: BodyInit | null,
     public init?: ResponseInit
   ) {}
-} as any
+} as typeof Response
 
 global.Headers = class Headers {
-  constructor(init?: HeadersInit) {}
-} as any
-
+  constructor(_init?: HeadersInit) {}
+} as typeof Headers

@@ -12,7 +12,7 @@ const SwaggerUI = dynamic(() => import("swagger-ui-react"), { ssr: false })
 import "swagger-ui-react/swagger-ui.css"
 
 export default function ApiDocsPage() {
-  const [spec, setSpec] = useState<any>(null)
+  const [spec, setSpec] = useState<Record<string, unknown> | null>(null)
 
   useEffect(() => {
     fetch("/api/docs")
@@ -38,4 +38,3 @@ export default function ApiDocsPage() {
     </div>
   )
 }
-
