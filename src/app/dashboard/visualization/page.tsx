@@ -705,7 +705,9 @@ export default function VisualizationPage() {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center space-y-4">
           <Activity className="mx-auto h-16 w-16 text-zinc-400" />
-          <h3 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">Aucune donnée</h3>
+          <h3 className="text-lg sm:text-xl font-bold text-zinc-900 dark:text-zinc-100">
+            Aucune donnée
+          </h3>
           <p className="text-sm text-zinc-600 dark:text-zinc-400">
             Créez des comptes et enregistrez des PnL pour voir les visualisations
           </p>
@@ -721,7 +723,7 @@ export default function VisualizationPage() {
         <div className="flex flex-col gap-4">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
             <div className="space-y-2">
-              <h1 className="text-3xl sm:text-4xl font-bold text-zinc-900 dark:text-zinc-50">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-zinc-900 dark:text-zinc-50">
                 Visualisations
               </h1>
               <p className="text-sm text-zinc-600 dark:text-zinc-400">
@@ -1130,7 +1132,7 @@ export default function VisualizationPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-lg font-bold text-zinc-900 dark:text-zinc-50">
+                <p className="text-sm sm:text-base md:text-lg font-bold text-zinc-900 dark:text-zinc-50">
                   {selectedAccount.name}
                 </p>
                 <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
@@ -1145,7 +1147,7 @@ export default function VisualizationPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-lg font-bold text-zinc-900 dark:text-zinc-50">
+                <p className="text-sm sm:text-base md:text-lg font-bold text-zinc-900 dark:text-zinc-50">
                   ${accountStats.totalPnl.toFixed(2)}
                 </p>
               </CardContent>
@@ -1157,7 +1159,7 @@ export default function VisualizationPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-lg font-bold text-zinc-900 dark:text-zinc-50">
+                <p className="text-sm sm:text-base md:text-lg font-bold text-zinc-900 dark:text-zinc-50">
                   ${accountStats.currentBalance.toFixed(2)}
                 </p>
               </CardContent>
@@ -1169,7 +1171,7 @@ export default function VisualizationPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-lg font-bold text-red-600 dark:text-red-400">
+                <p className="text-sm sm:text-base md:text-lg font-bold text-red-600 dark:text-red-400">
                   ${accountStats.maxDrawdown.toFixed(2)}
                 </p>
               </CardContent>
@@ -1371,7 +1373,7 @@ export default function VisualizationPage() {
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center space-y-4">
             <User className="mx-auto h-16 w-16 text-zinc-400" />
-            <h3 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">
+            <h3 className="text-lg sm:text-xl font-bold text-zinc-900 dark:text-zinc-100">
               Sélectionnez un compte
             </h3>
             <p className="text-sm text-zinc-600 dark:text-zinc-400">
