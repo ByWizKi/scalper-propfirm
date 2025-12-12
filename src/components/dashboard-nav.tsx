@@ -94,7 +94,7 @@ export function DashboardNav() {
       </div>
 
       {/* Mobile Header + Menu Burger */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 flex items-center justify-between h-16 px-4 border-b border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950">
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 flex items-center justify-between h-16 min-h-[calc(4rem+env(safe-area-inset-top))] px-4 pt-[env(safe-area-inset-top)] border-b border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950">
         <h1 className="text-lg font-bold">Scalper Propfirm</h1>
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger asChild>

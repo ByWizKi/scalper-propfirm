@@ -57,3 +57,20 @@ body {
 .dark .scrollbar-track-zinc-900::-webkit-scrollbar-track {
   background-color: rgb(24 24 27);
 }
+
+/* Safe area support for iPhone notch and home indicator */
+.safe-area-inset-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+.safe-area-inset-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.safe-area-inset-left {
+  padding-left: env(safe-area-inset-left);
+}
+
+.safe-area-inset-right {
+  padding-right: env(safe-area-inset-right);
+}
