@@ -3,21 +3,20 @@
  */
 
 // Mock des APIs Web pour Node.js
-// Utilisation de type assertions pour les mocks globaux nécessaires aux tests
 global.Request = class Request {
   constructor(
     public input: RequestInfo | URL,
-    public _init?: RequestInit
+    public init?: RequestInit
   ) {}
-} as unknown as typeof Request
+} as typeof Request
 
 global.Response = class Response {
   constructor(
     public body?: BodyInit | null,
-    public _init?: ResponseInit
+    public init?: ResponseInit
   ) {}
-} as unknown as typeof Response
+} as typeof Response
 
 global.Headers = class Headers {
   constructor(_init?: HeadersInit) {}
-} as unknown as typeof Headers
+} as typeof Headers
