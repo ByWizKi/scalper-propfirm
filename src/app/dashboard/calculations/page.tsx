@@ -111,7 +111,6 @@ export default function CalculationsPage() {
 
     const totalNetUsd = targetEur / USD_TO_EUR
     const netPerAccount = totalNetUsd / numAccounts
-    const netPerAccountEur = targetEur / numAccounts
 
     // Calcul selon la propfirm
     let totalPnlNeeded: number
@@ -123,13 +122,14 @@ export default function CalculationsPage() {
       grossPerAccount = netPerAccount / withdrawalPercentage
       totalPnlNeeded = grossPerAccount * numAccounts
     } else if (propfirm === PropfirmType.TAKEPROFITTRADER && propfirmRules.hasBuffer) {
-      // Pour TakeProfitTrader : calcul selon la formule (montant_net_eur + 20%) / 0.86 + buffer - accountSize
+      // Pour TakeProfitTrader : calcul correct avec buffer et taxes
       const strategy = PropfirmStrategyFactory.getStrategy(propfirm)
       const buffer = strategy.calculateBuffer(accountSize)
-      // Montant brut en EUR avec taxes : montant_net + 20%
-      const grossEur = netPerAccountEur * (1 + propfirmRules.taxRate)
-      // Conversion en USD
-      const grossUsd = grossEur / USD_TO_EUR
+      // Montant net souhaité en USD (netPerAccount est déjà en USD)
+      const netUsd = netPerAccount
+      // Montant brut à retirer en USD (avant taxes de 20%)
+      // net = brut * 0.8, donc brut = net / 0.8
+      const grossUsd = netUsd / (1 - propfirmRules.taxRate)
       // PnL nécessaire = montant brut + buffer - accountSize
       grossPerAccount = grossUsd + buffer - accountSize
       // PnL sans buffer = montant brut (PnL pur, pas la balance)
