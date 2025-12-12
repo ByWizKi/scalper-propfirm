@@ -24,3 +24,36 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Scrollbar styling for horizontal scroll indicators */
+.scrollbar-thin {
+  scrollbar-width: thin;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  height: 8px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  border-radius: 4px;
+}
+
+.scrollbar-thumb-zinc-300::-webkit-scrollbar-thumb {
+  background-color: rgb(212 212 212);
+}
+
+.dark .scrollbar-thumb-zinc-700::-webkit-scrollbar-thumb {
+  background-color: rgb(63 63 70);
+}
+
+.scrollbar-track-zinc-100::-webkit-scrollbar-track {
+  background-color: rgb(244 244 245);
+}
+
+.dark .scrollbar-track-zinc-900::-webkit-scrollbar-track {
+  background-color: rgb(24 24 27);
+}

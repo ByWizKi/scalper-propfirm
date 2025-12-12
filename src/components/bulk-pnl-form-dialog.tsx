@@ -268,7 +268,7 @@ export function BulkPnlFormDialog({
           </div>
 
           {/* Vue desktop : tableau */}
-          <div className="hidden md:block overflow-x-auto">
+          <div className="hidden md:block overflow-x-auto scrollbar-thin scrollbar-thumb-zinc-300 scrollbar-track-zinc-100 dark:scrollbar-thumb-zinc-700 dark:scrollbar-track-zinc-900">
             <div className="inline-block min-w-full align-middle">
               <div className="overflow-hidden border rounded-lg">
                 <table className="min-w-full divide-y divide-zinc-200 dark:divide-zinc-800">
