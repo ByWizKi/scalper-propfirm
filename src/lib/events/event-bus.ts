@@ -52,15 +52,40 @@ class EventBus {
    * Émettre un événement
    */
   emit<T = any>(event: string, data?: T): void {
+    console.log("[EventBus] Emitting event:", event, "with data:", data)
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/db8eeb53-5cb0-4ca6-b69a-c9171cec64a1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'event-bus.ts:55',message:'HYP-A: EventBus.emit called',data:{event,eventData:data},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
     const callbacks = this.events.get(event)
+    const listenerCount = callbacks?.size || 0
+    console.log("[EventBus] Found", listenerCount, "listeners for event:", event)
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/db8eeb53-5cb0-4ca6-b69a-c9171cec64a1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'event-bus.ts:59',message:'HYP-B: Listener count check',data:{event,listenerCount},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
     if (callbacks) {
       callbacks.forEach((callback) => {
         try {
+          console.log("[EventBus] Calling callback for event:", event)
+          // #region agent log
+          fetch('http://127.0.0.1:7242/ingest/db8eeb53-5cb0-4ca6-b69a-c9171cec64a1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'event-bus.ts:64',message:'HYP-B: About to call callback',data:{event},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+          // #endregion
           callback(data)
+          console.log("[EventBus] Callback executed successfully")
+          // #region agent log
+          fetch('http://127.0.0.1:7242/ingest/db8eeb53-5cb0-4ca6-b69a-c9171cec64a1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'event-bus.ts:67',message:'HYP-B: Callback executed',data:{event},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+          // #endregion
         } catch (_error) {
           console.error(`Error in event handler for "${event}":`, _error)
+          // #region agent log
+          fetch('http://127.0.0.1:7242/ingest/db8eeb53-5cb0-4ca6-b69a-c9171cec64a1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'event-bus.ts:70',message:'HYP-B: Callback error',data:{event,error:String(_error)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+          // #endregion
         }
       })
+    } else {
+      console.warn("[EventBus] No listeners found for event:", event)
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/db8eeb53-5cb0-4ca6-b69a-c9171cec64a1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'event-bus.ts:74',message:'HYP-B: No listeners found',data:{event},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+      // #endregion
     }
   }
 

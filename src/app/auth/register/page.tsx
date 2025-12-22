@@ -84,7 +84,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-zinc-900 px-4">
+    <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-[#0a0f1a] px-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold">Inscription</CardTitle>
@@ -142,9 +142,9 @@ export default function RegisterPage() {
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? "Inscription..." : "S'inscrire"}
             </Button>
-            <p className="text-sm text-center text-zinc-600 dark:text-zinc-400">
+            <p className="text-sm text-center text-slate-600 dark:text-slate-400">
               Vous avez déjà un compte ?{" "}
-              <Link href="/auth/login" className="text-zinc-900 dark:text-zinc-50 font-medium hover:underline">
+              <Link href="/auth/login" className="text-slate-900 dark:text-slate-50 font-medium hover:underline">
                 Se connecter
               </Link>
             </p>

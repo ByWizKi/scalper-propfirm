@@ -25,13 +25,17 @@ export function useEvent<K extends keyof EventDataMap>(
   }, [callback])
 
   useEffect(() => {
+    console.log("[useEvent] Setting up listener for event:", event)
     const handler = (data: EventDataMap[K]) => {
+      console.log("[useEvent] Handler called for event:", event, "with data:", data)
       callbackRef.current(data)
     }
 
     const unsubscribe = eventBus.on(event, handler)
+    console.log("[useEvent] Listener registered for event:", event)
 
     return () => {
+      console.log("[useEvent] Cleaning up listener for event:", event)
       unsubscribe()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

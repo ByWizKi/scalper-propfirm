@@ -357,7 +357,7 @@ export function WithdrawalFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[95vw] sm:max-w-3xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
+      <DialogContent className="max-w-[95vw] sm:max-w-3xl max-h-[90vh] overflow-hidden flex flex-col p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle className="text-lg sm:text-xl">
             {withdrawal ? "Modifier le retrait" : "Ajouter un retrait"}
@@ -367,7 +367,7 @@ export function WithdrawalFormDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} className="flex-1 min-h-0 overflow-y-auto scrollbar-hide">
           <div className="grid gap-3 sm:gap-4 py-3 sm:py-4">
             {/* Mode selector */}
             {!withdrawal && eligibleAccounts.length > 0 && (
@@ -407,13 +407,13 @@ export function WithdrawalFormDialog({
                   }}
                   required
                 >
-                  <SelectTrigger id="accountId">
+                  <SelectTrigger id="accountId" className="w-full min-w-0 text-xs sm:text-sm">
                     <SelectValue placeholder="Sélectionner un compte" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="max-w-[calc(100vw-2rem)] sm:max-w-none">
                     {eligibleAccounts.length > 0 ? (
                       eligibleAccounts.map((account) => (
-                        <SelectItem key={account.id} value={account.id}>
+                        <SelectItem key={account.id} value={account.id} className="text-xs sm:text-sm truncate block max-w-full">
                           {account.name} - {account.propfirm}
                         </SelectItem>
                       ))
@@ -430,8 +430,8 @@ export function WithdrawalFormDialog({
             {/* Multiple accounts selector */}
             {!withdrawal && multipleMode && (
               <div className="grid gap-3">
-                <div className="flex items-center justify-between">
-                  <Label>Comptes sélectionnés ({selectedAccountIds.length})</Label>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                  <Label className="text-xs sm:text-sm">Comptes sélectionnés ({selectedAccountIds.length})</Label>
                   <div className="flex gap-2">
                     <Button
                       type="button"
@@ -439,6 +439,7 @@ export function WithdrawalFormDialog({
                       size="sm"
                       onClick={selectAllFiltered}
                       disabled={filteredAccounts.length === 0}
+                      className="text-xs sm:text-sm flex-1 sm:flex-initial"
                     >
                       Tout sélectionner
                     </Button>
@@ -448,6 +449,7 @@ export function WithdrawalFormDialog({
                       size="sm"
                       onClick={deselectAll}
                       disabled={selectedAccountIds.length === 0}
+                      className="text-xs sm:text-sm flex-1 sm:flex-initial"
                     >
                       Tout désélectionner
                     </Button>
@@ -460,13 +462,13 @@ export function WithdrawalFormDialog({
                     Propfirm
                   </Label>
                   <Select value={filterPropfirm} onValueChange={setFilterPropfirm}>
-                    <SelectTrigger id="filterPropfirm" className="h-9">
+                    <SelectTrigger id="filterPropfirm" className="h-9 text-xs sm:text-sm">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Toutes</SelectItem>
+                    <SelectContent className="max-w-[calc(100vw-2rem)] sm:max-w-none">
+                      <SelectItem value="all" className="text-xs sm:text-sm">Toutes</SelectItem>
                       {uniquePropfirms.map((propfirm) => (
-                        <SelectItem key={propfirm} value={propfirm}>
+                        <SelectItem key={propfirm} value={propfirm} className="text-xs sm:text-sm truncate block max-w-full">
                           {propfirm}
                         </SelectItem>
                       ))}
@@ -475,7 +477,7 @@ export function WithdrawalFormDialog({
                 </div>
 
                 {/* Account list */}
-                <div className="border border-zinc-200 dark:border-zinc-800 rounded-lg max-h-[200px] overflow-y-auto">
+                <div className="border border-zinc-200 dark:border-zinc-800 rounded-lg max-h-[200px] sm:max-h-[300px] overflow-y-auto">
                   {filteredAccounts.length === 0 ? (
                     <div className="p-4 text-center text-sm text-zinc-500">Aucun compte trouvé</div>
                   ) : (
@@ -503,9 +505,9 @@ export function WithdrawalFormDialog({
                                     <Check className="h-3 w-3 text-white dark:text-zinc-900" />
                                   )}
                                 </div>
-                                <div className="flex-1">
-                                  <p className="text-sm font-medium">{account.name}</p>
-                                  <p className="text-xs text-zinc-500">
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-xs sm:text-sm font-medium truncate">{account.name}</p>
+                                  <p className="text-[10px] sm:text-xs text-zinc-500 truncate">
                                     {formatCurrency(account.size)}
                                   </p>
                                 </div>
@@ -562,11 +564,12 @@ export function WithdrawalFormDialog({
                         setFormData({ ...formData, amount: amountToSet })
                       }
                     }}
-                    className="h-7 text-xs gap-1"
+                    className="h-7 sm:h-8 text-[10px] sm:text-xs gap-1 px-2 sm:px-3 shrink-0"
                     title={`Définir le montant maximum disponible: ${formatCurrency(maxAvailableAmount)}`}
                   >
-                    <Maximize2 className="h-3 w-3" />
-                    Max ({formatCurrency(maxAvailableAmount)})
+                    <Maximize2 className="h-3 w-3 shrink-0" />
+                    <span className="hidden sm:inline">Max ({formatCurrency(maxAvailableAmount)})</span>
+                    <span className="sm:hidden">Max</span>
                   </Button>
                 )}
               </div>
@@ -751,7 +754,7 @@ export function WithdrawalFormDialog({
               </Label>
               <textarea
                 id="notes"
-                className="flex min-h-[80px] w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-800 dark:bg-zinc-950 dark:placeholder:text-zinc-400 dark:focus-visible:ring-zinc-300"
+                className="flex min-h-[80px] w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-xs sm:text-sm placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-300 focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-800 dark:bg-zinc-950 dark:placeholder:text-zinc-400 dark:focus-visible:ring-zinc-600 cursor-text"
                 placeholder="Notes supplémentaires..."
                 value={formData.notes}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
@@ -759,12 +762,13 @@ export function WithdrawalFormDialog({
             </div>
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="gap-2 sm:gap-0">
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
+              className="w-full sm:w-auto"
             >
               Annuler
             </Button>
@@ -775,6 +779,7 @@ export function WithdrawalFormDialog({
                 (multipleMode && selectedAccountIds.length === 0) ||
                 (eligibleAccounts.length === 0 && !withdrawal)
               }
+              className="w-full sm:w-auto"
             >
               {isLoading
                 ? "En cours..."

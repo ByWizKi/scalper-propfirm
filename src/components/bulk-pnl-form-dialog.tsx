@@ -19,8 +19,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { useToast } from "@/hooks/use-toast"
+import { useNotification } from "@/hooks/use-notification"
 import { Plus, Trash2 } from "lucide-react"
+import { emitEvent, AppEvents } from "@/lib/events/event-bus"
 
 interface Account {
   id: string
@@ -51,7 +52,7 @@ export function BulkPnlFormDialog({
   accounts,
   onSuccess,
 }: BulkPnlFormDialogProps) {
-  const { toast } = useToast()
+  const notification = useNotification()
   const [isLoading, setIsLoading] = useState(false)
 
   // Filtrer uniquement les comptes ACTIVE
@@ -83,11 +84,7 @@ export function BulkPnlFormDialog({
 
   const removeRow = (id: string) => {
     if (rows.length === 1) {
-      toast({
-        title: "Erreur",
-        description: "Vous devez avoir au moins une ligne",
-        variant: "destructive",
-      })
+      notification.showError("Vous devez avoir au moins une ligne")
       return
     }
     setRows(rows.filter((row) => row.id !== id))
@@ -106,11 +103,7 @@ export function BulkPnlFormDialog({
       const invalidRows = rows.filter((row) => !row.accountId || !row.date || !row.amount)
 
       if (invalidRows.length > 0) {
-        toast({
-          title: "Erreur",
-          description: "Veuillez remplir tous les champs obligatoires (compte, date, montant)",
-          variant: "destructive",
-        })
+        notification.showError("Veuillez remplir tous les champs obligatoires (compte, date, montant)")
         setIsLoading(false)
         return
       }
@@ -133,15 +126,20 @@ export function BulkPnlFormDialog({
           throw new Error(error.error || "Erreur lors de l'ajout")
         }
 
-        return res.json()
+        const result = await res.json()
+
+        // Émettre l'événement PNL_CREATED pour mettre à jour le cache
+        emitEvent(AppEvents.PNL_CREATED, {
+          accountId: result.accountId,
+          pnlId: result.id,
+        })
+
+        return result
       })
 
       await Promise.all(promises)
 
-      toast({
-        title: "Succès",
-        description: `${rows.length} entrée(s) PnL ajoutée(s) avec succès`,
-      })
+      notification.showSuccess(`${rows.length} entrée(s) PnL ajoutée(s) avec succès`)
 
       // Réinitialiser le formulaire
       setRows([
@@ -158,11 +156,7 @@ export function BulkPnlFormDialog({
       onSuccess()
     } catch (_error) {
       console.error("Error:", _error)
-      toast({
-        title: "Erreur",
-        description: _error instanceof Error ? _error.message : "Une erreur est survenue",
-        variant: "destructive",
-      })
+      notification.handleError(_error, "Une erreur est survenue")
     } finally {
       setIsLoading(false)
     }

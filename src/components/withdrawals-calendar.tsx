@@ -131,7 +131,7 @@ function WithdrawalsCalendarBase({ withdrawals }: WithdrawalsCalendarProps) {
           {["Lun", "Mar", "Mer", "Jeu", "Ven", "Sem."].map((day) => (
             <div
               key={day}
-              className="text-center text-xs md:text-sm font-medium text-zinc-600 dark:text-zinc-400 py-1 md:py-2"
+              className="text-center text-xs md:text-sm font-medium text-slate-600 dark:text-slate-300 py-1 md:py-2"
             >
               {day}
             </div>
@@ -175,10 +175,10 @@ function WithdrawalsCalendarBase({ withdrawals }: WithdrawalsCalendarProps) {
                       key={dayIdx}
                       className={`min-h-[80px] md:min-h-[100px] p-1.5 md:p-3 rounded-lg border transition-all duration-200 ${
                         !isCurrentMonth
-                          ? "bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800"
+                          ? "bg-slate-50 dark:bg-[#151b2e] border-slate-200 dark:border-[#1e293b]"
                           : dayTotal > 0
                             ? "border-green-300 bg-green-50 dark:border-green-900 dark:bg-green-950 cursor-pointer hover:bg-green-100 dark:hover:bg-green-900 hover:scale-105 hover:shadow-md"
-                            : "border-zinc-200 dark:border-zinc-800"
+                            : "border-slate-200 dark:border-[#1e293b]"
                       }`}
                       onClick={() => {
                         // Ne rien faire si le jour n'est pas dans le mois courant
@@ -189,7 +189,7 @@ function WithdrawalsCalendarBase({ withdrawals }: WithdrawalsCalendarProps) {
                         }
                       }}
                     >
-                      <div className="text-xs md:text-sm font-medium text-zinc-600 dark:text-zinc-400 mb-1 md:mb-2">
+                      <div className="text-xs md:text-sm font-medium text-slate-600 dark:text-slate-300 mb-1 md:mb-2">
                         {format(day, "d")}
                       </div>
                       {dayWithdrawals.length > 0 && (
@@ -200,7 +200,7 @@ function WithdrawalsCalendarBase({ withdrawals }: WithdrawalsCalendarProps) {
                           <div className="text-[10px] md:text-xs text-green-600 dark:text-green-400 truncate">
                             {formatCurrencyEUR(dayTotal * USD_TO_EUR)}
                           </div>
-                          <div className="text-[10px] md:text-xs text-zinc-500 hidden md:block">
+                          <div className="text-[10px] md:text-xs text-slate-500 hidden md:block">
                             {dayWithdrawals.length} retrait{dayWithdrawals.length > 1 ? "s" : ""}
                           </div>
                         </div>
@@ -213,7 +213,7 @@ function WithdrawalsCalendarBase({ withdrawals }: WithdrawalsCalendarProps) {
                   className={`min-h-[80px] md:min-h-[100px] p-1.5 md:p-3 rounded-lg border-2 transition-all duration-200 ${
                     weekTotal > 0
                       ? "border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950 cursor-pointer hover:bg-green-100 dark:hover:bg-green-900 hover:scale-105 hover:shadow-md"
-                      : "border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900"
+                      : "border-slate-200 bg-slate-50 dark:border-[#1e293b] dark:bg-[#151b2e]"
                   }`}
                   onClick={() => {
                     if (weekTotal > 0) {
@@ -232,7 +232,7 @@ function WithdrawalsCalendarBase({ withdrawals }: WithdrawalsCalendarProps) {
                   }}
                 >
                   <div className="flex items-center justify-center mb-1 md:mb-2">
-                    <span className="text-[9px] sm:text-[10px] md:text-xs font-medium text-zinc-600 dark:text-zinc-400 text-center">
+                    <span className="text-[9px] sm:text-[10px] md:text-xs font-medium text-slate-600 dark:text-slate-300 text-center">
                       Total semaine
                     </span>
                   </div>
@@ -300,11 +300,11 @@ function WithdrawalsCalendarBase({ withdrawals }: WithdrawalsCalendarProps) {
             >
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0 mr-3">
-                  <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                  <p className="text-xs text-slate-500 dark:text-slate-300">
                     {format(new Date(withdrawal.date), "HH:mm", { locale: fr })}
                   </p>
                   {withdrawal.notes && (
-                    <p className="text-xs text-zinc-600 dark:text-zinc-300 mt-1 line-clamp-1">
+                    <p className="text-xs text-slate-600 dark:text-slate-200 mt-1 line-clamp-1">
                       {withdrawal.notes}
                     </p>
                   )}

@@ -148,7 +148,7 @@ function MonthlyCalendarBase({ pnlEntries }: MonthlyCalendarProps) {
   const goToNextMonth = () => setCurrentMonth(addMonths(currentMonth, 1))
 
   return (
-    <Card>
+    <Card className="rounded-2xl border border-slate-200/70 dark:border-[#1e293b]/70 bg-white/85 dark:bg-[#151b2e]/90 backdrop-blur-sm shadow-sm">
       <CardHeader className="p-4 sm:p-6">
         <div className="flex flex-col gap-4">
           {/* Navigation et titre */}
@@ -177,16 +177,16 @@ function MonthlyCalendarBase({ pnlEntries }: MonthlyCalendarProps) {
           </div>
 
           {/* Stats mensuelles */}
-          <div className="flex items-center justify-between sm:justify-end gap-2 pt-2 border-t border-zinc-200 dark:border-zinc-800">
+          <div className="flex items-center justify-between sm:justify-end gap-2 pt-2 border-t border-slate-200/70 dark:border-[#1e293b]/70">
             <div className="text-left sm:text-right">
-              <p className="text-[10px] sm:text-xs text-zinc-600 dark:text-zinc-400">P/L Mensuel</p>
+              <p className="text-[10px] sm:text-xs text-slate-600 dark:text-slate-300">P/L Mensuel</p>
               <p
                 className={`text-base sm:text-xl md:text-2xl font-bold break-words leading-tight ${monthlyTotal >= 0 ? "text-green-600" : "text-red-600"}`}
               >
                 {monthlyTotal >= 0 ? "+" : ""}
                 {formatCurrency(monthlyTotal)}
               </p>
-              <p className="text-[10px] sm:text-xs text-zinc-500">
+              <p className="text-[10px] sm:text-xs text-slate-500">
                 {monthlyTrades} trade{monthlyTrades > 1 ? "s" : ""}
               </p>
             </div>
@@ -200,7 +200,7 @@ function MonthlyCalendarBase({ pnlEntries }: MonthlyCalendarProps) {
           {["Lun", "Mar", "Mer", "Jeu", "Ven", "Sem."].map((day) => (
             <div
               key={day}
-              className="text-center text-[10px] sm:text-xs md:text-sm font-medium text-zinc-600 dark:text-zinc-400 py-1 sm:py-2"
+              className="text-center text-[10px] sm:text-xs md:text-sm font-medium text-slate-600 dark:text-slate-300 py-1 sm:py-2"
             >
               {day}
             </div>
@@ -231,12 +231,12 @@ function MonthlyCalendarBase({ pnlEntries }: MonthlyCalendarProps) {
                       key={dayIdx}
                       className={`min-h-[70px] sm:min-h-[80px] md:min-h-[100px] p-1.5 sm:p-2 md:p-3 rounded-lg border-2 transition-all duration-200 ${
                         !isCurrentMonth
-                          ? "border-zinc-100 bg-zinc-50 dark:border-zinc-900 dark:bg-zinc-950 opacity-40"
+                          ? "border-slate-100 bg-slate-50 dark:border-[#1e293b] dark:bg-[#0a0f1a] opacity-40"
                           : dayPnl
                             ? dayPnl.amount >= 0
                               ? "border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950 cursor-pointer hover:bg-green-100 dark:hover:bg-green-900 hover:scale-105 hover:shadow-md"
                               : "border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950 cursor-pointer hover:bg-red-100 dark:hover:bg-red-900 hover:scale-105 hover:shadow-md"
-                            : "border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900"
+                            : "border-slate-200/50 bg-white dark:border-[#1e293b]/50 dark:bg-[#151b2e]"
                       } ${isCurrentDay ? "ring-2 ring-blue-500 dark:ring-blue-400" : ""}`}
                       onClick={() => {
                         // Ne rien faire si le jour n'est pas dans le mois courant
@@ -254,8 +254,8 @@ function MonthlyCalendarBase({ pnlEntries }: MonthlyCalendarProps) {
                             isCurrentDay
                               ? "flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-full bg-blue-500 text-white text-[10px] sm:text-sm"
                               : !isCurrentMonth
-                                ? "text-zinc-400"
-                                : "text-zinc-900 dark:text-zinc-50"
+                                ? "text-slate-400"
+                                : "text-slate-900 dark:text-slate-100"
                           }`}
                         >
                           {format(day, "d")}
@@ -274,7 +274,7 @@ function MonthlyCalendarBase({ pnlEntries }: MonthlyCalendarProps) {
                             {dayPnl.amount >= 0 ? "+" : ""}
                             {formatCurrency(dayPnl.amount)}
                           </div>
-                          <div className="text-[9px] sm:text-[10px] md:text-xs text-zinc-500">
+                          <div className="text-[9px] sm:text-[10px] md:text-xs text-slate-500">
                             {dayPnl.count} trade{dayPnl.count > 1 ? "s" : ""}
                           </div>
                         </div>
@@ -290,7 +290,7 @@ function MonthlyCalendarBase({ pnlEntries }: MonthlyCalendarProps) {
                       ? "border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950"
                       : weekData.amount < 0
                         ? "border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950"
-                        : "border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900"
+                        : "border-slate-200/50 bg-slate-50 dark:border-[#1e293b]/50 dark:bg-[#151b2e]"
                   } ${weekData.count > 0 ? "cursor-pointer hover:scale-105 hover:shadow-md" : ""}`}
                   onClick={() => {
                     if (weekData.count > 0 && weekData.days.length > 0) {
@@ -310,7 +310,7 @@ function MonthlyCalendarBase({ pnlEntries }: MonthlyCalendarProps) {
                   }}
                 >
                   <div className="flex items-center justify-center mb-1 sm:mb-2">
-                    <span className="text-[9px] sm:text-[10px] md:text-xs font-medium text-zinc-600 dark:text-zinc-400 text-center">
+                    <span className="text-[9px] sm:text-[10px] md:text-xs font-medium text-slate-600 dark:text-slate-300 text-center">
                       Total semaine
                     </span>
                   </div>
@@ -392,11 +392,11 @@ function MonthlyCalendarBase({ pnlEntries }: MonthlyCalendarProps) {
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[10px] sm:text-xs text-zinc-500 dark:text-zinc-400">
+                <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-300">
                   {format(new Date(entry.date), "HH:mm", { locale: fr })}
                 </p>
                 {entry.notes && (
-                  <p className="text-[10px] sm:text-xs text-zinc-600 dark:text-zinc-300 mt-0.5 sm:mt-1 line-clamp-2 break-words">
+                  <p className="text-[10px] sm:text-xs text-slate-600 dark:text-slate-200 mt-0.5 sm:mt-1 line-clamp-2 break-words">
                     {entry.notes}
                   </p>
                 )}

@@ -1,15 +1,26 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-# Run ESLint on all staged files before push
-echo "🔍 Running ESLint before push..."
-npm run lint:strict
+# Protection de la branche main - GitFlow
+current_branch=$(git symbolic-ref HEAD | sed -e 's,^refs/heads/,,')
+protected_branches="main master"
 
-# If ESLint fails, prevent the push
-if [ $? -ne 0 ]; then
-  echo "❌ ESLint errors found. Please fix them before pushing."
+for protected in $protected_branches; do
+  if [ "$current_branch" = "$protected" ]; then
+    echo "❌ Vous ne pouvez pas push directement sur la branche $protected"
+    echo "📋 Utilisez GitFlow :"
+    echo "   1. Créez une branche release : git flow release start <version>"
+    echo "   2. Ou créez un hotfix : git flow hotfix start <version>"
+    echo "   3. Ou mergez depuis develop via une Pull Request"
+    exit 1
+  fi
+done
+
+# Vérifier que le build fonctionne avant de push
+echo "🔍 Vérification du build avant le push..."
+npm run build || {
+  echo "❌ Le build a échoué. Corrigez les erreurs avant de push."
   exit 1
-fi
+}
 
-echo "✅ ESLint passed!"
-
+echo "✅ Build réussi, push autorisé"

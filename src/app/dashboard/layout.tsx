@@ -20,8 +20,8 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-zinc-900 dark:border-zinc-50 mx-auto"></div>
-          <p className="mt-4 text-sm text-zinc-600 dark:text-zinc-400">Chargement...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-900 dark:border-slate-50 mx-auto"></div>
+          <p className="mt-4 text-sm text-slate-600 dark:text-slate-300">Chargement...</p>
         </div>
       </div>
     )
@@ -32,7 +32,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-zinc-50 dark:bg-zinc-900">
+    <div className="flex h-screen overflow-hidden bg-slate-50 dark:bg-[#0a0f1a]">
       <DashboardNav />
       <main className="flex-1 overflow-y-auto lg:mt-0 mt-16 safe-area-inset-top safe-area-inset-bottom">
         {children}

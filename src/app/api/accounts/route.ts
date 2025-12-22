@@ -32,11 +32,17 @@ import { createAccountSchema, validateApiRequest } from "@/lib/validation"
  */
 export async function GET() {
   try {
+    console.info("[API Accounts] Début de la requête GET")
+
     const session = (await getServerSession(authOptions)) as { user?: { id?: string } } | null
+    console.info("[API Accounts] Session:", session ? "authentifiée" : "non authentifiée")
 
     if (!session?.user?.id) {
+      console.warn("[API Accounts] Utilisateur non authentifié")
       return NextResponse.json({ message: "Non authentifié" }, { status: 401 })
     }
+
+    console.info("[API Accounts] Récupération des comptes pour userId:", session.user.id)
 
     const accounts = await prisma.propfirmAccount.findMany({
       where: {
@@ -52,11 +58,23 @@ export async function GET() {
       },
     })
 
+    console.info(`[API Accounts] ${accounts.length} comptes trouvés`)
+
     return NextResponse.json(accounts)
-  } catch (_error) {
-    console.error("API Error:", _error)
+  } catch (error) {
+    console.error("[API Accounts] Error:", error)
+    const errorMessage = error instanceof Error ? error.message : "Erreur inconnue"
+    const errorStack = error instanceof Error ? error.stack : undefined
+
+    if (errorStack) {
+      console.error("[API Accounts] Stack:", errorStack)
+    }
+
     return NextResponse.json(
-      { message: "Erreur lors de la récupération des comptes" },
+      {
+        message: `Erreur lors de la récupération des comptes: ${errorMessage}`,
+        details: process.env.NODE_ENV === "development" ? errorStack : undefined
+      },
       { status: 500 }
     )
   }
