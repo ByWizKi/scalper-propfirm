@@ -308,7 +308,7 @@ export default function AccountsPage() {
       <AccountFormDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
-        account={selectedAccount ?? undefined}
+        account={selectedAccount}
         onSuccess={() => {
           setDialogOpen(false)
           router.refresh()

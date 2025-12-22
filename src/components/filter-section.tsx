@@ -145,7 +145,7 @@ export function FilterSection({
                   <SelectItem value="all">Toutes</SelectItem>
                   {availablePropfirms.map((propfirm) => (
                     <SelectItem key={propfirm} value={propfirm}>
-                      {propfirmLabels[propfirm] ?? propfirm}
+                      {(propfirmLabels as Record<string, string>)[propfirm] ?? propfirm}
                     </SelectItem>
                   ))}
                 </SelectContent>

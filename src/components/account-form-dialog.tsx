@@ -31,8 +31,8 @@ interface PropfirmAccount {
   accountType: string
   status: string
   pricePaid: number
-  linkedEvalId?: string
-  notes?: string
+  linkedEvalId?: string | null
+  notes?: string | null
 }
 
 interface AccountFormDialogProps {

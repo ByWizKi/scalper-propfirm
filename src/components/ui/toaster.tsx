@@ -93,7 +93,7 @@ export const Toaster = memo(() => {
   return (
     <ToastProvider duration={2000} swipeDirection="right">
       {toasts.map((toast) => (
-        <ToastItem key={toast.id} {...toast} />
+        <ToastItem key={toast.id} {...toast} variant={toast.variant ?? undefined} />
       ))}
       <ToastViewport />
     </ToastProvider>

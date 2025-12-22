@@ -76,14 +76,8 @@ export function useDataCache<T>(
 
     try {
       console.log("[useDataCache] Fetching data...")
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/db8eeb53-5cb0-4ca6-b69a-c9171cec64a1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'use-data-cache.ts:76',message:'HYP-C: About to call fetchFn',data:{force,silent},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-      // #endregion
       const result = await fetchFn()
       console.log("[useDataCache] Data fetched:", result)
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/db8eeb53-5cb0-4ca6-b69a-c9171cec64a1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'use-data-cache.ts:79',message:'HYP-C: fetchFn completed',data:{resultPnLEntriesCount:result?.pnlEntries?.length,resultId:result?.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-      // #endregion
 
       if (isMountedRef.current) {
         console.log("[useDataCache] Setting data...")
@@ -91,18 +85,12 @@ export function useDataCache<T>(
         setData((prevData) => {
           console.log("[useDataCache] setData callback - prevData:", prevData)
           console.log("[useDataCache] setData callback - new result:", result)
-          // #region agent log
-          fetch('http://127.0.0.1:7242/ingest/db8eeb53-5cb0-4ca6-b69a-c9171cec64a1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'use-data-cache.ts:86',message:'HYP-D: setData callback called',data:{prevPnLEntriesCount:prevData?.pnlEntries?.length,newPnLEntriesCount:result?.pnlEntries?.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-          // #endregion
 
           // Comparer les données pour voir si elles ont vraiment changé
           const prevJson = JSON.stringify(prevData)
           const newJson = JSON.stringify(result)
           const hasChanged = prevJson !== newJson
           console.log("[useDataCache] Data has changed:", hasChanged)
-          // #region agent log
-          fetch('http://127.0.0.1:7242/ingest/db8eeb53-5cb0-4ca6-b69a-c9171cec64a1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'use-data-cache.ts:92',message:'HYP-D: Data comparison',data:{hasChanged,prevPnLCount:prevData?.pnlEntries?.length,newPnLCount:result?.pnlEntries?.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-          // #endregion
 
           if (!hasChanged) {
             console.log("[useDataCache] Data is the same, but forcing update with new reference")
@@ -115,9 +103,6 @@ export function useDataCache<T>(
         })
         setLastFetchTime(Date.now())
         console.log("[useDataCache] Data set successfully")
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/db8eeb53-5cb0-4ca6-b69a-c9171cec64a1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'use-data-cache.ts:103',message:'HYP-D: setData completed',data:{timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-        // #endregion
       }
     } catch (err) {
       if (isMountedRef.current) {
@@ -140,23 +125,14 @@ export function useDataCache<T>(
    */
   const invalidate = useCallback((eventData?: any) => {
     console.log("[useDataCache] invalidate called with eventData:", eventData)
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/db8eeb53-5cb0-4ca6-b69a-c9171cec64a1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'use-data-cache.ts:139',message:'HYP-B: invalidate called',data:{eventData,eventAccountId:eventData?.accountId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-    // #endregion
     const shouldInvalidateResult = shouldInvalidate(eventData)
     console.log("[useDataCache] shouldInvalidate result:", shouldInvalidateResult, "for eventData:", eventData)
     if (!shouldInvalidateResult) {
       console.log("[useDataCache] shouldInvalidate returned false, skipping")
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/db8eeb53-5cb0-4ca6-b69a-c9171cec64a1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'use-data-cache.ts:145',message:'HYP-B: shouldInvalidate returned false',data:{eventData,eventAccountId:eventData?.accountId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-      // #endregion
       return
     }
 
     console.log("[useDataCache] Invalidating cache and fetching new data...")
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/db8eeb53-5cb0-4ca6-b69a-c9171cec64a1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'use-data-cache.ts:151',message:'HYP-C: About to fetchData',data:{eventData,hasFetchDataRef:!!fetchDataRef.current},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-    // #endregion
     // Nettoyer le timeout précédent
     if (refetchTimeoutRef.current) {
       clearTimeout(refetchTimeoutRef.current)
@@ -170,9 +146,6 @@ export function useDataCache<T>(
       fetchDataRef.current(true, true) // silent = true pour éviter le scroll, force = true pour forcer le fetch
     } else {
       console.error("[useDataCache] fetchDataRef.current is null! This should not happen.")
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/db8eeb53-5cb0-4ca6-b69a-c9171cec64a1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'use-data-cache.ts:163',message:'HYP-C: fetchDataRef is null',data:{eventData},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-      // #endregion
     }
   }, [shouldInvalidate]) // Ne pas inclure fetchData pour éviter les réinscriptions constantes
 
@@ -211,34 +184,22 @@ export function useDataCache<T>(
 
   useEffect(() => {
     console.log("[useDataCache] Setting up event listeners for events:", invalidateOn)
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/db8eeb53-5cb0-4ca6-b69a-c9171cec64a1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'use-data-cache.ts:192',message:'HYP-B: Setting up event listeners',data:{events:invalidateOn,eventsKey},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-    // #endregion
     const unsubscribers: Array<() => void> = []
 
     invalidateOn.forEach((event) => {
       const handler = (eventData: any) => {
         console.log("[useDataCache] Event received:", event, "with data:", eventData)
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/db8eeb53-5cb0-4ca6-b69a-c9171cec64a1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'use-data-cache.ts:203',message:'HYP-B: Event received in handler',data:{event,eventData,hasInvalidateRef:!!invalidateRef.current},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-        // #endregion
         // Utiliser invalidateRef pour éviter les closures obsolètes
         if (invalidateRef.current) {
           console.log("[useDataCache] Calling invalidate from ref")
           invalidateRef.current(eventData)
         } else {
           console.error("[useDataCache] invalidateRef.current is null! This should not happen.")
-          // #region agent log
-          fetch('http://127.0.0.1:7242/ingest/db8eeb53-5cb0-4ca6-b69a-c9171cec64a1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'use-data-cache.ts:210',message:'HYP-B: invalidateRef is null',data:{event,eventData},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-          // #endregion
         }
       }
       const unsubscribe = eventBus.on(event, handler)
       unsubscribers.push(unsubscribe)
       console.log("[useDataCache] Listener registered for event:", event)
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/db8eeb53-5cb0-4ca6-b69a-c9171cec64a1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'use-data-cache.ts:205',message:'HYP-B: Listener registered',data:{event},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-      // #endregion
     })
 
     return () => {

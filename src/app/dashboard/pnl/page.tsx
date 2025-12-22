@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState, useMemo } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { StatCard } from "@/components/stat-card"
@@ -72,6 +73,7 @@ const formatCurrencyCompact = (amount: number): string => {
 }
 
 export default function PnlPage() {
+  const router = useRouter()
   const [entries, setEntries] = useState<PnlEntry[]>([])
   const [accounts, setAccounts] = useState<PropfirmAccount[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -527,7 +529,7 @@ export default function PnlPage() {
         accounts={eligibleAccounts}
         onSuccess={() => {
           setDialogOpen(false)
-          fetchEntries()
+          router.refresh()
         }}
       />
 
@@ -537,7 +539,7 @@ export default function PnlPage() {
         accounts={eligibleAccounts}
         onSuccess={() => {
           setBulkDialogOpen(false)
-          fetchEntries()
+          router.refresh()
         }}
       />
     </div>

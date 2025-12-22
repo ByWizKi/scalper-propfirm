@@ -309,7 +309,7 @@ export function PnlFormDialog({
       // Vérifier que c'est un CSV
       const hasCsvDelimiter = content.includes(",") || content.includes(";")
       if (!hasCsvDelimiter) {
-        notification.showError("Le fichier ne semble pas être un fichier CSV valide", 3500)
+        notification.showError("Le fichier ne semble pas être un fichier CSV valide")
         setImportFile(null)
         setIsLoadingPreview(false)
         return
@@ -349,7 +349,7 @@ export function PnlFormDialog({
 
   const handleImport = async () => {
     if (!importFile || !importPlatform || !importAccountId) {
-      notification.showError("Veuillez sélectionner une plateforme, un compte et un fichier CSV", 4000)
+      notification.showError("Veuillez sélectionner une plateforme, un compte et un fichier CSV")
       return
     }
 
