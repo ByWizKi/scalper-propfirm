@@ -1,14 +1,24 @@
 "use client"
 
 import * as React from "react"
+import { lazy, Suspense } from "react"
 import { StatCard } from "@/components/stat-card"
-import { ExpensesCalendar } from "@/components/expenses-calendar"
-import { WithdrawalsCalendar } from "@/components/withdrawals-calendar"
 import { DashboardWidget, WidgetType, WidgetData } from "@/types/dashboard-widget.types"
 import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import { GripVertical, Eye, EyeOff, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
+
+// Lazy loading pour les composants lourds
+const ExpensesCalendar = lazy(() =>
+  import("@/components/expenses-calendar").then((mod) => ({ default: mod.ExpensesCalendar }))
+)
+const WithdrawalsCalendar = lazy(() =>
+  import("@/components/withdrawals-calendar").then((mod) => ({ default: mod.WithdrawalsCalendar }))
+)
+const MonthlyCalendar = lazy(() =>
+  import("@/components/monthly-calendar").then((mod) => ({ default: mod.MonthlyCalendar }))
+)
 
 interface DashboardWidgetProps {
   widget: DashboardWidget
@@ -141,28 +151,41 @@ function renderCalendarWidget(widget: DashboardWidget, data?: WidgetData) {
   if (config.calendarType === "expenses") {
     const accounts = Array.isArray(data?.accounts) ? data.accounts : []
     return (
-      <ExpensesCalendar
-        expenses={
-          accounts as Array<{ id: string; createdAt: string; pricePaid: number; name: string }>
-        }
-      />
+      <Suspense fallback={<div className="animate-pulse h-64 bg-gray-200 rounded-lg" />}>
+        <ExpensesCalendar
+          expenses={
+            accounts as Array<{ id: string; createdAt: string; pricePaid: number; name: string }>
+          }
+        />
+      </Suspense>
     )
   }
 
   if (config.calendarType === "withdrawals") {
     const withdrawals = Array.isArray(data?.withdrawals) ? data.withdrawals : []
     return (
-      <WithdrawalsCalendar
-        withdrawals={
-          withdrawals as Array<{
-            id: string
-            date: string
-            amount: number
-            notes?: string
-            account: { propfirm: string }
-          }>
-        }
-      />
+      <Suspense fallback={<div className="animate-pulse h-64 bg-gray-200 rounded-lg" />}>
+        <WithdrawalsCalendar
+          withdrawals={
+            withdrawals as Array<{
+              id: string
+              date: string
+              amount: number
+              notes?: string
+              account: { propfirm: string }
+            }>
+          }
+        />
+      </Suspense>
+    )
+  }
+
+  if (config.calendarType === "monthly") {
+    // Pour le moment, passer un tableau vide - à améliorer plus tard
+    return (
+      <Suspense fallback={<div className="animate-pulse h-64 bg-gray-200 rounded-lg" />}>
+        <MonthlyCalendar pnlEntries={[]} />
+      </Suspense>
     )
   }
 

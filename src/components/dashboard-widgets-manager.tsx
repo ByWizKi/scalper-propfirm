@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { memo } from "react"
 import {
   DndContext,
   closestCenter,
@@ -41,11 +42,7 @@ interface DashboardWidgetsManagerProps {
 /**
  * Composant pour gérer les widgets du tableau de bord avec drag and drop
  */
-export function DashboardWidgetsManager({
-  widgets,
-  onWidgetsChange,
-  data,
-}: DashboardWidgetsManagerProps) {
+function DashboardWidgetsManager({ widgets, onWidgetsChange, data }: DashboardWidgetsManagerProps) {
   const [showSettings, setShowSettings] = React.useState(false)
   const [showCustomStatDialog, setShowCustomStatDialog] = React.useState(false)
 
@@ -309,3 +306,5 @@ export function DashboardWidgetsManager({
     </div>
   )
 }
+
+export const DashboardWidgetsManagerMemo = memo(DashboardWidgetsManager)
