@@ -90,7 +90,8 @@ export function useAccountCache(accountId?: string) {
         AppEvents.WITHDRAWAL_UPDATED,
         AppEvents.WITHDRAWAL_DELETED,
       ],
-      shouldInvalidate: (eventData) => !accountId || eventData?.accountId === accountId,
+      shouldInvalidate: (eventData) =>
+        !accountId || (eventData && "accountId" in eventData && eventData.accountId === accountId),
     }
   )
 }
