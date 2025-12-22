@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { toast } from "@/hooks/use-toast"
+import { useNotification } from "@/hooks/use-notification"
 import { Loader2, Save, Trash2, HelpCircle } from "lucide-react"
 import { validateFormula, AVAILABLE_VARIABLES } from "@/lib/custom-stat-evaluator"
 
@@ -75,6 +75,7 @@ export function CustomStatFormDialog({
   customStat,
   onSuccess,
 }: CustomStatFormDialogProps) {
+  const notification = useNotification()
   const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState({
     title: "",
@@ -130,40 +131,24 @@ export function CustomStatFormDialog({
 
     // Validation
     if (!formData.title.trim()) {
-      toast({
-        title: "Erreur",
-        description: "Le titre est requis",
-        variant: "destructive",
-      })
+      notification.showError("Le titre est requis")
       return
     }
 
     if (!formData.formula.trim()) {
-      toast({
-        title: "Erreur",
-        description: "La formule est requise",
-        variant: "destructive",
-      })
+      notification.showError("La formule est requise")
       return
     }
 
     const validation = validateFormula(formData.formula)
     if (!validation.valid) {
-      toast({
-        title: "Erreur",
-        description: validation.error || "Formule invalide",
-        variant: "destructive",
-      })
+      notification.showError(validation.error || "Formule invalide")
       return
     }
 
     // Vérifier qu'il n'y a pas d'erreur de formule affichée
     if (formulaError) {
-      toast({
-        title: "Erreur",
-        description: formulaError,
-        variant: "destructive",
-      })
+      notification.showError(formulaError)
       return
     }
 
@@ -220,12 +205,11 @@ export function CustomStatFormDialog({
 
       await response.json()
 
-      toast({
-        title: "Succès",
-        description: customStat?.id
+      notification.showSuccess(
+        customStat?.id
           ? "Statistique personnalisée mise à jour"
-          : "Statistique personnalisée créée",
-      })
+          : "Statistique personnalisée créée"
+      )
 
       // Déclencher l'événement immédiatement pour mettre à jour les données
       window.dispatchEvent(new Event("customStatsUpdated"))
@@ -237,13 +221,7 @@ export function CustomStatFormDialog({
       onSuccess()
     } catch (error) {
       console.error("Erreur lors de la sauvegarde:", error)
-      const errorMessage =
-        error instanceof Error ? error.message : "Erreur lors de la sauvegarde. Veuillez réessayer."
-      toast({
-        title: "Erreur",
-        description: errorMessage,
-        variant: "destructive",
-      })
+      notification.handleError(error, "Erreur lors de la sauvegarde. Veuillez réessayer.")
     } finally {
       setIsLoading(false)
     }
@@ -268,20 +246,13 @@ export function CustomStatFormDialog({
         throw new Error(error.message || "Erreur lors de la suppression")
       }
 
-      toast({
-        title: "Succès",
-        description: "Statistique personnalisée supprimée",
-      })
+      notification.showSuccess("Statistique personnalisée supprimée")
 
       onSuccess()
       onOpenChange(false)
     } catch (error) {
       console.error("Erreur:", error)
-      toast({
-        title: "Erreur",
-        description: error instanceof Error ? error.message : "Erreur lors de la suppression",
-        variant: "destructive",
-      })
+      notification.handleError(error, "Erreur lors de la suppression")
     } finally {
       setIsLoading(false)
     }
@@ -396,7 +367,7 @@ export function CustomStatFormDialog({
                 value={formData.icon}
                 onValueChange={(value) => setFormData({ ...formData, icon: value })}
               >
-                <SelectTrigger className="h-10">
+                <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -417,7 +388,7 @@ export function CustomStatFormDialog({
                 value={formData.variant}
                 onValueChange={(value) => setFormData({ ...formData, variant: value })}
               >
-                <SelectTrigger className="h-10">
+                <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

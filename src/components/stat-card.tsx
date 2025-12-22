@@ -34,24 +34,24 @@ export interface StatCardProps {
  */
 const variantStyles = {
   default: {
-    icon: "text-zinc-500 dark:text-zinc-400",
-    value: "text-zinc-900 dark:text-zinc-50",
+    icon: "text-slate-500 dark:text-slate-400",
+    value: "text-slate-900 dark:text-slate-50",
   },
   success: {
-    icon: "text-green-600 dark:text-green-400",
-    value: "text-green-600 dark:text-green-400",
+    icon: "text-green-600 dark:text-green-500",
+    value: "text-green-600 dark:text-green-500",
   },
   danger: {
-    icon: "text-red-600 dark:text-red-400",
-    value: "text-red-600 dark:text-red-400",
+    icon: "text-red-600 dark:text-red-500",
+    value: "text-red-600 dark:text-red-500",
   },
   warning: {
-    icon: "text-orange-600 dark:text-orange-400",
-    value: "text-orange-600 dark:text-orange-400",
+    icon: "text-cyan-600 dark:text-cyan-400",
+    value: "text-cyan-600 dark:text-cyan-400",
   },
   neutral: {
-    icon: "text-zinc-500 dark:text-zinc-400",
-    value: "text-zinc-900 dark:text-zinc-50",
+    icon: "text-slate-500 dark:text-slate-400",
+    value: "text-slate-900 dark:text-slate-50",
   },
 }
 
@@ -119,15 +119,15 @@ export function StatCard({
   return (
     <TooltipProvider>
       <Card
-        className={`rounded-2xl border border-zinc-200/70 dark:border-zinc-800/70 bg-white/85 dark:bg-zinc-950/70 backdrop-blur-sm shadow-sm ${className}`}
+        className={`rounded-2xl border border-slate-200/70 dark:border-[#1e293b]/70 bg-white/85 dark:bg-[#151b2e]/90 backdrop-blur-sm shadow-sm h-full ${className}`}
       >
-        <CardContent className="p-3 sm:p-4 md:p-5 flex flex-col h-full">
+        <CardContent className="p-4 sm:p-5 md:p-6 flex flex-col h-full">
           <div className="flex items-start justify-between gap-2 sm:gap-3 mb-2 sm:mb-3 flex-shrink-0">
             <div className="flex-1 min-w-0">
               <Tooltip>
                 <TooltipTrigger asChild>
                   <h3
-                    className={`${sizes.title} text-zinc-600 dark:text-zinc-400 break-words cursor-help line-clamp-2`}
+                    className={`${sizes.title} text-slate-600 dark:text-slate-300 break-words cursor-help line-clamp-2`}
                   >
                     {title}
                   </h3>
@@ -164,7 +164,7 @@ export function StatCard({
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <p
-                      className={`${sizes.description} text-zinc-500 dark:text-zinc-400 break-words cursor-help line-clamp-2`}
+                      className={`${sizes.description} text-slate-500 dark:text-slate-300 break-words cursor-help line-clamp-2`}
                     >
                       {description}
                     </p>
@@ -179,7 +179,7 @@ export function StatCard({
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <p
-                      className={`${sizes.secondary} text-zinc-400 dark:text-zinc-500 break-words cursor-help line-clamp-1 mt-1`}
+                      className={`${sizes.secondary} text-slate-400 dark:text-slate-400 break-words cursor-help line-clamp-1 mt-1`}
                     >
                       {secondaryText}
                     </p>

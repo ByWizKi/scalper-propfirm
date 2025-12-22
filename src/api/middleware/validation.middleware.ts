@@ -26,11 +26,11 @@ export function validateRequest<T extends z.ZodSchema>(
 /**
  * Wrapper pour valider le body de la requête
  */
-export function withValidation<T extends z.ZodSchema>(
+export function withValidation<T extends z.ZodSchema, A extends unknown[]>(
   schema: T,
-  handler: (data: z.infer<T>, ...args: unknown[]) => Promise<NextResponse>
+  handler: (data: z.infer<T>, ...args: A) => Promise<NextResponse>
 ) {
-  return async (request: Request, ...args: unknown[]): Promise<NextResponse> => {
+  return async (request: Request, ...args: A): Promise<NextResponse> => {
     const body = await request.json()
     const validation = validateRequest(schema, body)
     if (!validation.success) {

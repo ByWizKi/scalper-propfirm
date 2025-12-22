@@ -302,34 +302,34 @@ export default function CalculationsPage() {
   }, [propfirmRules])
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 lg:p-8 space-y-4 sm:space-y-6">
+    <div className="space-y-6 sm:space-y-8 p-4 sm:p-6 lg:p-8">
       {/* Header */}
-      <section className="rounded-2xl border border-zinc-200/70 dark:border-zinc-800/70 bg-white/85 dark:bg-zinc-950/70 backdrop-blur-sm p-3 sm:p-4 md:p-5 shadow-sm">
-        <div className="flex items-center gap-3 mb-2">
-          <Calculator className="h-6 w-6 sm:h-8 sm:w-8 text-zinc-900 dark:text-zinc-50" />
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-zinc-900 dark:text-zinc-50">
+      <section className="space-y-2">
+        <div className="flex items-center gap-3">
+          <Calculator className="h-6 w-6 sm:h-7 sm:w-7 text-slate-900 dark:text-slate-50" />
+          <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-slate-50">
             Calculateurs
           </h1>
         </div>
-        <p className="text-xs sm:text-sm md:text-base text-zinc-600 dark:text-zinc-400">
+        <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400">
           Effectuez des calculs personnalisés pour vos comptes propfirm
         </p>
       </section>
 
       {/* Sélection du type de calcul */}
-      <Card className="rounded-2xl border border-zinc-200/70 dark:border-zinc-800/70 bg-white/85 dark:bg-zinc-950/70 backdrop-blur-sm shadow-sm">
-        <CardHeader className="p-3 sm:p-4 md:p-6">
-          <CardTitle className="text-base sm:text-lg md:text-xl">Type de calcul</CardTitle>
-          <CardDescription className="text-xs sm:text-sm">
+      <Card className="rounded-lg border border-slate-200 dark:border-[#1e293b] bg-white dark:bg-[#151b2e] shadow-sm">
+        <CardHeader className="p-4 sm:p-5">
+          <CardTitle className="text-lg sm:text-xl font-bold">Type de calcul</CardTitle>
+          <CardDescription className="text-sm text-slate-600 dark:text-slate-400">
             Choisissez le calcul à effectuer
           </CardDescription>
         </CardHeader>
-        <CardContent className="p-3 sm:p-4 md:p-6 space-y-4">
+        <CardContent className="p-4 sm:p-5 space-y-4">
           <Select value={selectedCalculation} onValueChange={setSelectedCalculation}>
-            <SelectTrigger className="h-10 sm:h-11 w-full">
+            <SelectTrigger className="h-9 w-full min-w-0">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="w-[var(--radix-select-trigger-width)]">
               <SelectItem value="net-amount-target">
                 <div className="flex items-center gap-2">
                   <Coins className="h-4 w-4 flex-shrink-0" />
@@ -347,10 +347,10 @@ export default function CalculationsPage() {
 
           {/* Paramètres communs */}
           <div
-            className={`grid gap-3 sm:gap-4 ${selectedCalculation === "net-amount-target" ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-2"}`}
+            className={`grid gap-3 ${selectedCalculation === "net-amount-target" ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-2"}`}
           >
             <div className="space-y-2">
-              <Label htmlFor="propfirm" className="text-xs sm:text-sm font-semibold">
+              <Label htmlFor="propfirm" className="text-sm font-medium">
                 Propfirm
               </Label>
               <Select
@@ -368,10 +368,10 @@ export default function CalculationsPage() {
                   }
                 }}
               >
-                <SelectTrigger id="propfirm" className="h-10 sm:h-11 w-full">
+                <SelectTrigger id="propfirm" className="h-9 w-full min-w-0">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="w-[var(--radix-select-trigger-width)]">
                   {Object.entries(PROPFIRM_LABELS)
                     .filter(
                       ([key]) =>
@@ -384,7 +384,7 @@ export default function CalculationsPage() {
                     ))}
                 </SelectContent>
               </Select>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400 break-words">
+              <p className="text-xs text-slate-500 dark:text-slate-400 break-words mt-1">
                 Les calculs s&apos;adaptent automatiquement aux règles de cette propfirm
               </p>
             </div>
@@ -392,17 +392,17 @@ export default function CalculationsPage() {
             {/* Type de compte - uniquement pour le calcul "Combien de jours pour valider" */}
             {selectedCalculation === "eval-days" && (
               <div className="space-y-2">
-                <Label htmlFor="account-type" className="text-xs sm:text-sm font-semibold">
+                <Label htmlFor="account-type" className="text-sm font-medium">
                   Type de compte
                 </Label>
                 <Select
                   value={effectiveAccountType}
                   onValueChange={(value) => setAccountType(value as AccountType)}
                 >
-                  <SelectTrigger id="account-type" className="h-10 sm:h-11 w-full">
+                  <SelectTrigger id="account-type" className="h-9 w-full min-w-0">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="w-[var(--radix-select-trigger-width)]">
                     {Object.entries(ACCOUNT_TYPE_LABELS).map(([key, label]) => (
                       <SelectItem key={key} value={key}>
                         {label}
@@ -414,26 +414,26 @@ export default function CalculationsPage() {
             )}
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 w-full">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
             {accountSizes.length > 0 ? (
               <div className="space-y-2">
-                <Label htmlFor="account-size" className="text-xs sm:text-sm font-semibold">
+                <Label htmlFor="account-size" className="text-sm font-medium">
                   Taille de compte
                 </Label>
                 <Select
                   value={accountSize.toString()}
                   onValueChange={(value) => setAccountSize(parseInt(value))}
                 >
-                  <SelectTrigger id="account-size" className="h-10 sm:h-11 w-full">
+                  <SelectTrigger id="account-size" className="h-9 w-full min-w-0">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="w-[var(--radix-select-trigger-width)]">
                     {accountSizes.map((size) => (
                       <SelectItem key={size} value={size.toString()} className="break-words">
                         <span className="block break-words">
                           {size.toLocaleString()} $US
                           {propfirmRules.profitTargets[size] && (
-                            <span className="text-xs text-zinc-500 ml-2 break-words">
+                            <span className="text-xs text-slate-500 ml-2 break-words">
                               (Target: {propfirmRules.profitTargets[size].toLocaleString()} $US)
                             </span>
                           )}
@@ -445,7 +445,7 @@ export default function CalculationsPage() {
               </div>
             ) : (
               <div className="space-y-2">
-                <Label htmlFor="account-size" className="text-xs sm:text-sm font-semibold">
+                <Label htmlFor="account-size" className="text-sm font-medium">
                   Taille de compte
                 </Label>
                 <Input
@@ -454,9 +454,9 @@ export default function CalculationsPage() {
                   value={accountSize}
                   onChange={(e) => setAccountSize(parseInt(e.target.value) || 0)}
                   placeholder="25000"
-                  className="h-10 sm:h-11 w-full"
+                  className="h-9 w-full"
                 />
-                <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                <p className="text-xs text-slate-500 dark:text-slate-400">
                   Cette propfirm n&apos;a pas de tailles prédéfinies. Entrez une taille
                   personnalisée.
                 </p>
@@ -466,9 +466,9 @@ export default function CalculationsPage() {
 
           {/* Paramètres spécifiques au calcul */}
           {selectedCalculation === "net-amount-target" && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 pt-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
               <div className="space-y-2">
-                <Label htmlFor="net-amount-target" className="text-xs sm:text-sm font-semibold">
+                <Label htmlFor="net-amount-target" className="text-sm font-medium">
                   Montant net souhaité (EUR)
                 </Label>
                 <Input
@@ -477,11 +477,11 @@ export default function CalculationsPage() {
                   value={netAmountTarget}
                   onChange={(e) => setNetAmountTarget(e.target.value)}
                   placeholder="10000"
-                  className="h-10 sm:h-11 w-full"
+                  className="h-9 w-full"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="number-of-accounts" className="text-xs sm:text-sm font-semibold">
+                <Label htmlFor="number-of-accounts" className="text-sm font-medium">
                   Nombre de comptes
                 </Label>
                 <Input
@@ -490,16 +490,16 @@ export default function CalculationsPage() {
                   value={numberOfAccounts}
                   onChange={(e) => setNumberOfAccounts(e.target.value)}
                   placeholder="1"
-                  className="h-10 sm:h-11 w-full"
+                  className="h-9 w-full"
                 />
               </div>
             </div>
           )}
 
           {selectedCalculation === "eval-days" && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 pt-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
               <div className="space-y-2">
-                <Label htmlFor="daily-pnl" className="text-xs sm:text-sm font-semibold">
+                <Label htmlFor="daily-pnl" className="text-sm font-medium">
                   PnL journalier moyen (USD)
                 </Label>
                 <Input
@@ -508,18 +508,18 @@ export default function CalculationsPage() {
                   value={dailyPnl}
                   onChange={(e) => setDailyPnl(e.target.value)}
                   placeholder="300"
-                  className="h-10 sm:h-11 w-full"
+                  className="h-9 w-full"
                 />
               </div>
               <div className="space-y-2">
-                <Label className="text-xs sm:text-sm font-semibold text-zinc-500 dark:text-zinc-400">
+                <Label className="text-sm font-medium text-slate-500 dark:text-slate-400">
                   Profit target
                 </Label>
-                <div className="min-h-10 sm:min-h-11 flex flex-col sm:flex-row items-start sm:items-center justify-start sm:justify-start px-3 py-2.5 sm:py-0 rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900">
+                <div className="min-h-9 flex flex-col sm:flex-row items-start sm:items-center justify-start sm:justify-start px-3 py-2 rounded-md border border-slate-200 dark:border-[#1e293b] bg-slate-50 dark:bg-[#1e293b]/50">
                   <span className="text-sm font-semibold whitespace-nowrap">
                     ${propfirmRules.profitTarget.toLocaleString("fr-FR")}
                   </span>
-                  <span className="text-xs text-zinc-500 dark:text-zinc-400 sm:ml-2 mt-0.5 sm:mt-0 break-words">
+                  <span className="text-xs text-slate-500 dark:text-slate-400 sm:ml-2 mt-0.5 sm:mt-0 break-words">
                     (selon la taille de compte)
                   </span>
                 </div>
@@ -530,13 +530,13 @@ export default function CalculationsPage() {
       </Card>
 
       {/* Affichage du taux de conversion */}
-      <Card className="rounded-2xl border border-zinc-200/70 dark:border-zinc-800/70 bg-white/85 dark:bg-zinc-950/70 backdrop-blur-sm shadow-sm">
-        <CardContent className="p-3 sm:p-4 md:p-6">
+      <Card className="rounded-lg border border-slate-200 dark:border-[#1e293b] bg-white dark:bg-[#151b2e] shadow-sm">
+        <CardContent className="p-4 sm:p-5">
           <div className="flex items-center sm:items-start gap-2 sm:gap-3">
-            <Info className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0 text-zinc-500 dark:text-zinc-400" />
-            <p className="flex-1 min-w-0 text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 text-center sm:text-left">
+            <Info className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0 text-slate-500 dark:text-slate-400" />
+            <p className="flex-1 min-w-0 text-sm text-slate-600 dark:text-slate-400 text-center sm:text-left">
               <span className="block sm:inline">Taux de conversion utilisé : </span>
-              <strong className="text-zinc-900 dark:text-zinc-50 font-semibold block sm:inline break-all sm:break-normal">
+              <strong className="text-slate-900 dark:text-slate-50 font-semibold block sm:inline break-all sm:break-normal">
                 1 USD = {USD_TO_EUR.toFixed(4)} EUR
               </strong>
             </p>
@@ -546,11 +546,11 @@ export default function CalculationsPage() {
 
       {/* Résultats */}
       {currentResults.length > 0 && (
-        <section className="rounded-2xl border border-zinc-200/70 dark:border-zinc-800/70 bg-white/85 dark:bg-zinc-950/70 backdrop-blur-sm p-3 sm:p-4 md:p-5 lg:p-6 shadow-sm">
-          <h2 className="text-base sm:text-lg md:text-xl font-bold text-zinc-900 dark:text-zinc-50 mb-3 sm:mb-4 md:mb-5">
+        <section className="rounded-lg border border-slate-200 dark:border-[#1e293b] bg-white dark:bg-[#151b2e] p-4 sm:p-5 lg:p-6 shadow-sm">
+          <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-50 mb-4 sm:mb-5">
             Résultats
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {currentResults.map((result, index) => (
               <StatCard
                 key={index}

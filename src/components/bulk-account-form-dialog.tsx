@@ -284,7 +284,7 @@ export function BulkAccountFormDialog({
                   setFormData({ ...formData, propfirm: value as PropfirmType })
                 }
               >
-                <SelectTrigger id="propfirm" className="h-10">
+                <SelectTrigger id="propfirm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -308,7 +308,7 @@ export function BulkAccountFormDialog({
                   setFormData({ ...formData, accountType: value as AccountType })
                 }
               >
-                <SelectTrigger id="accountType" className="h-10">
+                <SelectTrigger id="accountType">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -330,7 +330,7 @@ export function BulkAccountFormDialog({
                 value={formData.size}
                 onValueChange={(value) => setFormData({ ...formData, size: value })}
               >
-                <SelectTrigger id="size" className="h-10">
+                <SelectTrigger id="size">
                   <SelectValue placeholder="Sélectionnez une taille" />
                 </SelectTrigger>
                 <SelectContent>

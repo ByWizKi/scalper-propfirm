@@ -1,10 +1,11 @@
 /* eslint-disable */
 "use client"
 
-import { useState, useMemo, useCallback } from "react"
+import { useState, useMemo, useCallback, use, useEffect } from "react"
 import { useRouter, useParams } from "next/navigation"
 import dynamic from "next/dynamic"
 import { Button } from "@/components/ui/button"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import {
   ArrowLeft,
   Edit,
@@ -14,10 +15,20 @@ import {
   DollarSign,
   Calendar,
   CheckCircle2,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react"
 import { StatCard, useStatVariant } from "@/components/stat-card"
 import { useAccountCache } from "@/hooks/use-data-cache"
-import { useDeleteAccountMutation, useUpdateAccountMutation } from "@/hooks/use-mutation"
+import {
+  useDeleteAccountMutation,
+  useUpdateAccountMutation,
+  useDeletePnlMutation,
+  useDeleteWithdrawalMutation,
+} from "@/hooks/use-mutation"
+import { useConfirm } from "@/hooks/use-confirm"
+import { useNotification } from "@/hooks/use-notification"
+import { eventBus, AppEvents } from "@/lib/events/event-bus"
 import { format } from "date-fns"
 import { fr } from "date-fns/locale"
 import { MonthlyCalendar } from "@/components/monthly-calendar"
@@ -26,9 +37,8 @@ import { TradingCyclesTracker } from "@/components/trading-cycles-tracker"
 import { ApexPaRulesTracker } from "@/components/apex-pa-rules-tracker"
 import { PhidiasFundedTracker } from "@/components/phidias-funded-tracker"
 import { PropfirmStrategyFactory } from "@/lib/strategies/propfirm-strategy.factory"
-import { Gift, CreditCard, Info } from "lucide-react"
+import { Gift, CreditCard, Info, BarChart3, Target } from "lucide-react"
 import { getPhidiasAccountSubType, getPhidiasAccountSubTypeLabel } from "@/lib/phidias-account-type"
-
 // ⚡ CODE SPLITTING: Lazy load dialogs only (opened on user action)
 const AccountFormDialog = dynamic(() =>
   import("@/components/account-form-dialog").then((m) => ({ default: m.AccountFormDialog }))
@@ -38,6 +48,9 @@ const PnlFormDialog = dynamic(() =>
 )
 const WithdrawalFormDialog = dynamic(() =>
   import("@/components/withdrawal-form-dialog").then((m) => ({ default: m.WithdrawalFormDialog }))
+)
+const TradingStatsComponent = dynamic(() =>
+  import("@/components/trading-stats").then((m) => ({ default: m.TradingStatsComponent }))
 )
 
 const PROPFIRM_LABELS: Record<string, string> = {
@@ -62,23 +75,83 @@ const STATUS_LABELS: Record<string, string> = {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  ACTIVE: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
-  VALIDATED: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
-  FAILED: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
-  ARCHIVED: "bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-300",
+  ACTIVE: "bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300",
+  VALIDATED: "bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-300",
+  FAILED: "bg-red-100 text-red-600 dark:bg-red-900 dark:text-red-300",
+  ARCHIVED: "bg-zinc-100 text-zinc-600 dark:bg-[#1e293b] dark:text-slate-300",
 }
 
 export default function AccountDetailPage() {
   const router = useRouter()
   const params = useParams()
+  // Dans les client components, useParams() retourne toujours un objet synchrone
+  // Les Promises sont uniquement pour les Server Components
   const accountId = params.id as string
 
   // Utiliser le cache avec invalidation automatique
-  const { data: account, isLoading } = useAccountCache(accountId)
+  // Le cache se met à jour automatiquement via les événements, pas besoin de refetch manuel
+  // useAccountCache écoute automatiquement PNL_CREATED, PNL_UPDATED, PNL_DELETED, etc.
+  // et invalide le cache pour mettre à jour l'affichage sans rechargement de page
+  const { data: account, isLoading, refetch } = useAccountCache(accountId)
+
+  // Log pour déboguer les changements de données et forcer un re-render si nécessaire
+  useEffect(() => {
+    console.log("[AccountDetailPage] Component rendered")
+    console.log("[AccountDetailPage] Account data:", account)
+    console.log("[AccountDetailPage] Account ID:", account?.id)
+    const pnlCount = account?.pnlEntries?.length || 0
+    console.log("[AccountDetailPage] PnL entries count:", pnlCount)
+    // #region agent log
+    fetch("http://127.0.0.1:7242/ingest/db8eeb53-5cb0-4ca6-b69a-c9171cec64a1", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        location: "accounts/[id]/page.tsx:95",
+        message: "HYP-E: Component rendered with account data",
+        data: { accountId: account?.id, pnlEntriesCount: pnlCount, hasAccount: !!account },
+        timestamp: Date.now(),
+        sessionId: "debug-session",
+        runId: "run1",
+        hypothesisId: "E",
+      }),
+    }).catch(() => {})
+    // #endregion
+    if (account?.pnlEntries) {
+      const pnlIds = account.pnlEntries.map((e: any) => e.id)
+      console.log("[AccountDetailPage] PnL entries IDs:", pnlIds)
+      console.log(
+        "[AccountDetailPage] PnL entries:",
+        account.pnlEntries.map((e: any) => ({ id: e.id, date: e.date, amount: e.amount }))
+      )
+      // #region agent log
+      fetch("http://127.0.0.1:7242/ingest/db8eeb53-5cb0-4ca6-b69a-c9171cec64a1", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          location: "accounts/[id]/page.tsx:99",
+          message: "HYP-E: PnL entries details",
+          data: { pnlIds, pnlCount },
+          timestamp: Date.now(),
+          sessionId: "debug-session",
+          runId: "run1",
+          hypothesisId: "E",
+        }),
+      }).catch(() => {})
+      // #endregion
+    }
+  }, [account])
 
   // Utiliser les mutations
   const { mutate: deleteAccount } = useDeleteAccountMutation()
   const { mutate: updateAccount } = useUpdateAccountMutation()
+  const { mutate: deletePnl } = useDeletePnlMutation()
+  const { mutate: deleteWithdrawal } = useDeleteWithdrawalMutation()
+
+  // Hook de confirmation
+  const { confirm, ConfirmDialog } = useConfirm()
+
+  // Hook pour les notifications unifiées
+  const notification = useNotification()
 
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [pnlDialogOpen, setPnlDialogOpen] = useState(false)
@@ -98,9 +171,13 @@ export default function AccountDetailPage() {
     accountId: string
   } | null>(null)
   const [isEligibleForValidation, setIsEligibleForValidation] = useState(false)
+  const [isTradingStatsOpen, setIsTradingStatsOpen] = useState(false)
+  const [isRulesOpen, setIsRulesOpen] = useState(false)
+  const [isPnlHistoryOpen, setIsPnlHistoryOpen] = useState(false)
+  const [isWithdrawalHistoryOpen, setIsWithdrawalHistoryOpen] = useState(false)
 
   const handleDelete = async () => {
-    if (!confirm("Êtes-vous sûr de vouloir supprimer ce compte ?")) {
+    if (!window.confirm("Êtes-vous sûr de vouloir supprimer ce compte ?")) {
       return
     }
 
@@ -113,7 +190,11 @@ export default function AccountDetailPage() {
   }
 
   const handleValidate = async () => {
-    if (!confirm("Êtes-vous sûr de vouloir valider ce compte ? Il passera en statut VALIDATED.")) {
+    if (
+      !window.confirm(
+        "Êtes-vous sûr de vouloir valider ce compte ? Il passera en statut VALIDATED."
+      )
+    ) {
       return
     }
 
@@ -151,27 +232,28 @@ export default function AccountDetailPage() {
   const USD_TO_EUR = 0.92
 
   // ⚡ MEMOIZATION: Heavy calculations (AVANT les early returns pour respecter les règles des Hooks)
+  // Utiliser account complet comme dépendance pour garantir la mise à jour
   const totalPnl = useMemo(
     () =>
       account?.pnlEntries?.reduce(
         (sum: number, entry: { amount: number }) => sum + entry.amount,
         0
       ) || 0,
-    [account?.pnlEntries]
+    [account] // Utiliser account complet pour détecter tous les changements
   )
 
   const totalWithdrawals = useMemo(
     () =>
       account?.withdrawals?.reduce((sum: number, w: { amount: number }) => sum + w.amount, 0) || 0,
-    [account?.withdrawals]
+    [account] // Utiliser account complet pour détecter tous les changements
   )
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-zinc-900 dark:border-zinc-50 mx-auto"></div>
-          <p className="mt-4 text-sm text-zinc-600 dark:text-zinc-400">Chargement...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-900 dark:border-slate-50 mx-auto"></div>
+          <p className="mt-4 text-sm text-slate-600 dark:text-slate-300">Chargement...</p>
         </div>
       </div>
     )
@@ -313,32 +395,49 @@ export default function AccountDetailPage() {
 
   return (
     <div className="space-y-6 sm:space-y-8 p-4 sm:p-6 lg:p-8">
-      {/* Header avec informations principales */}
-      <section className="rounded-2xl border border-zinc-200/70 dark:border-zinc-800/70 bg-white/85 dark:bg-zinc-950/70 backdrop-blur-sm p-4 sm:p-5 shadow-sm">
-        <div className="flex flex-col gap-4">
-          {/* Bouton retour et titre */}
-          <div className="flex items-center gap-2 sm:gap-3">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => router.push("/dashboard/accounts")}
-              className="h-9 w-9 sm:h-10 sm:w-10 shrink-0"
-            >
-              <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
-            </Button>
-            <div className="min-w-0 flex-1">
-              <h1 className="text-sm sm:text-base md:text-lg font-bold text-zinc-900 dark:text-zinc-50 truncate">
-                {account.name}
-              </h1>
-              <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 mt-1">
-                {PROPFIRM_LABELS[account.propfirm]} • {formatCurrency(account.size)}
-              </p>
+      {/* ============================================
+          SECTION 1: HEADER ET INFORMATIONS PRINCIPALES
+          ============================================ */}
+      <section className="rounded-2xl border border-slate-200/70 dark:border-[#1e293b]/70 bg-white/85 dark:bg-[#151b2e]/90 backdrop-blur-sm shadow-sm">
+        <div className="flex flex-col gap-4 sm:gap-5 p-4 sm:p-5 lg:p-6">
+          {/* En-tête : Bouton retour et titre */}
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => router.push("/dashboard/accounts")}
+                className="h-8 w-8 sm:h-9 sm:w-9 shrink-0"
+              >
+                <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
+              </Button>
+              <div className="min-w-0 flex-1">
+                <TooltipProvider delayDuration={300}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <h1 className="text-base sm:text-lg lg:text-xl font-bold text-slate-900 dark:text-slate-100 truncate cursor-help touch-manipulation">
+                        {account.name}
+                      </h1>
+                    </TooltipTrigger>
+                    <TooltipContent
+                      side="bottom"
+                      className="max-w-[calc(100vw-2rem)] sm:max-w-xs z-50"
+                      sideOffset={8}
+                    >
+                      <p className="break-words text-xs sm:text-sm">{account.name}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-1">
+                  {PROPFIRM_LABELS[account.propfirm]} • {formatCurrency(account.size)}
+                </p>
+              </div>
             </div>
           </div>
 
-          {/* Informations principales en cartes */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-            {/* Balance actuelle */}
+          {/* Cartes de statistiques principales */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5">
+            {/* Carte 1: Balance actuelle */}
             <StatCard
               title="Balance actuelle"
               value={formatCurrency(currentBalance)}
@@ -349,22 +448,22 @@ export default function AccountDetailPage() {
                   ? `+${formatCurrency(currentBalance - account.size)}`
                   : formatCurrency(currentBalance - account.size)
               }
-              size="lg"
+              size="md"
               className="min-w-0"
             />
 
-            {/* PnL Total */}
+            {/* Carte 2: PnL Total */}
             <StatCard
               title="PnL Total"
               value={formatCurrency(totalPnl)}
               icon={totalPnl >= 0 ? TrendingUp : TrendingDown}
               variant={useStatVariant(totalPnl)}
               description={`${tradingDays} jour${tradingDays > 1 ? "s" : ""} de trading`}
-              size="lg"
+              size="md"
               className="min-w-0"
             />
 
-            {/* Retraits (si financé) */}
+            {/* Carte 3: Retraits (comptes financés uniquement) */}
             {account.accountType === "FUNDED" && (
               <StatCard
                 title="Retraits"
@@ -372,157 +471,367 @@ export default function AccountDetailPage() {
                 icon={DollarSign}
                 variant="neutral"
                 description={`${account.withdrawals.length} retrait${account.withdrawals.length > 1 ? "s" : ""}`}
-                size="lg"
+                size="md"
                 className="min-w-0"
               />
             )}
 
-            {/* Type et Statut */}
-            <div className="bg-zinc-50 dark:bg-zinc-900/50 rounded-xl p-4 border border-zinc-200 dark:border-zinc-800">
-              <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 mb-2">Type</p>
-              <div className="flex flex-col gap-1.5">
-                <p className="text-sm sm:text-base font-semibold text-zinc-900 dark:text-zinc-50">
-                  {ACCOUNT_TYPE_LABELS[account.accountType]}
+            {/* Carte 4: Type et Statut */}
+            <div className="bg-slate-50 dark:bg-[#151b2e]/60 rounded-xl p-3 sm:p-4 border border-slate-200 dark:border-[#1e293b] flex flex-col justify-between min-h-full">
+              <div>
+                <p className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-2">
+                  Type
                 </p>
-                {phidiasSubType && (
-                  <span className="inline-block px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-300 w-fit">
-                    {getPhidiasAccountSubTypeLabel(phidiasSubType)}
+                <div className="flex flex-col gap-1.5">
+                  <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100">
+                    {ACCOUNT_TYPE_LABELS[account.accountType]}
+                  </p>
+                  {phidiasSubType && (
+                    <span className="inline-block px-2 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-300 w-fit">
+                      {getPhidiasAccountSubTypeLabel(phidiasSubType)}
+                    </span>
+                  )}
+                  <span
+                    className={`inline-block px-2 py-0.5 rounded-full text-xs font-bold w-fit ${STATUS_COLORS[account.status]}`}
+                  >
+                    {STATUS_LABELS[account.status]}
                   </span>
-                )}
-                <span
-                  className={`inline-block px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold w-fit ${STATUS_COLORS[account.status]}`}
-                >
-                  {STATUS_LABELS[account.status]}
-                </span>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Actions */}
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3 pt-2 border-t border-zinc-200/70 dark:border-zinc-800/70">
+          {/* Barre d'actions */}
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 pt-3 sm:pt-4 border-t border-slate-200/70 dark:border-[#1e293b]/70">
             {account.accountType === "EVAL" &&
               account.status === "ACTIVE" &&
               isEligibleForValidation && (
                 <Button
                   onClick={handleValidate}
-                  size="lg"
-                  className="bg-green-600 hover:bg-green-700 text-sm sm:text-base font-semibold h-11 sm:h-12"
+                  size="default"
+                  className="bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700 text-xs sm:text-sm font-semibold h-9 sm:h-10 px-3 sm:px-4"
                 >
-                  <CheckCircle2 className="h-5 w-5 mr-2" />
+                  <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5" />
                   <span className="hidden sm:inline">Valider le compte</span>
                   <span className="sm:hidden">Valider</span>
                 </Button>
               )}
             <Button
               variant="outline"
-              size="lg"
+              size="default"
               onClick={() => setEditDialogOpen(true)}
-              className="text-sm sm:text-base font-semibold h-11 sm:h-12"
+              className="text-xs sm:text-sm font-semibold h-9 sm:h-10 px-3 sm:px-4"
             >
-              <Edit className="h-5 w-5 mr-2" />
+              <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5" />
               <span className="hidden sm:inline">Modifier</span>
               <span className="sm:hidden">Éditer</span>
             </Button>
             <Button
               variant="destructive"
-              size="lg"
+              size="default"
               onClick={handleDelete}
-              className="text-sm sm:text-base font-semibold h-11 sm:h-12"
+              className="text-xs sm:text-sm font-semibold h-9 sm:h-10 px-3 sm:px-4"
             >
-              <Trash2 className="h-5 w-5 mr-2" />
+              <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5" />
               Supprimer
             </Button>
           </div>
         </div>
       </section>
 
-      {/* Informations complémentaires */}
-      <section className="rounded-2xl border border-zinc-200/70 dark:border-zinc-800/70 bg-white/85 dark:bg-zinc-950/70 backdrop-blur-sm shadow-sm">
-        <div className="px-5 sm:px-6 py-4 border-b border-zinc-200/70 dark:border-zinc-800/70">
-          <h2 className="text-xs sm:text-sm md:text-base font-semibold text-zinc-900 dark:text-zinc-50">
+      {/* ============================================
+          SECTION 2: INFORMATIONS COMPLÉMENTAIRES
+          ============================================ */}
+      <section className="rounded-2xl border border-slate-200/70 dark:border-[#1e293b]/70 bg-white/85 dark:bg-[#151b2e]/90 backdrop-blur-sm shadow-sm">
+        <div className="px-4 sm:px-5 lg:px-6 py-3 sm:py-4 border-b border-slate-200/70 dark:border-[#1e293b]/70">
+          <h2 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+            <Info className="h-4 w-4 sm:h-5 sm:w-5" />
             Informations complémentaires
           </h2>
         </div>
         <div className="p-4 sm:p-5 lg:p-6">
+          {/* Grille d'informations */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            {/* Colonne 1: Investissement total */}
             <div>
-              <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 mb-2 font-medium">
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mb-2 font-medium">
                 Investissement total
               </p>
-              <p className="text-sm sm:text-base md:text-lg font-bold text-zinc-900 dark:text-zinc-50">
+              <p className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100">
                 {formatCurrency(totalInvested)}
               </p>
-              <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-1">
+              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-300 mt-1">
                 {formatCurrencyEUR(totalInvested * USD_TO_EUR)}
               </p>
               {account.linkedEval && (
-                <div className="mt-2 pt-2 border-t border-zinc-200/50 dark:border-zinc-800/50">
-                  <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400">
+                <div className="mt-2 pt-2 border-t border-slate-200/50 dark:border-[#1e293b]/50">
+                  <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-300">
                     Compte: {formatCurrency(account.pricePaid)}
                   </p>
-                  <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400">
+                  <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-300">
                     Évaluation: {formatCurrency(account.linkedEval.pricePaid)}
                   </p>
                 </div>
               )}
             </div>
 
+            {/* Colonne 2: Date de création */}
             <div>
-              <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 mb-2 font-medium">
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mb-2 font-medium">
                 Date de création
               </p>
-              <p className="text-xs sm:text-sm md:text-base font-bold text-zinc-900 dark:text-zinc-50">
+              <p className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100">
                 {format(new Date(account.createdAt), "d MMMM yyyy", { locale: fr })}
               </p>
-              <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-1">
+              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-300 mt-1">
                 {format(new Date(account.createdAt), "HH:mm", { locale: fr })}
               </p>
             </div>
 
+            {/* Colonne 3: Compte d'évaluation lié (si applicable) */}
             {account.linkedEval && (
               <div>
-                <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 mb-2 font-medium">
+                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mb-2 font-medium">
                   Compte d&apos;évaluation lié
                 </p>
-                <p className="text-xs sm:text-sm md:text-base font-semibold text-zinc-900 dark:text-zinc-50 wrap-break-word">
+                <p className="text-sm sm:text-base font-semibold text-slate-900 dark:text-slate-100 wrap-break-word">
                   {account.linkedEval.name}
                 </p>
-                <p className="text-xs sm:text-sm md:text-base font-bold text-zinc-700 dark:text-zinc-300 mt-1">
+                <p className="text-sm sm:text-base font-bold text-slate-700 dark:text-slate-200 mt-1">
                   {formatCurrency(account.linkedEval.pricePaid)}
                 </p>
               </div>
             )}
           </div>
 
+          {/* Notes (si présentes) */}
           {account.notes && (
-            <div className="mt-6 pt-6 border-t border-zinc-200/70 dark:border-zinc-800/70">
-              <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 mb-2 font-medium">
+            <div className="mt-6 pt-6 border-t border-slate-200/70 dark:border-[#1e293b]/70">
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mb-2 font-medium">
                 Notes
               </p>
-              <p className="text-xs sm:text-sm text-zinc-700 dark:text-zinc-300 whitespace-pre-wrap wrap-break-word bg-zinc-50 dark:bg-zinc-900/50 rounded-lg p-3 sm:p-4">
+              <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-200 whitespace-pre-wrap wrap-break-word bg-slate-50 dark:bg-[#1e293b]/50 rounded-lg p-3 sm:p-4">
                 {account.notes}
               </p>
             </div>
           )}
+
+          {/* Récapitulatif des règles */}
+          {(() => {
+            const strategy = PropfirmStrategyFactory.getStrategy(account.propfirm)
+            const accountRules = strategy.getAccountRules(
+              account.size,
+              account.accountType,
+              account.name,
+              account.notes
+            )
+            const withdrawalRules = strategy.getWithdrawalRules(
+              account.size,
+              account.accountType,
+              account.name,
+              account.notes
+            )
+
+            // Ne pas afficher si pas de règles
+            if (!accountRules && account.accountType === "EVAL") return null
+            if (account.accountType === "FUNDED" && !withdrawalRules) return null
+
+            // Ne pas afficher dailyLossLimit si égal au maxDrawdown (redondant)
+            const showDailyLossLimit =
+              accountRules &&
+              accountRules.dailyLossLimit > 0 &&
+              accountRules.dailyLossLimit !== accountRules.maxDrawdown
+
+            return (
+              <div className="mt-6 pt-6 border-t border-slate-200/70 dark:border-[#1e293b]/70">
+                <h3 className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-slate-100 mb-3 sm:mb-4">
+                  Récapitulatif des règles
+                </h3>
+                {/* Grille des règles */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
+                  {/* ===== RÈGLES DU COMPTE (ÉVALUATION) ===== */}
+                  {accountRules && account.accountType === "EVAL" && (
+                    <>
+                      {/* Règle 1: Objectif de profit */}
+                      <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-slate-50/50 dark:bg-[#1e293b]/50 border border-slate-200/50 dark:border-[#1e293b]/50">
+                        <span className="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+                          Objectif de profit
+                        </span>
+                        <span className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-slate-100 ml-2 shrink-0">
+                          {formatCurrency(accountRules.profitTarget)}
+                        </span>
+                      </div>
+                      {/* Règle 2: Drawdown maximum */}
+                      <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-slate-50/50 dark:bg-[#1e293b]/50 border border-slate-200/50 dark:border-[#1e293b]/50">
+                        <span className="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+                          Drawdown max
+                        </span>
+                        <span className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-slate-100 ml-2 shrink-0">
+                          {formatCurrency(accountRules.maxDrawdown)}
+                        </span>
+                      </div>
+                      {/* Règle 3: Perte journalière max (si différente du drawdown) */}
+                      {showDailyLossLimit && (
+                        <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-slate-50/50 dark:bg-[#1e293b]/50 border border-slate-200/50 dark:border-[#1e293b]/50">
+                          <span className="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+                            Perte journalière max
+                          </span>
+                          <span className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-slate-100 ml-2 shrink-0">
+                            {formatCurrency(accountRules.dailyLossLimit)}
+                          </span>
+                        </div>
+                      )}
+                      {/* Règle 4: Règle de cohérence (si applicable) */}
+                      {accountRules.consistencyRule > 0 && (
+                        <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-slate-50/50 dark:bg-[#1e293b]/50 border border-slate-200/50 dark:border-[#1e293b]/50">
+                          <span className="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+                            Cohérence
+                          </span>
+                          <span className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-slate-100 ml-2 shrink-0">
+                            {accountRules.consistencyRule}%
+                          </span>
+                        </div>
+                      )}
+                      {/* Règle 5: Jours de trading minimum (si applicable) */}
+                      {accountRules.minTradingDays && accountRules.minTradingDays > 0 && (
+                        <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-slate-50/50 dark:bg-[#1e293b]/50 border border-slate-200/50 dark:border-[#1e293b]/50">
+                          <span className="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+                            Jours min
+                          </span>
+                          <span className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-slate-100 ml-2 shrink-0">
+                            {accountRules.minTradingDays}
+                          </span>
+                        </div>
+                      )}
+                    </>
+                  )}
+
+                  {/* ===== RÈGLES DE RETRAIT (COMPTES FINANCÉS) ===== */}
+                  {account.accountType === "FUNDED" && withdrawalRules && (
+                    <>
+                      {/* Règle 1: Taxe sur les retraits */}
+                      <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-slate-50/50 dark:bg-[#1e293b]/50 border border-slate-200/50 dark:border-[#1e293b]/50">
+                        <span className="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+                          Taxe
+                        </span>
+                        <span className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-slate-100 ml-2 shrink-0">
+                          {Math.round(withdrawalRules.taxRate * 100)}%
+                        </span>
+                      </div>
+                      {/* Règles de cycles (si requis) */}
+                      {withdrawalRules.requiresCycles && withdrawalRules.cycleRequirements && (
+                        <>
+                          {/* Règle 2: Cycles requis */}
+                          <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-slate-50/50 dark:bg-[#1e293b]/50 border border-slate-200/50 dark:border-[#1e293b]/50">
+                            <span className="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+                              Cycles requis
+                            </span>
+                            <span className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-slate-100 ml-2 shrink-0">
+                              {withdrawalRules.cycleRequirements.daysPerCycle} jours
+                            </span>
+                          </div>
+                          {/* Règle 3: PnL minimum par jour (si requis) */}
+                          {withdrawalRules.cycleRequirements.minDailyProfit > 0 && (
+                            <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-slate-50/50 dark:bg-[#1e293b]/50 border border-slate-200/50 dark:border-[#1e293b]/50">
+                              <span className="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+                                PnL min/jour
+                              </span>
+                              <span className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-slate-100 ml-2 shrink-0">
+                                {formatCurrency(withdrawalRules.cycleRequirements.minDailyProfit)}
+                              </span>
+                            </div>
+                          )}
+                        </>
+                      )}
+                      {/* Règle 4: Buffer requis (si applicable) */}
+                      {withdrawalRules.hasBuffer && (
+                        <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-slate-50/50 dark:bg-[#1e293b]/50 border border-slate-200/50 dark:border-[#1e293b]/50">
+                          <span className="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+                            Buffer requis
+                          </span>
+                          <span className="text-xs sm:text-sm font-semibold text-green-600 dark:text-green-500 ml-2 shrink-0">
+                            Oui
+                          </span>
+                        </div>
+                      )}
+                      {/* Règle 5: Retrait libre (si pas de cycles ni buffer) */}
+                      {!withdrawalRules.requiresCycles && !withdrawalRules.hasBuffer && (
+                        <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-slate-50/50 dark:bg-[#1e293b]/50 border border-slate-200/50 dark:border-[#1e293b]/50">
+                          <span className="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+                            Retrait
+                          </span>
+                          <span className="text-xs sm:text-sm font-semibold text-green-600 dark:text-green-500 ml-2 shrink-0">
+                            Libre
+                          </span>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              </div>
+            )
+          })()}
         </div>
       </section>
 
-      {/* Règles de validation */}
+      {/* ============================================
+          SECTION 3: RÈGLES DE VALIDATION (COMPTES ÉVALUATION)
+          ============================================ */}
       {account.accountType === "EVAL" && (
-        <section className="rounded-2xl border border-zinc-200/70 dark:border-zinc-800/70 bg-white/85 dark:bg-zinc-950/70 backdrop-blur-sm shadow-sm">
-          <AccountRulesTracker
-            accountSize={account.size}
-            accountType={account.accountType}
-            propfirm={account.propfirm}
-            pnlEntries={account.pnlEntries}
-            onEligibilityChange={setIsEligibleForValidation}
-          />
+        <section className="rounded-2xl border border-slate-200/70 dark:border-[#1e293b]/70 bg-white/85 dark:bg-[#151b2e]/90 backdrop-blur-sm shadow-sm">
+          <button
+            onClick={() => setIsRulesOpen(!isRulesOpen)}
+            className="w-full px-4 sm:px-5 lg:px-6 py-3 sm:py-4 border-b border-slate-200/50 dark:border-[#1e293b]/30 hover:bg-slate-50/50 dark:hover:bg-[#1e293b]/50 transition-colors"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 flex-1 text-left">
+                <h2 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                  <Target className="h-4 w-4 sm:h-5 sm:w-5" />
+                  Règles de validation
+                </h2>
+              </div>
+              <div className="flex items-center gap-2">
+                <Info className="h-4 w-4 text-zinc-400" />
+                {isEligibleForValidation && (
+                  <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-green-100 dark:bg-green-900/30">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-green-600 dark:text-green-500" />
+                    <span className="text-xs font-medium text-green-600 dark:text-green-500">
+                      Éligible
+                    </span>
+                  </div>
+                )}
+                {isRulesOpen ? (
+                  <ChevronUp className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600 dark:text-slate-300" />
+                ) : (
+                  <ChevronDown className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600 dark:text-slate-300" />
+                )}
+              </div>
+            </div>
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-1 text-left">
+              Suivez votre progression pour valider votre compte
+            </p>
+          </button>
+          {isRulesOpen && (
+            <div className="p-4 sm:p-6">
+              <AccountRulesTracker
+                accountSize={account.size}
+                accountType={account.accountType}
+                propfirm={account.propfirm}
+                pnlEntries={account.pnlEntries}
+                onEligibilityChange={setIsEligibleForValidation}
+              />
+            </div>
+          )}
         </section>
       )}
 
-      {/* Tableau de bord Phidias pour comptes financés */}
+      {/* ============================================
+          SECTION 4: TRACKERS SPÉCIFIQUES PAR PROPFIRM
+          ============================================ */}
+
+      {/* Tableau de bord Phidias (comptes financés uniquement) */}
       {account.accountType === "FUNDED" && account.propfirm === "PHIDIAS" && (
-        <section className="rounded-2xl border border-zinc-200/70 dark:border-zinc-800/70 bg-white/85 dark:bg-zinc-950/70 backdrop-blur-sm shadow-sm">
+        <section className="rounded-2xl border border-slate-200/70 dark:border-[#1e293b]/70 bg-white/85 dark:bg-[#151b2e]/90 backdrop-blur-sm shadow-sm">
           <PhidiasFundedTracker
             accountSize={account.size}
             accountType={account.accountType}
@@ -534,255 +843,181 @@ export default function AccountDetailPage() {
         </section>
       )}
 
-      {/* Cycles de trading pour autres comptes financés */}
+      {/* Cycles de trading (comptes financés sauf Apex et Phidias) */}
       {account.accountType === "FUNDED" &&
         account.propfirm !== "APEX" &&
         account.propfirm !== "PHIDIAS" && (
-          <section className="rounded-2xl border border-zinc-200/70 dark:border-zinc-800/70 bg-white/85 dark:bg-zinc-950/70 backdrop-blur-sm shadow-sm">
-            <TradingCyclesTracker
-              pnlEntries={account.pnlEntries}
-              withdrawals={account.withdrawals}
-              accountSize={account.size}
-              propfirm={account.propfirm}
-              maxDrawdown={getMaxDrawdown(account.propfirm, account.size)}
-              accountType={account.accountType}
-              accountName={account.name}
-              notes={account.notes}
-            />
-          </section>
+          <TradingCyclesTracker
+            pnlEntries={account.pnlEntries}
+            withdrawals={account.withdrawals}
+            accountSize={account.size}
+            propfirm={account.propfirm}
+            maxDrawdown={getMaxDrawdown(account.propfirm, account.size)}
+            accountType={account.accountType}
+            accountName={account.name}
+            notes={account.notes}
+          />
         )}
 
-      {/* Règles PA pour comptes financés Apex */}
+      {/* Règles PA (comptes financés Apex uniquement) */}
       {account.accountType === "FUNDED" && account.propfirm === "APEX" && (
-        <section className="rounded-2xl border border-zinc-200/70 dark:border-zinc-800/70 bg-white/85 dark:bg-zinc-950/70 backdrop-blur-sm shadow-sm">
+        <section className="rounded-2xl border border-slate-200/70 dark:border-[#1e293b]/70 bg-white/85 dark:bg-[#151b2e]/90 backdrop-blur-sm shadow-sm">
           <ApexPaRulesTracker accountSize={account.size} pnlEntries={account.pnlEntries} />
         </section>
       )}
 
-      {/* Historique PnL et Retraits */}
-      <div
-        className={`grid gap-4 sm:gap-6 ${account.accountType === "EVAL" ? "md:grid-cols-1" : "md:grid-cols-2"}`}
-      >
-        {/* Historique PnL */}
-        <section className="rounded-2xl border border-zinc-200/70 dark:border-zinc-800/70 bg-white/85 dark:bg-zinc-950/70 backdrop-blur-sm shadow-sm">
-          <div className="px-5 sm:px-6 py-4 border-b border-zinc-200/70 dark:border-zinc-800/70 flex items-center justify-between gap-4">
-            <div>
-              <h2 className="text-xs sm:text-sm md:text-base font-semibold text-zinc-900 dark:text-zinc-50">
-                Historique PnL
+      {/* ============================================
+          SECTION 5: STATISTIQUES DE TRADING
+          ============================================ */}
+
+      {/* Statistiques de Trading */}
+      <section className="rounded-2xl border border-slate-200/70 dark:border-[#1e293b]/70 bg-white/85 dark:bg-[#151b2e]/90 backdrop-blur-sm shadow-sm">
+        <button
+          onClick={() => setIsTradingStatsOpen(!isTradingStatsOpen)}
+          className="w-full px-4 sm:px-5 lg:px-6 py-3 sm:py-4 border-b border-slate-200/70 dark:border-[#1e293b]/70 hover:bg-slate-50/50 dark:hover:bg-[#1e293b]/50 transition-colors"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 flex-1 text-left">
+              <h2 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5" />
+                Statistiques de Trading
               </h2>
-              <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 mt-0.5">
-                Les dernières entrées de profit et perte
-              </p>
             </div>
-            <Button
-              size="lg"
-              onClick={() => setPnlDialogOpen(true)}
-              disabled={account.status !== "ACTIVE"}
-              className="text-sm sm:text-base font-semibold h-11 sm:h-12"
-              title={
-                account.status !== "ACTIVE"
-                  ? "Impossible d'ajouter un PNL à un compte non actif"
-                  : ""
-              }
-            >
-              Ajouter
-            </Button>
+            <div className="flex items-center gap-2">
+              <Info className="h-4 w-4 text-zinc-400" />
+              {isTradingStatsOpen ? (
+                <ChevronUp className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600 dark:text-slate-300" />
+              ) : (
+                <ChevronDown className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600 dark:text-slate-300" />
+              )}
+            </div>
           </div>
-          <div className="p-4 sm:p-5 lg:p-6">
-            {account.pnlEntries.length === 0 ? (
-              <p className="text-xs sm:text-sm text-zinc-500 text-center py-8">
-                Aucune entrée PnL pour le moment
-              </p>
-            ) : (
-              <div className="space-y-2 sm:space-y-3">
-                {account.pnlEntries
-                  .slice(0, 5)
-                  .map(
-                    (entry: {
-                      id: string
-                      date: string
-                      amount: number
-                      notes?: string | null
-                    }) => (
-                      <div
-                        key={entry.id}
-                        className="flex items-center justify-between gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg bg-zinc-50/50 dark:bg-zinc-900/50 border border-zinc-200/50 dark:border-zinc-800/50"
-                      >
-                        <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-                          <div
-                            className={`p-1.5 sm:p-2 rounded-lg shrink-0 ${entry.amount >= 0 ? "bg-green-100 dark:bg-green-900" : "bg-red-100 dark:bg-red-900"}`}
-                          >
-                            {entry.amount >= 0 ? (
-                              <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-600 dark:text-green-400" />
-                            ) : (
-                              <TrendingDown className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-red-600 dark:text-red-400" />
-                            )}
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-zinc-50">
-                              {format(new Date(entry.date), "d MMM yyyy", { locale: fr })}
-                            </p>
-                            {entry.notes && (
-                              <p className="text-[10px] sm:text-xs text-zinc-500 dark:text-zinc-400 mt-0.5 truncate">
-                                {entry.notes}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-                          <span
-                            className={`text-xs sm:text-sm md:text-base font-bold whitespace-nowrap ${entry.amount >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
-                          >
-                            {entry.amount >= 0 ? "+" : ""}
-                            {formatCurrency(entry.amount)}
-                          </span>
-                          <div className="flex gap-0.5 sm:gap-1">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => {
-                                setSelectedPnl({
-                                  id: entry.id,
-                                  date: entry.date,
-                                  amount: entry.amount,
-                                  notes: entry.notes || undefined,
-                                  accountId: account.id || "",
-                                })
-                                setPnlDialogOpen(true)
-                              }}
-                              className="h-7 w-7 sm:h-8 sm:w-8"
-                            >
-                              <Edit className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={async () => {
-                                if (confirm("Êtes-vous sûr de vouloir supprimer cette entrée ?")) {
-                                  try {
-                                    const res = await fetch(`/api/pnl/${entry.id}`, {
-                                      method: "DELETE",
-                                    })
-                                    if (!res.ok) throw new Error("Erreur lors de la suppression")
-                                    window.location.reload()
-                                  } catch (_error) {
-                                    alert("Erreur lors de la suppression de l'entrée PnL")
-                                  }
-                                }
-                              }}
-                              className="h-7 w-7 sm:h-8 sm:w-8"
-                            >
-                              <Trash2 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    )
-                  )}
-                {account.pnlEntries.length > 5 && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="w-full h-8 sm:h-9 text-xs sm:text-sm"
-                    onClick={() => router.push("/dashboard/pnl")}
-                  >
-                    Voir tout ({account.pnlEntries.length})
-                  </Button>
+          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-1 text-left">
+            Statistiques détaillées calculées à partir des trades importés depuis Project X ou
+            Tradovate
+          </p>
+        </button>
+        {isTradingStatsOpen && (
+          <div className="p-4 sm:p-6">
+            <TradingStatsComponent accountId={accountId} />
+          </div>
+        )}
+      </section>
+
+      {/* ============================================
+          SECTION 6: HISTORIQUES
+          ============================================ */}
+      <div className="space-y-4 sm:space-y-6">
+        {/* Historique PnL */}
+        <section className="rounded-2xl border border-slate-200/70 dark:border-[#1e293b]/70 bg-white/85 dark:bg-[#151b2e]/90 backdrop-blur-sm shadow-sm">
+          <button
+            onClick={() => setIsPnlHistoryOpen(!isPnlHistoryOpen)}
+            className="w-full px-4 sm:px-5 lg:px-6 py-3 sm:py-4 border-b border-slate-200/50 dark:border-[#1e293b]/30 hover:bg-slate-50/50 dark:hover:bg-[#1e293b]/50 transition-colors"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 flex-1 text-left">
+                <h2 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                  <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5" />
+                  Historique PnL
+                </h2>
+              </div>
+              <div className="flex items-center gap-2">
+                <Info className="h-4 w-4 text-zinc-400" />
+                {isPnlHistoryOpen ? (
+                  <ChevronUp className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600 dark:text-slate-300" />
+                ) : (
+                  <ChevronDown className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600 dark:text-slate-300" />
                 )}
               </div>
-            )}
-          </div>
-        </section>
-
-        {/* Historique Retraits - Seulement pour les comptes financés */}
-        {account.accountType !== "EVAL" && (
-          <section className="rounded-2xl border border-zinc-200/70 dark:border-zinc-800/70 bg-white/85 dark:bg-zinc-950/70 backdrop-blur-sm shadow-sm">
-            <div className="px-5 sm:px-6 py-4 border-b border-zinc-200/70 dark:border-zinc-800/70 flex items-center justify-between gap-4">
-              <div>
-                <h2 className="text-xs sm:text-sm md:text-base font-semibold text-zinc-900 dark:text-zinc-50">
-                  Historique Retraits
-                </h2>
-                <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 mt-0.5">
-                  Les derniers retraits effectués
-                </p>
-              </div>
-              <Button
-                size="lg"
-                onClick={() => setWithdrawalDialogOpen(true)}
-                className="text-sm sm:text-base font-semibold h-11 sm:h-12"
-              >
-                Ajouter
-              </Button>
             </div>
-            <div className="p-4 sm:p-5 lg:p-6">
-              {account.withdrawals.length === 0 ? (
-                <p className="text-xs sm:text-sm text-zinc-500 text-center py-8">
-                  Aucun retrait pour le moment
-                </p>
-              ) : (
-                <div className="space-y-2 sm:space-y-3">
-                  {account.withdrawals
-                    .slice(0, 5)
-                    .map(
-                      (withdrawal: {
-                        id: string
-                        date: string
-                        amount: number
-                        notes?: string | null
-                      }) => {
-                        // Calculer le montant net reçu (avec taxes pour TakeProfitTrader)
-                        const isTakeProfitTrader = account.propfirm === "TAKEPROFITTRADER"
-                        const netAmount = isTakeProfitTrader
-                          ? withdrawal.amount * 0.8
-                          : withdrawal.amount
-
-                        return (
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-1 text-left">
+              Les dernières entrées de profit et perte
+            </p>
+          </button>
+          {isPnlHistoryOpen && (
+            <div>
+              {/* Barre d'action avec bouton Ajouter */}
+              <div className="px-3 sm:px-4 md:px-5 lg:px-6 py-2.5 sm:py-3 md:py-4 border-b border-slate-200/70 dark:border-[#1e293b]/70 flex items-center justify-end">
+                <Button
+                  size="lg"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setPnlDialogOpen(true)
+                  }}
+                  disabled={account.status !== "ACTIVE"}
+                  className="w-full sm:w-auto text-sm sm:text-base font-semibold h-9 sm:h-10 px-3 sm:px-4"
+                  title={
+                    account.status !== "ACTIVE"
+                      ? "Impossible d'ajouter un PNL à un compte non actif"
+                      : ""
+                  }
+                >
+                  Ajouter
+                </Button>
+              </div>
+              {/* Liste des entrées PnL */}
+              <div className="p-3 sm:p-4 md:p-5 lg:p-6">
+                {account.pnlEntries.length === 0 ? (
+                  <p className="text-xs sm:text-sm text-zinc-500 text-center py-8">
+                    Aucune entrée PnL pour le moment
+                  </p>
+                ) : (
+                  <div className="space-y-2 sm:space-y-3">
+                    {/* Afficher les 5 dernières entrées */}
+                    {account.pnlEntries
+                      .slice(0, 5)
+                      .map(
+                        (entry: {
+                          id: string
+                          date: string
+                          amount: number
+                          notes?: string | null
+                        }) => (
                           <div
-                            key={withdrawal.id}
-                            className="flex items-center justify-between gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg bg-zinc-50/50 dark:bg-zinc-900/50 border border-zinc-200/50 dark:border-zinc-800/50"
+                            key={entry.id}
+                            className="flex items-center justify-between gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg bg-slate-50/50 dark:bg-[#1e293b]/50 border border-slate-200/50 dark:border-[#1e293b]/50"
                           >
                             <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-                              <div className="p-1.5 sm:p-2 rounded-lg bg-green-100 dark:bg-green-900 shrink-0">
-                                <DollarSign className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-600 dark:text-green-400" />
+                              <div
+                                className={`p-1.5 sm:p-2 rounded-lg shrink-0 ${entry.amount >= 0 ? "bg-green-100 dark:bg-green-900" : "bg-red-100 dark:bg-red-900"}`}
+                              >
+                                {entry.amount >= 0 ? (
+                                  <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-600 dark:text-green-500" />
+                                ) : (
+                                  <TrendingDown className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-red-600 dark:text-red-500" />
+                                )}
                               </div>
                               <div className="min-w-0 flex-1">
-                                <p className="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-zinc-50">
-                                  {format(new Date(withdrawal.date), "d MMM yyyy", { locale: fr })}
+                                <p className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-slate-100">
+                                  {format(new Date(entry.date), "d MMM yyyy", { locale: fr })}
                                 </p>
-                                {withdrawal.notes && (
-                                  <p className="text-[10px] sm:text-xs text-zinc-500 dark:text-zinc-400 mt-0.5 truncate">
-                                    {withdrawal.notes}
+                                {entry.notes && (
+                                  <p className="hidden sm:block text-[10px] sm:text-xs text-slate-500 dark:text-slate-300 mt-0.5 truncate">
+                                    {entry.notes}
                                   </p>
                                 )}
                               </div>
                             </div>
                             <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-                              <div className="text-right">
-                                <p className="text-xs sm:text-sm md:text-base font-bold text-green-600 dark:text-green-400 whitespace-nowrap">
-                                  {formatCurrency(withdrawal.amount)}
-                                </p>
-                                {isTakeProfitTrader && (
-                                  <p className="text-[10px] sm:text-xs text-orange-600 dark:text-orange-400 whitespace-nowrap">
-                                    Net: {formatCurrency(netAmount)} (20% taxe)
-                                  </p>
-                                )}
-                                <p className="text-[10px] sm:text-xs text-green-600 dark:text-green-400 whitespace-nowrap">
-                                  {formatCurrencyEUR(netAmount * USD_TO_EUR)}
-                                </p>
-                              </div>
+                              <span
+                                className={`text-sm sm:text-base font-bold whitespace-nowrap ${entry.amount >= 0 ? "text-green-600 dark:text-green-500" : "text-red-600 dark:text-red-500"}`}
+                              >
+                                {entry.amount >= 0 ? "+" : ""}
+                                {formatCurrency(entry.amount)}
+                              </span>
                               <div className="flex gap-0.5 sm:gap-1">
                                 <Button
                                   variant="ghost"
                                   size="icon"
                                   onClick={() => {
-                                    setSelectedWithdrawal({
-                                      id: withdrawal.id,
-                                      date: withdrawal.date,
-                                      amount: withdrawal.amount,
-                                      notes: withdrawal.notes || undefined,
+                                    setSelectedPnl({
+                                      id: entry.id,
+                                      date: entry.date,
+                                      amount: entry.amount,
+                                      notes: entry.notes || undefined,
                                       accountId: account.id || "",
                                     })
-                                    setWithdrawalDialogOpen(true)
+                                    setPnlDialogOpen(true)
                                   }}
                                   className="h-7 w-7 sm:h-8 sm:w-8"
                                 >
@@ -792,21 +1027,25 @@ export default function AccountDetailPage() {
                                   variant="ghost"
                                   size="icon"
                                   onClick={async () => {
-                                    if (
-                                      confirm("Êtes-vous sûr de vouloir supprimer ce retrait ?")
-                                    ) {
+                                    const confirmed = await confirm({
+                                      title: "Supprimer cette entrée PnL ?",
+                                      description: `Êtes-vous sûr de vouloir supprimer cette entrée PnL du ${format(new Date(entry.date), "dd/MM/yyyy", { locale: fr })} ?`,
+                                      confirmText: "Supprimer",
+                                      cancelText: "Annuler",
+                                      variant: "destructive",
+                                    })
+                                    if (confirmed) {
                                       try {
-                                        const res = await fetch(
-                                          `/api/withdrawals/${withdrawal.id}`,
-                                          {
-                                            method: "DELETE",
-                                          }
+                                        await deletePnl({ id: entry.id, accountId: account.id })
+
+                                        notification.showDelete("PnL supprimé avec succès", {
+                                          duration: 2500,
+                                        })
+                                      } catch (deleteError) {
+                                        notification.handleError(
+                                          deleteError,
+                                          "Erreur lors de la suppression"
                                         )
-                                        if (!res.ok)
-                                          throw new Error("Erreur lors de la suppression")
-                                        window.location.reload()
-                                      } catch (_error) {
-                                        alert("Erreur lors de la suppression du retrait")
                                       }
                                     }
                                   }}
@@ -818,179 +1057,192 @@ export default function AccountDetailPage() {
                             </div>
                           </div>
                         )
-                      }
+                      )}
+                    {account.pnlEntries.length > 5 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full h-8 sm:h-9 text-xs sm:text-sm"
+                        onClick={() => router.push("/dashboard/pnl")}
+                      >
+                        Voir tout ({account.pnlEntries.length})
+                      </Button>
                     )}
-                  {account.withdrawals.length > 5 && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="w-full h-8 sm:h-9 text-xs sm:text-sm"
-                      onClick={() => router.push("/dashboard/withdrawals")}
-                    >
-                      Voir tout ({account.withdrawals.length})
-                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </section>
+
+        {/* Historique Retraits (comptes financés uniquement) */}
+        {account.accountType !== "EVAL" && (
+          <section className="rounded-2xl border border-slate-200/70 dark:border-[#1e293b]/70 bg-white/85 dark:bg-[#151b2e]/90 backdrop-blur-sm shadow-sm">
+            <button
+              onClick={() => setIsWithdrawalHistoryOpen(!isWithdrawalHistoryOpen)}
+              className="w-full px-4 sm:px-5 lg:px-6 py-3 sm:py-4 border-b border-slate-200/50 dark:border-[#1e293b]/30 hover:bg-slate-50/50 dark:hover:bg-[#1e293b]/50 transition-colors"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 flex-1 text-left">
+                  <h2 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                    <DollarSign className="h-4 w-4 sm:h-5 sm:w-5" />
+                    Historique Retraits
+                  </h2>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Info className="h-4 w-4 text-zinc-400" />
+                  {isWithdrawalHistoryOpen ? (
+                    <ChevronUp className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600 dark:text-slate-300" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600 dark:text-slate-300" />
                   )}
                 </div>
-              )}
-            </div>
+              </div>
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-1 text-left">
+                Les derniers retraits effectués
+              </p>
+            </button>
+            {isWithdrawalHistoryOpen && (
+              <div>
+                {/* Barre d'action avec bouton Ajouter */}
+                <div className="px-4 sm:px-5 lg:px-6 py-3 sm:py-4 border-b border-slate-200/70 dark:border-[#1e293b]/70 flex items-center justify-end">
+                  <Button
+                    size="lg"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setWithdrawalDialogOpen(true)
+                    }}
+                    className="w-full sm:w-auto text-sm sm:text-base font-semibold h-9 sm:h-10 px-3 sm:px-4"
+                  >
+                    Ajouter
+                  </Button>
+                </div>
+                {/* Liste des retraits */}
+                <div className="p-4 sm:p-5 lg:p-6">
+                  {account.withdrawals.length === 0 ? (
+                    <p className="text-xs sm:text-sm text-zinc-500 text-center py-8">
+                      Aucun retrait pour le moment
+                    </p>
+                  ) : (
+                    <div className="space-y-2 sm:space-y-3">
+                      {/* Afficher les 5 derniers retraits */}
+                      {account.withdrawals
+                        .slice(0, 5)
+                        .map(
+                          (withdrawal: {
+                            id: string
+                            date: string
+                            amount: number
+                            notes?: string | null
+                          }) => {
+                            // Calculer le montant net reçu (avec taxes pour TakeProfitTrader)
+                            const isTakeProfitTrader = account.propfirm === "TAKEPROFITTRADER"
+                            const netAmount = isTakeProfitTrader
+                              ? withdrawal.amount * 0.8
+                              : withdrawal.amount
+
+                            return (
+                              <div
+                                key={withdrawal.id}
+                                className="flex items-center justify-between gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg bg-slate-50/50 dark:bg-[#1e293b]/50 border border-slate-200/50 dark:border-[#1e293b]/50"
+                              >
+                                <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                                  <div className="p-1.5 sm:p-2 rounded-lg bg-green-100 dark:bg-green-900 shrink-0">
+                                    <DollarSign className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-600 dark:text-green-500" />
+                                  </div>
+                                  <div className="min-w-0 flex-1">
+                                    <p className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-slate-100">
+                                      {format(new Date(withdrawal.date), "d MMM yyyy", {
+                                        locale: fr,
+                                      })}
+                                    </p>
+                                    {withdrawal.notes && (
+                                      <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-300 mt-0.5 truncate">
+                                        {withdrawal.notes}
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                                  <div className="text-right">
+                                    <p className="text-sm sm:text-base font-bold text-green-600 dark:text-green-500 whitespace-nowrap">
+                                      {formatCurrency(withdrawal.amount)}
+                                    </p>
+                                    {isTakeProfitTrader && (
+                                      <p className="text-[10px] sm:text-xs text-orange-600 dark:text-orange-500 whitespace-nowrap">
+                                        Net: {formatCurrency(netAmount)} (20% taxe)
+                                      </p>
+                                    )}
+                                    <p className="text-[10px] sm:text-xs text-green-600 dark:text-green-500 whitespace-nowrap">
+                                      {formatCurrencyEUR(netAmount * USD_TO_EUR)}
+                                    </p>
+                                  </div>
+                                  <div className="flex gap-0.5 sm:gap-1">
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => {
+                                        setSelectedWithdrawal({
+                                          id: withdrawal.id,
+                                          date: withdrawal.date,
+                                          amount: withdrawal.amount,
+                                          notes: withdrawal.notes || undefined,
+                                          accountId: account.id || "",
+                                        })
+                                        setWithdrawalDialogOpen(true)
+                                      }}
+                                      className="h-7 w-7 sm:h-8 sm:w-8"
+                                    >
+                                      <Edit className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => {
+                                        // Suppression silencieuse sans confirmation pour une meilleure UX
+                                        deleteWithdrawal({
+                                          id: withdrawal.id,
+                                          accountId: account.id,
+                                        })
+                                        // Le cache se met à jour automatiquement via l'événement WITHDRAWAL_DELETED
+                                      }}
+                                      className="h-7 w-7 sm:h-8 sm:w-8"
+                                    >
+                                      <Trash2 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                                    </Button>
+                                  </div>
+                                </div>
+                              </div>
+                            )
+                          }
+                        )}
+                      {account.withdrawals.length > 5 && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="w-full h-8 sm:h-9 text-xs sm:text-sm"
+                          onClick={() => router.push("/dashboard/withdrawals")}
+                        >
+                          Voir tout ({account.withdrawals.length})
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </section>
         )}
       </div>
 
-      {/* Vue calendrier mensuelle */}
-      {account.pnlEntries.length > 0 && (
-        <section className="rounded-2xl border border-zinc-200/70 dark:border-zinc-800/70 bg-white/85 dark:bg-zinc-950/70 backdrop-blur-sm shadow-sm">
-          <MonthlyCalendar pnlEntries={account.pnlEntries} />
-        </section>
-      )}
+      {/* ============================================
+          SECTION 7: CALENDRIER MENSUEL
+          ============================================ */}
+      {account.pnlEntries.length > 0 && <MonthlyCalendar pnlEntries={account.pnlEntries} />}
 
-      {/* Récapitulatif des règles */}
-      {(() => {
-        const strategy = PropfirmStrategyFactory.getStrategy(account.propfirm)
-        const accountRules = strategy.getAccountRules(
-          account.size,
-          account.accountType,
-          account.name,
-          account.notes
-        )
-        const withdrawalRules = strategy.getWithdrawalRules(
-          account.size,
-          account.accountType,
-          account.name,
-          account.notes
-        )
-
-        // Ne pas afficher si pas de règles
-        if (!accountRules && account.accountType === "EVAL") return null
-        if (account.accountType === "FUNDED" && !withdrawalRules) return null
-
-        // Ne pas afficher dailyLossLimit si égal au maxDrawdown (redondant)
-        const showDailyLossLimit =
-          accountRules &&
-          accountRules.dailyLossLimit > 0 &&
-          accountRules.dailyLossLimit !== accountRules.maxDrawdown
-
-        return (
-          <section className="rounded-2xl border border-zinc-200/70 dark:border-zinc-800/70 bg-white/85 dark:bg-zinc-950/70 backdrop-blur-sm shadow-sm">
-            <div className="px-4 sm:px-5 py-3 sm:py-4">
-              <h3 className="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-zinc-50 mb-3 sm:mb-4">
-                Récapitulatif des règles
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
-                {/* Règles du compte */}
-                {accountRules && account.accountType === "EVAL" && (
-                  <>
-                    <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-zinc-50/50 dark:bg-zinc-900/50 border border-zinc-200/50 dark:border-zinc-800/50">
-                      <span className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400">
-                        Objectif de profit
-                      </span>
-                      <span className="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-zinc-50 ml-2 shrink-0">
-                        {formatCurrency(accountRules.profitTarget)}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-zinc-50/50 dark:bg-zinc-900/50 border border-zinc-200/50 dark:border-zinc-800/50">
-                      <span className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400">
-                        Drawdown max
-                      </span>
-                      <span className="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-zinc-50 ml-2 shrink-0">
-                        {formatCurrency(accountRules.maxDrawdown)}
-                      </span>
-                    </div>
-                    {showDailyLossLimit && (
-                      <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-zinc-50/50 dark:bg-zinc-900/50 border border-zinc-200/50 dark:border-zinc-800/50">
-                        <span className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400">
-                          Perte journalière max
-                        </span>
-                        <span className="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-zinc-50 ml-2 shrink-0">
-                          {formatCurrency(accountRules.dailyLossLimit)}
-                        </span>
-                      </div>
-                    )}
-                    {accountRules.consistencyRule > 0 && (
-                      <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-zinc-50/50 dark:bg-zinc-900/50 border border-zinc-200/50 dark:border-zinc-800/50">
-                        <span className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400">
-                          Cohérence
-                        </span>
-                        <span className="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-zinc-50 ml-2 shrink-0">
-                          {accountRules.consistencyRule}%
-                        </span>
-                      </div>
-                    )}
-                    {accountRules.minTradingDays && accountRules.minTradingDays > 0 && (
-                      <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-zinc-50/50 dark:bg-zinc-900/50 border border-zinc-200/50 dark:border-zinc-800/50">
-                        <span className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400">
-                          Jours min
-                        </span>
-                        <span className="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-zinc-50 ml-2 shrink-0">
-                          {accountRules.minTradingDays}
-                        </span>
-                      </div>
-                    )}
-                  </>
-                )}
-
-                {/* Règles de retrait */}
-                {account.accountType === "FUNDED" && withdrawalRules && (
-                  <>
-                    <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-zinc-50/50 dark:bg-zinc-900/50 border border-zinc-200/50 dark:border-zinc-800/50">
-                      <span className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400">
-                        Taxe
-                      </span>
-                      <span className="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-zinc-50 ml-2 shrink-0">
-                        {Math.round(withdrawalRules.taxRate * 100)}%
-                      </span>
-                    </div>
-                    {withdrawalRules.requiresCycles && withdrawalRules.cycleRequirements && (
-                      <>
-                        <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-zinc-50/50 dark:bg-zinc-900/50 border border-zinc-200/50 dark:border-zinc-800/50">
-                          <span className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400">
-                            Cycles requis
-                          </span>
-                          <span className="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-zinc-50 ml-2 shrink-0">
-                            {withdrawalRules.cycleRequirements.daysPerCycle} jours
-                          </span>
-                        </div>
-                        {withdrawalRules.cycleRequirements.minDailyProfit > 0 && (
-                          <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-zinc-50/50 dark:bg-zinc-900/50 border border-zinc-200/50 dark:border-zinc-800/50">
-                            <span className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400">
-                              PnL min/jour
-                            </span>
-                            <span className="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-zinc-50 ml-2 shrink-0">
-                              {formatCurrency(withdrawalRules.cycleRequirements.minDailyProfit)}
-                            </span>
-                          </div>
-                        )}
-                      </>
-                    )}
-                    {withdrawalRules.hasBuffer && (
-                      <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-zinc-50/50 dark:bg-zinc-900/50 border border-zinc-200/50 dark:border-zinc-800/50">
-                        <span className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400">
-                          Buffer requis
-                        </span>
-                        <span className="text-xs sm:text-sm font-semibold text-green-600 dark:text-green-400 ml-2 shrink-0">
-                          Oui
-                        </span>
-                      </div>
-                    )}
-                    {!withdrawalRules.requiresCycles && !withdrawalRules.hasBuffer && (
-                      <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-zinc-50/50 dark:bg-zinc-900/50 border border-zinc-200/50 dark:border-zinc-800/50">
-                        <span className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400">
-                          Retrait
-                        </span>
-                        <span className="text-xs sm:text-sm font-semibold text-green-600 dark:text-green-400 ml-2 shrink-0">
-                          Libre
-                        </span>
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-            </div>
-          </section>
-        )
-      })()}
-
-      {/* Dialogs */}
+      {/* ============================================
+          SECTION 8: DIALOGS (MODALES)
+          ============================================ */}
       <AccountFormDialog
         open={editDialogOpen}
         onOpenChange={setEditDialogOpen}
@@ -1015,12 +1267,14 @@ export default function AccountDetailPage() {
             status: account.status,
           },
         ]}
+        disableMultipleMode={true}
         onSuccess={() => {
-          // Rafraîchir les données après modification/ajout
-          window.location.reload()
+          // L'événement PNL_CREATED sera émis par la mutation et déclenchera le rechargement
+          // Pas besoin de faire quoi que ce soit ici, l'écouteur d'événement s'en charge
         }}
       />
 
+      <ConfirmDialog />
       <WithdrawalFormDialog
         open={withdrawalDialogOpen}
         onOpenChange={(open) => {
@@ -1035,6 +1289,7 @@ export default function AccountDetailPage() {
             accountType: account.accountType,
             propfirm: account.propfirm,
             size: account.size,
+            status: account.status,
           },
         ]}
         onSuccess={() => {}}

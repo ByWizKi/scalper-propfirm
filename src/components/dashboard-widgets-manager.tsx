@@ -162,13 +162,13 @@ export function DashboardWidgetsManager({
   return (
     <div className="space-y-4 sm:space-y-6 md:space-y-8">
       {/* Header avec bouton de personnalisation */}
-      <section className="rounded-2xl border border-zinc-200/70 dark:border-zinc-800/70 bg-white/85 dark:bg-zinc-950/70 backdrop-blur-sm p-3 sm:p-4 md:p-5 shadow-sm">
+      <section className="rounded-2xl border border-slate-200 dark:border-[#1e293b] bg-white dark:bg-[#151b2e] backdrop-blur-sm p-3 sm:p-4 md:p-5 shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
           <div className="min-w-0 flex-1">
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-zinc-900 dark:text-zinc-50 truncate">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 dark:text-slate-50 truncate">
               Tableau de bord
             </h1>
-            <p className="text-xs sm:text-sm md:text-base text-zinc-600 dark:text-zinc-400 mt-1 sm:mt-2 truncate">
+            <p className="text-xs sm:text-sm md:text-base text-slate-600 dark:text-slate-300 mt-1 sm:mt-2 truncate">
               Vue d&apos;ensemble de vos comptes propfirm
             </p>
           </div>

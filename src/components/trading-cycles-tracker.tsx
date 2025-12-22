@@ -1,8 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { CheckCircle2, Calendar, DollarSign, TrendingUp, Info, Shield } from "lucide-react"
+import { Card, CardContent } from "@/components/ui/card"
+import { CheckCircle2, Calendar, DollarSign, TrendingUp, Info, Shield, ChevronDown, ChevronUp } from "lucide-react"
 import { getPhidiasAccountSubType } from "@/lib/phidias-account-type"
 import { PropfirmStrategyFactory } from "@/lib/strategies/propfirm-strategy.factory"
 
@@ -41,6 +41,8 @@ export function TradingCyclesTracker({
   accountName,
   notes
 }: TradingCyclesTrackerProps) {
+  const [isOpen, setIsOpen] = React.useState(false)
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("fr-FR", {
       style: "currency",
@@ -220,224 +222,276 @@ export function TradingCyclesTracker({
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
+    <Card className="rounded-2xl border border-slate-200/70 dark:border-[#1e293b]/70 bg-white/85 dark:bg-[#151b2e]/90 backdrop-blur-sm shadow-sm">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full px-4 sm:px-5 lg:px-6 py-3 sm:py-4 border-b border-zinc-200/50 dark:border-zinc-800/30 hover:bg-zinc-50/50 dark:hover:bg-zinc-900/50 transition-colors"
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 flex-1 text-left">
+            <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-zinc-600 dark:text-zinc-400 flex-shrink-0" />
+            <div>
+              <h3 className="text-sm sm:text-base font-semibold text-zinc-900 dark:text-zinc-50">
+                {title}
+              </h3>
+              <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 mt-0.5">
+                {description}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Info className="h-4 w-4 text-zinc-400" />
+            {isOpen ? (
+              <ChevronUp className="h-4 w-4 sm:h-5 sm:w-5 text-zinc-600 dark:text-zinc-400 flex-shrink-0" />
+            ) : (
+              <ChevronDown className="h-4 w-4 sm:h-5 sm:w-5 text-zinc-600 dark:text-zinc-400 flex-shrink-0" />
+            )}
+          </div>
+        </div>
+      </button>
+      {isOpen && (
+        <div className="p-4 sm:p-6">
+          <div className="space-y-6">
         {/* Résumé */}
         {(isTakeProfitTrader || (isPhidias && phidiasSubType === "LIVE") || (isPhidias && phidiasSubType === "CASH" && accountSize === 25000)) ? (
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
             {isTakeProfitTrader && (
-              <div className="bg-blue-50 dark:bg-blue-950 rounded-lg p-3 sm:p-4">
-                <div className="flex items-center gap-2 mb-1">
-                  <Shield className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-600 flex-shrink-0" />
-                  <p className="text-[10px] sm:text-xs text-zinc-600 dark:text-zinc-400 truncate">Buffer requis</p>
-                </div>
-                <p className="text-lg sm:text-xl lg:text-2xl font-bold text-blue-600 dark:text-blue-400 truncate">
-                  {formatCurrency(buffer)}
-                </p>
-                <p className="text-[10px] sm:text-xs text-zinc-500 mt-1 truncate">
-                  Balance initiale + DD
-                </p>
-              </div>
+              <Card className="rounded-2xl border border-slate-200/70 dark:border-[#1e293b]/70 bg-white/85 dark:bg-[#151b2e]/90 backdrop-blur-sm shadow-sm">
+                <CardContent className="p-3 sm:p-4 md:p-5 flex flex-col h-full">
+                  <div className="flex items-start justify-between gap-2 sm:gap-3 mb-2 sm:mb-3 flex-shrink-0">
+                    <h3 className="text-xs sm:text-sm font-semibold text-zinc-600 dark:text-zinc-400">Buffer requis</h3>
+                    <Shield className="h-4 w-4 sm:h-5 sm:w-5 text-zinc-500 dark:text-zinc-400 flex-shrink-0 mt-0.5" />
+                  </div>
+                  <div className="space-y-1 flex-1 flex flex-col justify-between">
+                    <div className="text-lg sm:text-xl md:text-2xl font-bold text-zinc-900 dark:text-zinc-50 break-words leading-tight truncate">
+                      {formatCurrency(buffer)}
+                    </div>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-auto">
+                      Balance initiale + DD
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
             )}
 
-            <div className="bg-green-50 dark:bg-green-950 rounded-lg p-3 sm:p-4">
-              <div className="flex items-center gap-2 mb-1">
-                <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-600 flex-shrink-0" />
-                <p className="text-[10px] sm:text-xs text-zinc-600 dark:text-zinc-400 truncate">Balance actuelle</p>
-              </div>
-              <p className="text-lg sm:text-xl lg:text-2xl font-bold text-green-600 dark:text-green-400 truncate">
-                {formatCurrency(currentBalance)}
-              </p>
-              {isTakeProfitTrader && (
-                <p className="text-[10px] sm:text-xs text-zinc-500 mt-1 truncate">
-                  {bufferReached ? "✓ Buffer atteint" : `Reste ${formatCurrency(buffer - currentBalance)}`}
-                </p>
-              )}
-              {isPhidias && phidiasSubType === "LIVE" && (
-                <p className="text-[10px] sm:text-xs text-zinc-500 mt-1 truncate">
-                  Solde min: {formatCurrency(accountSize + 100)}
-                </p>
-              )}
-            </div>
+            <Card className="rounded-2xl border border-slate-200/70 dark:border-[#1e293b]/70 bg-white/85 dark:bg-[#151b2e]/90 backdrop-blur-sm shadow-sm">
+              <CardContent className="p-3 sm:p-4 md:p-5 flex flex-col h-full">
+                <div className="flex items-start justify-between gap-2 sm:gap-3 mb-2 sm:mb-3 flex-shrink-0">
+                  <h3 className="text-xs sm:text-sm font-semibold text-zinc-600 dark:text-zinc-400">Balance actuelle</h3>
+                  <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-zinc-500 dark:text-zinc-400 flex-shrink-0 mt-0.5" />
+                </div>
+                <div className="space-y-1 flex-1 flex flex-col justify-between">
+                  <div className="text-lg sm:text-xl md:text-2xl font-bold text-zinc-900 dark:text-zinc-50 break-words leading-tight truncate">
+                    {formatCurrency(currentBalance)}
+                  </div>
+                  <div className="mt-auto">
+                    {isTakeProfitTrader && (
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                        {bufferReached ? "✓ Buffer atteint" : `Reste ${formatCurrency(buffer - currentBalance)}`}
+                      </p>
+                    )}
+                    {isPhidias && phidiasSubType === "LIVE" && (
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                        Solde min: {formatCurrency(accountSize + 100)}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
-            <div className="bg-purple-50 dark:bg-purple-950 rounded-lg p-3 sm:p-4">
-              <div className="flex items-center gap-2 mb-1">
-                <DollarSign className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-purple-600 flex-shrink-0" />
-                <p className="text-[10px] sm:text-xs text-zinc-600 dark:text-zinc-400 truncate">Disponible (net)</p>
-              </div>
-              <p className="text-lg sm:text-xl lg:text-2xl font-bold text-purple-600 dark:text-purple-400 truncate">
-                {formatCurrency(Math.max(0, availableForWithdrawal * (1 - taxRate)))}
-              </p>
-              <p className="text-[10px] sm:text-xs text-zinc-500 mt-1 truncate">
-                Après taxe de {Math.round(taxRate * 100)}%
-              </p>
-            </div>
+            <Card className="rounded-2xl border border-slate-200/70 dark:border-[#1e293b]/70 bg-white/85 dark:bg-[#151b2e]/90 backdrop-blur-sm shadow-sm">
+              <CardContent className="p-3 sm:p-4 md:p-5 flex flex-col h-full">
+                <div className="flex items-start justify-between gap-2 sm:gap-3 mb-2 sm:mb-3 flex-shrink-0">
+                  <h3 className="text-xs sm:text-sm font-semibold text-zinc-600 dark:text-zinc-400">Disponible (net)</h3>
+                  <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-zinc-500 dark:text-zinc-400 flex-shrink-0 mt-0.5" />
+                </div>
+                <div className="space-y-1 flex-1 flex flex-col justify-between">
+                  <div className="text-lg sm:text-xl md:text-2xl font-bold text-zinc-900 dark:text-zinc-50 break-words leading-tight truncate">
+                    {formatCurrency(Math.max(0, availableForWithdrawal * (1 - taxRate)))}
+                  </div>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-auto">
+                    Après taxe de {Math.round(taxRate * 100)}%
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         ) : (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-              <div className="bg-blue-50 dark:bg-blue-950 rounded-lg p-3 sm:p-4">
-                <div className="flex items-center gap-2 mb-1">
-                  <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-600 flex-shrink-0" />
-                  <p className="text-[10px] sm:text-xs text-zinc-600 dark:text-zinc-400 truncate">
-                    {isPhidias && phidiasSubType === "CASH" && accountSize !== 25000
-                      ? "Cycles complétés (10j)"
-                      : "Cycles complétés"}
-                  </p>
-                </div>
-                <p className="text-lg sm:text-xl lg:text-2xl font-bold text-blue-600 dark:text-blue-400">
-                  {completedCycles}
-                </p>
-                <p className="text-[10px] sm:text-xs text-zinc-500 mt-1 truncate">
-                  {isPhidias && phidiasSubType === "CASH" && accountSize !== 25000
-                    ? withdrawals.length < 3
-                      ? `${withdrawals.length}/3 premiers retraits`
-                      : "Une fois par mois"
-                    : lastWithdrawalDate
-                      ? "Depuis le dernier retrait"
-                      : "Total"}
-                </p>
-              </div>
+              <Card className="rounded-2xl border border-slate-200/70 dark:border-[#1e293b]/70 bg-white/85 dark:bg-[#151b2e]/90 backdrop-blur-sm shadow-sm">
+                <CardContent className="p-3 sm:p-4 md:p-5 flex flex-col h-full">
+                  <div className="flex items-start justify-between gap-2 sm:gap-3 mb-2 sm:mb-3 flex-shrink-0">
+                    <h3 className="text-xs sm:text-sm font-semibold text-zinc-600 dark:text-zinc-400">
+                      {isPhidias && phidiasSubType === "CASH" && accountSize !== 25000
+                        ? "Cycles complétés (10j)"
+                        : "Cycles complétés"}
+                    </h3>
+                    <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-zinc-500 dark:text-zinc-400 flex-shrink-0 mt-0.5" />
+                  </div>
+                  <div className="space-y-1 flex-1 flex flex-col justify-between">
+                    <div className="text-lg sm:text-xl md:text-2xl font-bold text-zinc-900 dark:text-zinc-50 break-words leading-tight">
+                      {completedCycles}
+                    </div>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-auto truncate">
+                      {isPhidias && phidiasSubType === "CASH" && accountSize !== 25000
+                        ? withdrawals.length < 3
+                          ? `${withdrawals.length}/3 premiers retraits`
+                          : "Une fois par mois"
+                        : lastWithdrawalDate
+                          ? "Depuis le dernier retrait"
+                          : "Total"}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
 
-              <div className="bg-green-50 dark:bg-green-950 rounded-lg p-3 sm:p-4">
-                <div className="flex items-center gap-2 mb-1">
-                  <DollarSign className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-600 flex-shrink-0" />
-                  <p className="text-[10px] sm:text-xs text-zinc-600 dark:text-zinc-400 truncate">Retraits effectués</p>
-                </div>
-                <p className="text-lg sm:text-xl lg:text-2xl font-bold text-green-600 dark:text-green-400 truncate">
-                  {formatCurrency(totalWithdrawals)}
-                </p>
-                <p className="text-[10px] sm:text-xs text-zinc-500 mt-1 truncate">
-                  {withdrawals.length} retrait{withdrawals.length > 1 ? "s" : ""}
-                </p>
-              </div>
+              <Card className="rounded-2xl border border-slate-200/70 dark:border-[#1e293b]/70 bg-white/85 dark:bg-[#151b2e]/90 backdrop-blur-sm shadow-sm">
+                <CardContent className="p-3 sm:p-4 md:p-5 flex flex-col h-full">
+                  <div className="flex items-start justify-between gap-2 sm:gap-3 mb-2 sm:mb-3 flex-shrink-0">
+                    <h3 className="text-xs sm:text-sm font-semibold text-zinc-600 dark:text-zinc-400">Retraits effectués</h3>
+                    <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-zinc-500 dark:text-zinc-400 flex-shrink-0 mt-0.5" />
+                  </div>
+                  <div className="space-y-1 flex-1 flex flex-col justify-between">
+                    <div className="text-lg sm:text-xl md:text-2xl font-bold text-zinc-900 dark:text-zinc-50 break-words leading-tight truncate">
+                      {formatCurrency(totalWithdrawals)}
+                    </div>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-auto truncate">
+                      {withdrawals.length} retrait{withdrawals.length > 1 ? "s" : ""}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
 
-              <div className="bg-purple-50 dark:bg-purple-950 rounded-lg p-3 sm:p-4">
-                <div className="flex items-center gap-2 mb-1">
-                  <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-purple-600 flex-shrink-0" />
-                  <p className="text-[10px] sm:text-xs text-zinc-600 dark:text-zinc-400 truncate">Retrait disponible</p>
-                </div>
-                <p className="text-lg sm:text-xl lg:text-2xl font-bold text-purple-600 dark:text-purple-400 truncate">
-                  {formatCurrency(Math.max(0, availableForWithdrawal))}
-                </p>
-                <p className="text-[10px] sm:text-xs text-zinc-500 mt-1 truncate">
-                  {completedCycles > 0 ? "Cycle complété ✓" : "Complétez un cycle"}
-                </p>
-              </div>
+              <Card className="rounded-2xl border border-slate-200/70 dark:border-[#1e293b]/70 bg-white/85 dark:bg-[#151b2e]/90 backdrop-blur-sm shadow-sm">
+                <CardContent className="p-3 sm:p-4 md:p-5 flex flex-col h-full">
+                  <div className="flex items-start justify-between gap-2 sm:gap-3 mb-2 sm:mb-3 flex-shrink-0">
+                    <h3 className="text-xs sm:text-sm font-semibold text-zinc-600 dark:text-zinc-400">Retrait disponible</h3>
+                    <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-zinc-500 dark:text-zinc-400 flex-shrink-0 mt-0.5" />
+                  </div>
+                  <div className="space-y-1 flex-1 flex flex-col justify-between">
+                    <div className="text-lg sm:text-xl md:text-2xl font-bold text-zinc-900 dark:text-zinc-50 break-words leading-tight truncate">
+                      {formatCurrency(Math.max(0, availableForWithdrawal))}
+                    </div>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-auto truncate">
+                      {completedCycles > 0 ? "Cycle complété ✓" : "Complétez un cycle"}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
 
             {/* Message si dernier retrait */}
             {lastWithdrawalDate && (
-              <div className="mt-3 p-2 sm:p-3 bg-orange-50 dark:bg-orange-950 rounded-lg border border-orange-200 dark:border-orange-800">
-                <p className="text-[10px] sm:text-xs text-orange-800 dark:text-orange-200">
-                  <span className="font-medium">Dernier retrait :</span> {new Date(lastWithdrawalDate).toLocaleDateString("fr-FR")}
-                  {" • "}Le cycle a été réinitialisé
-                </p>
-              </div>
+              <Card className="mt-3 rounded-2xl border border-zinc-200/70 dark:border-zinc-800/70 bg-white/85 dark:bg-zinc-950/70 backdrop-blur-sm shadow-sm">
+                <CardContent className="p-2 sm:p-3">
+                  <p className="text-[10px] sm:text-xs text-zinc-600 dark:text-zinc-400">
+                    <span className="font-medium">Dernier retrait :</span> {new Date(lastWithdrawalDate).toLocaleDateString("fr-FR")}
+                    {" • "}Le cycle a été réinitialisé
+                  </p>
+                </CardContent>
+              </Card>
             )}
           </>
         )}
 
         {/* Règles de retrait */}
-        <div className="border-t border-zinc-200 dark:border-zinc-800 pt-3 sm:pt-4">
+        <div className="border-t border-zinc-200/70 dark:border-zinc-800/70 pt-3 sm:pt-4">
           <div className="flex items-start gap-2 mb-2 sm:mb-3">
-            <Info className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+            <Info className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-zinc-600 dark:text-zinc-400 mt-0.5 flex-shrink-0" />
             <div className="flex-1 min-w-0">
-              <p className="text-xs sm:text-sm font-medium text-zinc-900 dark:text-zinc-100 mb-1 sm:mb-2">
+              <p className="text-xs sm:text-sm font-medium text-zinc-900 dark:text-zinc-50 mb-1 sm:mb-2">
                 Règles de retrait
               </p>
               {isPhidias && phidiasSubType === "CASH" && accountSize === 25000 ? (
                 <ul className="space-y-1 text-[10px] sm:text-xs text-zinc-600 dark:text-zinc-400">
                   <li className="flex items-start gap-2">
-                    <span className="text-blue-600 mt-0.5 flex-shrink-0">•</span>
+                    <span className="text-zinc-400 dark:text-zinc-500 mt-0.5 flex-shrink-0">•</span>
                     <span className="break-words">Retrait possible dès J+1 du compte CASH</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-blue-600 mt-0.5 flex-shrink-0">•</span>
+                    <span className="text-zinc-400 dark:text-zinc-500 mt-0.5 flex-shrink-0">•</span>
                     <span className="break-words">Pas de restriction de période, pas de minimum de montant</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-blue-600 mt-0.5 flex-shrink-0">•</span>
+                    <span className="text-zinc-400 dark:text-zinc-500 mt-0.5 flex-shrink-0">•</span>
                     <span className="break-words">Taxe de 20% : si vous retirez $100, vous recevez $80</span>
                   </li>
                 </ul>
               ) : isPhidias && phidiasSubType === "CASH" && accountSize !== 25000 ? (
                 <ul className="space-y-1 text-[10px] sm:text-xs text-zinc-600 dark:text-zinc-400">
                   <li className="flex items-start gap-2">
-                    <span className="text-blue-600 mt-0.5 flex-shrink-0">•</span>
+                    <span className="text-zinc-400 dark:text-zinc-500 mt-0.5 flex-shrink-0">•</span>
                     <span className="break-words">Un cycle = 10 jours de trading avec PnL positif ≥ {formatCurrency(minDailyProfit)} par jour</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-blue-600 mt-0.5 flex-shrink-0">•</span>
+                    <span className="text-zinc-400 dark:text-zinc-500 mt-0.5 flex-shrink-0">•</span>
                     <span className="break-words">Minimum 10 jours de trading pour les 3 premiers retraits</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-blue-600 mt-0.5 flex-shrink-0">•</span>
+                    <span className="text-zinc-400 dark:text-zinc-500 mt-0.5 flex-shrink-0">•</span>
                     <span className="break-words">Après les 3 premiers retraits : une demande par mois</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-blue-600 mt-0.5 flex-shrink-0">•</span>
+                    <span className="text-zinc-400 dark:text-zinc-500 mt-0.5 flex-shrink-0">•</span>
                     <span className="break-words">Seuil minimum requis : {accountSize === 50000 ? "52 600$" : accountSize === 100000 ? "103 700$" : "154 500$"}</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-blue-600 mt-0.5 flex-shrink-0">•</span>
+                    <span className="text-zinc-400 dark:text-zinc-500 mt-0.5 flex-shrink-0">•</span>
                     <span className="break-words">Montant max par période : {accountSize === 50000 ? "2 000$" : accountSize === 100000 ? "2 500$" : "2 750$"}</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-blue-600 mt-0.5 flex-shrink-0">•</span>
+                    <span className="text-zinc-400 dark:text-zinc-500 mt-0.5 flex-shrink-0">•</span>
                     <span className="break-words">Taxe de 20% sur tous les retraits</span>
                   </li>
                 </ul>
               ) : isPhidias && phidiasSubType === "LIVE" ? (
                 <ul className="space-y-1 text-[10px] sm:text-xs text-zinc-600 dark:text-zinc-400">
                   <li className="flex items-start gap-2">
-                    <span className="text-blue-600 mt-0.5 flex-shrink-0">•</span>
+                    <span className="text-zinc-400 dark:text-zinc-500 mt-0.5 flex-shrink-0">•</span>
                     <span className="break-words">Payout possible chaque jour sans limite maximum</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-blue-600 mt-0.5 flex-shrink-0">•</span>
+                    <span className="text-zinc-400 dark:text-zinc-500 mt-0.5 flex-shrink-0">•</span>
                     <span className="break-words">Minimum 500$ par retrait</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-blue-600 mt-0.5 flex-shrink-0">•</span>
+                    <span className="text-zinc-400 dark:text-zinc-500 mt-0.5 flex-shrink-0">•</span>
                     <span className="break-words">Solde minimum : solde initial ({formatCurrency(accountSize)}) + 100$</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-blue-600 mt-0.5 flex-shrink-0">•</span>
+                    <span className="text-zinc-400 dark:text-zinc-500 mt-0.5 flex-shrink-0">•</span>
                     <span className="break-words">Taxe de 20% : si vous retirez $100, vous recevez $80</span>
                   </li>
                 </ul>
               ) : isTakeProfitTrader ? (
                 <ul className="space-y-1 text-[10px] sm:text-xs text-zinc-600 dark:text-zinc-400">
                   <li className="flex items-start gap-2">
-                    <span className="text-blue-600 mt-0.5 flex-shrink-0">•</span>
+                    <span className="text-zinc-400 dark:text-zinc-500 mt-0.5 flex-shrink-0">•</span>
                     <span className="break-words">Buffer = Balance initiale ({formatCurrency(accountSize)}) + Drawdown max ({formatCurrency(maxDrawdown || 0)})</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-blue-600 mt-0.5 flex-shrink-0">•</span>
+                    <span className="text-zinc-400 dark:text-zinc-500 mt-0.5 flex-shrink-0">•</span>
                     <span className="break-words">Vous pouvez retirer tout montant au-dessus du buffer une fois qu&apos;il est atteint</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-blue-600 mt-0.5 flex-shrink-0">•</span>
+                    <span className="text-zinc-400 dark:text-zinc-500 mt-0.5 flex-shrink-0">•</span>
                     <span className="break-words">Taxe de 20% : si vous retirez $100, vous recevez $80 (le compte est débité de $100)</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-blue-600 mt-0.5 flex-shrink-0">•</span>
+                    <span className="text-zinc-400 dark:text-zinc-500 mt-0.5 flex-shrink-0">•</span>
                     <span className="break-words">Le montant affiché est déjà net de la taxe</span>
                   </li>
                 </ul>
               ) : (
                 <ul className="space-y-1 text-[10px] sm:text-xs text-zinc-600 dark:text-zinc-400">
                   <li className="flex items-start gap-2">
-                    <span className="text-blue-600 mt-0.5 flex-shrink-0">•</span>
+                    <span className="text-zinc-400 dark:text-zinc-500 mt-0.5 flex-shrink-0">•</span>
                     <span className="break-words">Un cycle = {daysPerCycle} jours consécutifs avec minimum {formatCurrency(minDailyProfit)} de profit par jour</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-blue-600 mt-0.5 flex-shrink-0">•</span>
+                    <span className="text-zinc-400 dark:text-zinc-500 mt-0.5 flex-shrink-0">•</span>
                     <span className="break-words">
                       {totalWithdrawals < 10000
                         ? "Avant $10,000 de retraits : 50% du PnL réalisé depuis le dernier retrait"
@@ -446,12 +500,12 @@ export function TradingCyclesTracker({
                     </span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-blue-600 mt-0.5 flex-shrink-0">•</span>
+                    <span className="text-zinc-400 dark:text-zinc-500 mt-0.5 flex-shrink-0">•</span>
                     <span className="break-words">Vous devez avoir au moins 1 cycle complété pour retirer</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-orange-600 mt-0.5 flex-shrink-0">•</span>
-                    <span className="font-medium text-orange-600 break-words">Chaque retrait réinitialise le cycle - vous ne pouvez faire qu&apos;un retrait par cycle</span>
+                    <span className="text-zinc-500 dark:text-zinc-400 mt-0.5 flex-shrink-0">•</span>
+                    <span className="font-medium text-zinc-600 dark:text-zinc-400 break-words">Chaque retrait réinitialise le cycle - vous ne pouvez faire qu&apos;un retrait par cycle</span>
                   </li>
                 </ul>
               )}
@@ -461,70 +515,74 @@ export function TradingCyclesTracker({
 
         {/* Cycle en cours - TopStep et Phidias CASH (50K+) uniquement */}
         {!isTakeProfitTrader && !(isPhidias && (phidiasSubType === "LIVE" || (phidiasSubType === "CASH" && accountSize === 25000))) && currentCycle.length > 0 && daysPerCycle > 0 && (
-          <div className="border-t border-zinc-200 dark:border-zinc-800 pt-4">
-            <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100 mb-3">
+          <div className="border-t border-zinc-200/70 dark:border-zinc-800/70 pt-4">
+            <p className="text-sm font-medium text-zinc-900 dark:text-zinc-50 mb-3">
               Cycle en cours {lastWithdrawalDate && "(depuis le dernier retrait)"}
             </p>
-            <div className="p-3 bg-blue-50 dark:bg-blue-950 rounded-lg">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-blue-600" />
-                  <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
-                    {currentCycle.length} / {daysPerCycle} jours
-                  </span>
+            <Card className="rounded-2xl border border-slate-200/70 dark:border-[#1e293b]/70 bg-white/85 dark:bg-[#151b2e]/90 backdrop-blur-sm shadow-sm">
+              <CardContent className="p-3">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-zinc-600 dark:text-zinc-400" />
+                    <span className="text-sm font-medium text-zinc-900 dark:text-zinc-50">
+                      {currentCycle.length} / {daysPerCycle} jours
+                    </span>
+                  </div>
+                  <div className="text-xs text-zinc-600 dark:text-zinc-400">
+                    {formatCurrency(currentCycle.reduce((sum, d) => sum + d.amount, 0))}
+                  </div>
                 </div>
-                <div className="text-xs text-blue-600 dark:text-blue-400">
-                  {formatCurrency(currentCycle.reduce((sum, d) => sum + d.amount, 0))}
+                <div className="flex gap-1">
+                  {Array.from({ length: daysPerCycle }, (_, i) => i + 1).map((day) => (
+                    <div
+                      key={day}
+                      className={`h-2 flex-1 rounded ${
+                        day <= currentCycle.length
+                          ? "bg-zinc-600 dark:bg-zinc-400"
+                          : "bg-zinc-200 dark:bg-zinc-700"
+                      }`}
+                    />
+                  ))}
                 </div>
-              </div>
-              <div className="flex gap-1">
-                {Array.from({ length: daysPerCycle }, (_, i) => i + 1).map((day) => (
-                  <div
-                    key={day}
-                    className={`h-2 flex-1 rounded ${
-                      day <= currentCycle.length
-                        ? "bg-blue-600"
-                        : "bg-zinc-200 dark:bg-zinc-700"
-                    }`}
-                  />
-                ))}
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           </div>
         )}
 
         {/* Liste des cycles complétés - TopStep et Phidias CASH (50K+) uniquement */}
         {!isTakeProfitTrader && !(isPhidias && (phidiasSubType === "LIVE" || (phidiasSubType === "CASH" && accountSize === 25000))) && cycles.length > 0 && (
-          <div className="border-t border-zinc-200 dark:border-zinc-800 pt-4">
-            <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100 mb-3">
+          <div className="border-t border-zinc-200/70 dark:border-zinc-800/70 pt-4">
+            <p className="text-sm font-medium text-zinc-900 dark:text-zinc-50 mb-3">
               {lastWithdrawalDate ? "Cycle complété (dernier retrait effectué)" : "Cycles complétés"}
             </p>
             <div className="space-y-2">
               {cycles.map((cycle, idx) => (
-                <div
+                <Card
                   key={idx}
-                  className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-950 rounded-lg"
+                  className="rounded-2xl border border-zinc-200/70 dark:border-zinc-800/70 bg-white/85 dark:bg-zinc-950/70 backdrop-blur-sm shadow-sm"
                 >
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-green-600" />
-                    <div>
-                      <p className="text-sm font-medium text-green-900 dark:text-green-100">
-                        Cycle {idx + 1}
+                  <CardContent className="p-3 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-500" />
+                      <div>
+                        <p className="text-sm font-medium text-zinc-900 dark:text-zinc-50">
+                          Cycle {idx + 1}
+                        </p>
+                        <p className="text-xs text-zinc-600 dark:text-zinc-400">
+                          {new Date(cycle.startDate).toLocaleDateString("fr-FR")} - {new Date(cycle.endDate).toLocaleDateString("fr-FR")}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-bold text-zinc-900 dark:text-zinc-50">
+                        {formatCurrency(cycle.days.reduce((sum, d) => sum + d.amount, 0))}
                       </p>
-                      <p className="text-xs text-green-600 dark:text-green-400">
-                        {new Date(cycle.startDate).toLocaleDateString("fr-FR")} - {new Date(cycle.endDate).toLocaleDateString("fr-FR")}
+                      <p className="text-xs text-zinc-600 dark:text-zinc-400">
+                        {daysPerCycle} jours
                       </p>
                     </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-bold text-green-600 dark:text-green-400">
-                      {formatCurrency(cycle.days.reduce((sum, d) => sum + d.amount, 0))}
-                    </p>
-                    <p className="text-xs text-green-600 dark:text-green-400">
-                      {daysPerCycle} jours
-                    </p>
-                  </div>
-                </div>
+                  </CardContent>
+                </Card>
               ))}
             </div>
           </div>
@@ -532,7 +590,7 @@ export function TradingCyclesTracker({
 
         {/* Message si pas de cycles - TopStep et Phidias CASH (50K+) uniquement */}
         {!isTakeProfitTrader && !(isPhidias && (phidiasSubType === "LIVE" || (phidiasSubType === "CASH" && accountSize === 25000))) && cycles.length === 0 && currentCycle.length === 0 && daysPerCycle > 0 && (
-          <div className="border-t border-zinc-200 dark:border-zinc-800 pt-4">
+          <div className="border-t border-zinc-200/70 dark:border-zinc-800/70 pt-4">
             <div className="text-center py-4">
               <Calendar className="h-12 w-12 text-zinc-400 mx-auto mb-2" />
               <p className="text-sm text-zinc-600 dark:text-zinc-400">
@@ -547,7 +605,9 @@ export function TradingCyclesTracker({
             </div>
           </div>
         )}
-      </CardContent>
+          </div>
+        </div>
+      )}
     </Card>
   )
 }

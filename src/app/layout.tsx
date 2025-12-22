@@ -1,20 +1,25 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
-import { Toaster } from "@/components/ui/toaster";
-import { RegisterServiceWorker } from "./register-sw";
+import type { Metadata, Viewport } from "next"
+import { Inter, JetBrains_Mono } from "next/font/google"
+import "./globals.css"
+import { NotificationProvider } from "@/components/notification-provider"
+import { RegisterServiceWorker } from "./register-sw"
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
-});
+  display: "swap",
+  preload: true,
+})
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-jetbrains-mono",
   subsets: ["latin"],
-});
+  display: "swap",
+  preload: true,
+})
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXTAUTH_URL || "http://localhost:3000"),
   title: {
     default: "Scalper Propfirm - Professional Trading Account Manager",
     template: "%s | Scalper Propfirm",
@@ -81,22 +86,23 @@ export const metadata: Metadata = {
       "Professional prop firm trading account management platform. Track your funded accounts, PnL, and withdrawals with ease.",
     images: ["/icon.svg"],
   },
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-    maximumScale: 5,
-  },
   verification: {
     // Ajouter vos codes de vérification Google/Bing ici
     // google: "votre-code-google",
     // yandex: "votre-code-yandex",
   },
-};
+}
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+}
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode;
+  children: React.ReactNode
 }>) {
   return (
     <html lang="en">
@@ -104,13 +110,11 @@ export default function RootLayout({
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
         <link rel="apple-touch-icon" href="/icon.svg" />
       </head>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <body className={`${inter.variable} ${jetbrainsMono.variable} antialiased`}>
         <RegisterServiceWorker />
         {children}
-        <Toaster />
+        <NotificationProvider />
       </body>
     </html>
-  );
+  )
 }

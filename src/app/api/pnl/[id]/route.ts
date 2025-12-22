@@ -51,6 +51,40 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     if (validation.data.amount !== undefined) updateData.amount = validation.data.amount
     if (validation.data.notes !== undefined) updateData.notes = validation.data.notes || null
 
+    // Vérifier les doublons si la date est modifiée
+    if (updateData.date) {
+      // Normaliser la date pour la comparaison (début de journée)
+      const normalizedDate = new Date(updateData.date)
+      normalizedDate.setHours(0, 0, 0, 0)
+      const endOfDay = new Date(normalizedDate)
+      endOfDay.setHours(23, 59, 59, 999)
+
+      // Vérifier s'il existe déjà un PnL pour ce compte et cette date (en excluant l'entrée actuelle)
+      const duplicateEntry = await prisma.pnlEntry.findFirst({
+        where: {
+          userId: session.user.id,
+          accountId: existingEntry.accountId,
+          date: {
+            gte: normalizedDate,
+            lte: endOfDay,
+          },
+          id: {
+            not: id, // Exclure l'entrée actuelle
+          },
+        },
+      })
+
+      if (duplicateEntry) {
+        return NextResponse.json(
+          {
+            message: "Une entrée PnL existe déjà pour ce compte à cette date",
+            error: "DUPLICATE_PNL_ENTRY",
+          },
+          { status: 409 }
+        )
+      }
+    }
+
     const pnlEntry = await prisma.pnlEntry.update({
       where: {
         id,
@@ -91,10 +125,32 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
         id,
         userId: session.user.id,
       },
+      include: {
+        trades: true,
+      },
     })
 
     if (!existingEntry) {
       return NextResponse.json({ message: "Entrée PnL non trouvée" }, { status: 404 })
+    }
+
+    // Supprimer les trades associés à cette entrée PnL si elle a été créée par import
+    // On détecte cela en vérifiant si des trades sont liés à cette entrée
+    if (existingEntry.trades && existingEntry.trades.length > 0) {
+      console.info(`[Delete PnL] Suppression de ${existingEntry.trades.length} trades associés`)
+
+      // Vérifier que prisma.trade est disponible
+      if (prisma.trade) {
+        await prisma.trade.deleteMany({
+          where: {
+            pnlEntryId: id,
+            userId: session.user.id,
+          },
+        })
+        console.info(`[Delete PnL] ✅ ${existingEntry.trades.length} trades supprimés`)
+      } else {
+        console.warn(`[Delete PnL] ⚠️  prisma.trade n'est pas disponible, les trades ne seront pas supprimés`)
+      }
     }
 
     await prisma.pnlEntry.delete({
