@@ -85,6 +85,33 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "Compte non trouvé" }, { status: 404 })
     }
 
+    // Vérifier les doublons : un seul PnL par compte et par date
+    const normalizedDate = new Date(date)
+    normalizedDate.setHours(0, 0, 0, 0)
+    const endOfDay = new Date(normalizedDate)
+    endOfDay.setHours(23, 59, 59, 999)
+
+    const duplicateEntry = await prisma.pnlEntry.findFirst({
+      where: {
+        userId: session.user.id,
+        accountId,
+        date: {
+          gte: normalizedDate,
+          lte: endOfDay,
+        },
+      },
+    })
+
+    if (duplicateEntry) {
+      return NextResponse.json(
+        {
+          message: "Une entrée PnL existe déjà pour ce compte à cette date",
+          error: "DUPLICATE_PNL_ENTRY",
+        },
+        { status: 409 }
+      )
+    }
+
     const pnlEntry = await prisma.pnlEntry.create({
       data: {
         userId: session.user.id,

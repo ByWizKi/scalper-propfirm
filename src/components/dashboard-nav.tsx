@@ -14,7 +14,7 @@ import {
   User,
   Menu,
   Calculator,
-  BarChart3,
+  Upload,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useState } from "react"
@@ -23,8 +23,8 @@ export const navigation = [
   { name: "Tableau de bord", href: "/dashboard", icon: LayoutDashboard },
   { name: "Comptes", href: "/dashboard/accounts", icon: Wallet },
   { name: "PnL", href: "/dashboard/pnl", icon: TrendingUp },
+  { name: "Import de trades", href: "/dashboard/trades/import", icon: Upload },
   { name: "Retraits", href: "/dashboard/withdrawals", icon: DollarSign },
-  { name: "Visualisations", href: "/dashboard/visualization", icon: BarChart3 },
   { name: "Calculateurs", href: "/dashboard/calculations", icon: Calculator },
   { name: "Profil", href: "/dashboard/profile", icon: User },
 ]
@@ -43,8 +43,8 @@ export function DashboardNav() {
   return (
     <>
       {/* Sidebar Desktop */}
-      <div className="hidden lg:flex h-screen w-64 flex-col border-r border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950">
-        <div className="flex h-16 items-center border-b border-zinc-200 px-6 dark:border-zinc-800">
+      <div className="hidden lg:flex h-screen w-64 flex-col border-r border-slate-200 bg-white dark:border-[#1e293b] dark:bg-[#151b2e]">
+        <div className="flex h-16 items-center border-b border-slate-200 px-6 dark:border-[#1e293b]">
           <h1 className="text-xl font-bold">Scalper Propfirm</h1>
         </div>
 

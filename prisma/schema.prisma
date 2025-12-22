@@ -32,6 +32,7 @@ model User {
   sessions         Session[]
   auditLogs        AuditLog[]
   customStats      CustomStat[]
+  trades           Trade[]
 
   @@map("users")
 }
@@ -71,24 +72,25 @@ model Session {
 // ========================================
 
 model PropfirmAccount {
-  id             String            @id @default(cuid())
-  userId         String
-  name           String
-  propfirm       PropfirmType
-  size           Int               // Taille du compte (ex: 50000)
-  accountType    AccountType       // eval ou funded
-  status         AccountStatus     @default(ACTIVE)
-  pricePaid      Float             // Prix payé en USD
-  linkedEvalId   String?           // ID de l'évaluation liée (si compte funded)
-  notes          String?
-  createdAt      DateTime          @default(now())
-  updatedAt      DateTime          @updatedAt
+  id           String        @id @default(cuid())
+  userId       String
+  name         String
+  propfirm     PropfirmType
+  size         Int // Taille du compte (ex: 50000)
+  accountType  AccountType // eval ou funded
+  status       AccountStatus @default(ACTIVE)
+  pricePaid    Float // Prix payé en USD
+  linkedEvalId String? // ID de l'évaluation liée (si compte funded)
+  notes        String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
 
   user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   linkedEval     PropfirmAccount?  @relation("FundedToEval", fields: [linkedEvalId], references: [id])
   fundedAccounts PropfirmAccount[] @relation("FundedToEval")
   pnlEntries     PnlEntry[]
   withdrawals    Withdrawal[]
+  trades         Trade[]
 
   @@index([userId])
   @@index([status])
@@ -123,17 +125,18 @@ enum AccountStatus {
 // ========================================
 
 model PnlEntry {
-  id        String          @id @default(cuid())
+  id        String   @id @default(cuid())
   userId    String
   accountId String
   date      DateTime
-  amount    Float           // Montant en USD
+  amount    Float // Montant en USD
   notes     String?
-  createdAt DateTime        @default(now())
-  updatedAt DateTime        @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  account   PropfirmAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  user    User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  account PropfirmAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  trades  Trade[] // Trades associés à cette entrée PnL (si importé)
 
   @@index([userId])
   @@index([accountId])
@@ -146,17 +149,17 @@ model PnlEntry {
 // ========================================
 
 model Withdrawal {
-  id        String          @id @default(cuid())
+  id        String   @id @default(cuid())
   userId    String
   accountId String
   date      DateTime
-  amount    Float           // Montant en USD
+  amount    Float // Montant en USD
   notes     String?
-  createdAt DateTime        @default(now())
-  updatedAt DateTime        @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  account   PropfirmAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  user    User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  account PropfirmAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([accountId])
@@ -226,9 +229,9 @@ model CustomStat {
   userId      String
   title       String
   description String?
-  formula     String   // Formule JavaScript simple (ex: "totalPnl / totalAccounts")
-  icon        String?  // Nom de l'icône Lucide
-  variant     String?  // "success", "danger", "neutral", etc.
+  formula     String // Formule JavaScript simple (ex: "totalPnl / totalAccounts")
+  icon        String? // Nom de l'icône Lucide
+  variant     String? // "success", "danger", "neutral", etc.
   enabled     Boolean  @default(true)
   order       Int      @default(0)
   createdAt   DateTime @default(now())
@@ -239,4 +242,45 @@ model CustomStat {
   @@index([userId])
   @@index([enabled])
   @@map("custom_stats")
+}
+
+// ========================================
+// TRADES (pour les imports CSV)
+// ========================================
+
+model Trade {
+  id         String  @id @default(cuid())
+  userId     String
+  accountId  String
+  pnlEntryId String? // Optionnel : lien vers l'entrée PnL si importé
+  platform   String // "PROJECT_X" ou "TRADOVATE"
+
+  // Données du trade
+  tradeId       String // ID du trade dans la plateforme
+  contractName  String // Ex: "MNQH6", "ES"
+  enteredAt     DateTime
+  exitedAt      DateTime
+  entryPrice    Float
+  exitPrice     Float
+  size          Float // Nombre de lots/contrats
+  type          String // "Long" ou "Short"
+  pnl           Float // PnL brut du trade
+  fees          Float // Fees du trade
+  commissions   Float? // Commissions optionnelles
+  tradeDay      DateTime // Jour de trading (peut différer de enteredAt)
+  tradeDuration Float? // Durée en secondes
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user     User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  account  PropfirmAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  pnlEntry PnlEntry?       @relation(fields: [pnlEntryId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([accountId])
+  @@index([pnlEntryId])
+  @@index([tradeDay])
+  @@index([platform])
+  @@map("trades")
 }

@@ -1,28 +1,175 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Nouvelle palette de couleurs - Mode clair */
+  --background: #fafbfc;
+  --foreground: #0f172a;
+
+  /* Couleurs primaires - Bleu/Violet moderne */
+  --primary: #6366f1;
+  --primary-foreground: #ffffff;
+  --primary-hover: #4f46e5;
+
+  /* Couleurs secondaires */
+  --secondary: #8b5cf6;
+  --secondary-foreground: #ffffff;
+
+  /* Couleurs d'accent */
+  --accent: #06b6d4;
+  --accent-foreground: #ffffff;
+
+  /* Couleurs de bordure */
+  --border: #e2e8f0;
+  --border-hover: #cbd5e1;
+
+  /* Couleurs de surface */
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+
+  /* Couleurs de statut */
+  --success: #10b981;
+  --success-foreground: #ffffff;
+  --warning: #f59e0b;
+  --warning-foreground: #ffffff;
+  --error: #ef4444;
+  --error-foreground: #ffffff;
+  --info: #3b82f6;
+  --info-foreground: #ffffff;
 }
 
 @theme inline {
+  /* Couleurs de base */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+
+  /* Couleurs primaires */
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-hover: var(--primary-hover);
+
+  /* Couleurs secondaires */
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+
+  /* Couleurs d'accent */
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  /* Couleurs de bordure */
+  --color-border: var(--border);
+  --color-border-hover: var(--border-hover);
+
+  /* Couleurs de surface */
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+
+  /* Couleurs de statut */
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-error: var(--error);
+  --color-error-foreground: var(--error-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+
+  /* Polices */
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-jetbrains-mono);
+
+  /* Palette étendue pour compatibilité avec les composants existants */
+  /* Slate (remplace zinc pour un look plus moderne) */
+  --color-slate-50: #f8fafc;
+  --color-slate-100: #f1f5f9;
+  --color-slate-200: #e2e8f0;
+  --color-slate-300: #cbd5e1;
+  --color-slate-400: #94a3b8;
+  --color-slate-500: #64748b;
+  --color-slate-600: #475569;
+  --color-slate-700: #334155;
+  --color-slate-800: #1e293b;
+  --color-slate-900: #0f172a;
+  --color-slate-950: #020617;
+
+  /* Indigo (pour les accents primaires) */
+  --color-indigo-50: #eef2ff;
+  --color-indigo-100: #e0e7ff;
+  --color-indigo-200: #c7d2fe;
+  --color-indigo-300: #a5b4fc;
+  --color-indigo-400: #818cf8;
+  --color-indigo-500: #6366f1;
+  --color-indigo-600: #4f46e5;
+  --color-indigo-700: #4338ca;
+  --color-indigo-800: #3730a3;
+  --color-indigo-900: #312e81;
+  --color-indigo-950: #1e1b4b;
+
+  /* Violet (pour les accents secondaires) */
+  --color-violet-50: #f5f3ff;
+  --color-violet-100: #ede9fe;
+  --color-violet-200: #ddd6fe;
+  --color-violet-300: #c4b5fd;
+  --color-violet-400: #a78bfa;
+  --color-violet-500: #8b5cf6;
+  --color-violet-600: #7c3aed;
+  --color-violet-700: #6d28d9;
+  --color-violet-800: #5b21b6;
+  --color-violet-900: #4c1d95;
+  --color-violet-950: #2e1065;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    /* Nouvelle palette de couleurs - Mode sombre moderne et élégant */
+    /* Fond principal - Bleu indigo très foncé avec teinte subtile */
+    --background: #0f1419;
+    --foreground: #e4e7eb;
+
+    /* Couleurs primaires - Violet indigo moderne */
+    --primary: #8b5cf6;
+    --primary-foreground: #ffffff;
+    --primary-hover: #a78bfa;
+
+    /* Couleurs secondaires - Indigo doux */
+    --secondary: #6366f1;
+    --secondary-foreground: #ffffff;
+
+    /* Couleurs d'accent - Cyan moderne */
+    --accent: #06b6d4;
+    --accent-foreground: #ffffff;
+
+    /* Couleurs de bordure - Bleu gris foncé */
+    --border: #1e293b;
+    --border-hover: #334155;
+
+    /* Couleurs de surface - Bleu indigo foncé avec teinte */
+    --card: #1a1f2e;
+    --card-foreground: #e4e7eb;
+    --muted: #1e293b;
+    --muted-foreground: #94a3b8;
+
+    /* Couleurs de statut - Vibrantes et harmonieuses */
+    --success: #10b981;
+    --success-foreground: #ffffff;
+    --warning: #f59e0b;
+    --warning-foreground: #ffffff;
+    --error: #ef4444;
+    --error-foreground: #ffffff;
+    --info: #3b82f6;
+    --info-foreground: #ffffff;
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  font-variation-settings: normal;
 }
 
 /* Scrollbar styling for horizontal scroll indicators */
@@ -42,20 +189,62 @@ body {
   border-radius: 4px;
 }
 
-.scrollbar-thumb-zinc-300::-webkit-scrollbar-thumb {
-  background-color: rgb(212 212 212);
+.scrollbar-thumb-slate-300::-webkit-scrollbar-thumb {
+  background-color: var(--color-slate-300);
 }
 
-.dark .scrollbar-thumb-zinc-700::-webkit-scrollbar-thumb {
-  background-color: rgb(63 63 70);
+.dark .scrollbar-thumb-slate-700::-webkit-scrollbar-thumb {
+  background-color: var(--color-slate-700);
 }
 
-.scrollbar-track-zinc-100::-webkit-scrollbar-track {
-  background-color: rgb(244 244 245);
+.scrollbar-track-slate-100::-webkit-scrollbar-track {
+  background-color: var(--color-slate-100);
 }
 
-.dark .scrollbar-track-zinc-900::-webkit-scrollbar-track {
-  background-color: rgb(24 24 27);
+.dark .scrollbar-track-slate-900::-webkit-scrollbar-track {
+  background-color: var(--color-slate-900);
+}
+
+/* Hide scrollbar on mobile */
+@media (max-width: 640px) {
+  .scrollbar-hide {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none; /* Chrome, Safari and Opera */
+  }
+
+  /* File input responsive fix */
+  input[type="file"] {
+    max-width: 100%;
+    overflow: hidden;
+  }
+
+  input[type="file"]::file-selector-button {
+    max-width: 40%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Hide empty Next.js portals */
+  nextjs-portal:empty,
+  nextjs-portal[style*="width: 0px"],
+  nextjs-portal[style*="height: 0px"] {
+    display: none !important;
+  }
+
+  /* Hide Next.js portals with absolute positioning and 0 dimensions */
+  nextjs-portal[style*="position: absolute"][style*="width: 0px"][style*="height: 0px"] {
+    display: none !important;
+  }
+}
+
+/* Hide empty Next.js portals globally */
+nextjs-portal:empty {
+  display: none !important;
 }
 
 /* Safe area support for iPhone notch and home indicator */
@@ -73,4 +262,74 @@ body {
 
 .safe-area-inset-right {
   padding-right: env(safe-area-inset-right);
+}
+
+/* Animations pour les notifications */
+@keyframes notification-in {
+  from {
+    transform: translateX(calc(100% + 1rem)) scale(0.9) rotateY(-15deg);
+    opacity: 0;
+    filter: blur(4px);
+  }
+  to {
+    transform: translateX(0) scale(1) rotateY(0deg);
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+
+@keyframes notification-out {
+  from {
+    transform: translateX(0) scale(1) rotateY(0deg);
+    opacity: 1;
+    filter: blur(0);
+  }
+  to {
+    transform: translateX(calc(100% + 1rem)) scale(0.9) rotateY(15deg);
+    opacity: 0;
+    filter: blur(4px);
+  }
+}
+
+@keyframes shine {
+  0% {
+    transform: translateX(-100%) skewX(-15deg);
+  }
+  100% {
+    transform: translateX(200%) skewX(-15deg);
+  }
+}
+
+@keyframes progress {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(59, 130, 246, 0.6);
+  }
+}
+
+.animate-notification-in {
+  animation: notification-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-notification-out {
+  animation: notification-out 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-shine {
+  animation: shine 2s ease-in-out infinite;
+}
+
+.animate-progress {
+  animation: progress linear forwards;
 }

@@ -6,9 +6,8 @@
 
 "use client"
 
-import { useState, useEffect, useCallback, useRef } from "react"
-import { useEvent } from "./use-event"
-import { AppEvents, EventDataMap } from "@/lib/events/event-bus"
+import { useState, useEffect, useCallback, useRef, useMemo } from "react"
+import { AppEvents, EventDataMap, eventBus } from "@/lib/events/event-bus"
 
 interface CacheOptions<T> {
   /**
@@ -53,26 +52,72 @@ export function useDataCache<T>(
 
   const isMountedRef = useRef(true)
   const refetchTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined)
+  const fetchDataRef = useRef<((force?: boolean, silent?: boolean) => Promise<void>) | null>(null)
+  const invalidateRef = useRef<((eventData?: any) => void) | null>(null)
 
   /**
    * Fonction pour fetch les données
    */
-  const fetchData = useCallback(async (force = false) => {
-    // Éviter les fetches multiples rapides
+  const fetchData = useCallback(async (force = false, silent = false) => {
+    console.log("[useDataCache] fetchData called - force:", force, "silent:", silent)
+    // Éviter les fetches multiples rapides (sauf si forcé ou silencieux)
+    // En mode silencieux, on force toujours le fetch pour mettre à jour l'affichage immédiatement
     const now = Date.now()
-    if (!force && now - lastFetchTime < 500) {
+    if (!force && !silent && now - lastFetchTime < 500) {
+      console.log("[useDataCache] Skipping fetch - too soon")
       return
     }
 
-    setIsLoading(true)
+    // Ne pas mettre isLoading à true lors des mises à jour silencieuses (évite le scroll vers le haut)
+    if (!silent) {
+      setIsLoading(true)
+    }
     setError(null)
 
     try {
+      console.log("[useDataCache] Fetching data...")
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/db8eeb53-5cb0-4ca6-b69a-c9171cec64a1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'use-data-cache.ts:76',message:'HYP-C: About to call fetchFn',data:{force,silent},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+      // #endregion
       const result = await fetchFn()
+      console.log("[useDataCache] Data fetched:", result)
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/db8eeb53-5cb0-4ca6-b69a-c9171cec64a1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'use-data-cache.ts:79',message:'HYP-C: fetchFn completed',data:{resultPnLEntriesCount:result?.pnlEntries?.length,resultId:result?.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+      // #endregion
 
       if (isMountedRef.current) {
-        setData(result)
+        console.log("[useDataCache] Setting data...")
+        // Utiliser la fonction de mise à jour de setState pour garantir que React détecte le changement
+        setData((prevData) => {
+          console.log("[useDataCache] setData callback - prevData:", prevData)
+          console.log("[useDataCache] setData callback - new result:", result)
+          // #region agent log
+          fetch('http://127.0.0.1:7242/ingest/db8eeb53-5cb0-4ca6-b69a-c9171cec64a1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'use-data-cache.ts:86',message:'HYP-D: setData callback called',data:{prevPnLEntriesCount:prevData?.pnlEntries?.length,newPnLEntriesCount:result?.pnlEntries?.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+          // #endregion
+
+          // Comparer les données pour voir si elles ont vraiment changé
+          const prevJson = JSON.stringify(prevData)
+          const newJson = JSON.stringify(result)
+          const hasChanged = prevJson !== newJson
+          console.log("[useDataCache] Data has changed:", hasChanged)
+          // #region agent log
+          fetch('http://127.0.0.1:7242/ingest/db8eeb53-5cb0-4ca6-b69a-c9171cec64a1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'use-data-cache.ts:92',message:'HYP-D: Data comparison',data:{hasChanged,prevPnLCount:prevData?.pnlEntries?.length,newPnLCount:result?.pnlEntries?.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+          // #endregion
+
+          if (!hasChanged) {
+            console.log("[useDataCache] Data is the same, but forcing update with new reference")
+            // Même si les données sont identiques, créer une nouvelle référence pour forcer le re-render
+            return result ? JSON.parse(JSON.stringify(result)) : result
+          }
+
+          // Les données ont changé, retourner le nouveau résultat
+          return result
+        })
         setLastFetchTime(Date.now())
+        console.log("[useDataCache] Data set successfully")
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/db8eeb53-5cb0-4ca6-b69a-c9171cec64a1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'use-data-cache.ts:103',message:'HYP-D: setData completed',data:{timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+        // #endregion
       }
     } catch (err) {
       if (isMountedRef.current) {
@@ -80,33 +125,60 @@ export function useDataCache<T>(
       }
     } finally {
       if (isMountedRef.current) {
-        setIsLoading(false)
+        if (!silent) {
+          setIsLoading(false)
+        }
       }
     }
   }, [fetchFn, lastFetchTime])
+
+  // Mettre à jour les références immédiatement (pas dans useEffect pour éviter les retards)
+  fetchDataRef.current = fetchData
 
   /**
    * Fonction pour invalider le cache et refetch
    */
   const invalidate = useCallback((eventData?: any) => {
-    if (!shouldInvalidate(eventData)) {
+    console.log("[useDataCache] invalidate called with eventData:", eventData)
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/db8eeb53-5cb0-4ca6-b69a-c9171cec64a1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'use-data-cache.ts:139',message:'HYP-B: invalidate called',data:{eventData,eventAccountId:eventData?.accountId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
+    const shouldInvalidateResult = shouldInvalidate(eventData)
+    console.log("[useDataCache] shouldInvalidate result:", shouldInvalidateResult, "for eventData:", eventData)
+    if (!shouldInvalidateResult) {
+      console.log("[useDataCache] shouldInvalidate returned false, skipping")
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/db8eeb53-5cb0-4ca6-b69a-c9171cec64a1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'use-data-cache.ts:145',message:'HYP-B: shouldInvalidate returned false',data:{eventData,eventAccountId:eventData?.accountId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+      // #endregion
       return
     }
 
+    console.log("[useDataCache] Invalidating cache and fetching new data...")
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/db8eeb53-5cb0-4ca6-b69a-c9171cec64a1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'use-data-cache.ts:151',message:'HYP-C: About to fetchData',data:{eventData,hasFetchDataRef:!!fetchDataRef.current},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+    // #endregion
     // Nettoyer le timeout précédent
     if (refetchTimeoutRef.current) {
       clearTimeout(refetchTimeoutRef.current)
     }
 
-    // Refetch avec délai optionnel
-    if (refetchDelay > 0) {
-      refetchTimeoutRef.current = setTimeout(() => {
-        fetchData(true)
-      }, refetchDelay)
+    // Refetch immédiat en mode silencieux (pas de isLoading, évite le scroll vers le haut)
+    // Le délai est ignoré pour les mises à jour automatiques pour une meilleure réactivité
+    // Utiliser fetchDataRef pour éviter les dépendances qui changent
+    if (fetchDataRef.current) {
+      console.log("[useDataCache] Calling fetchData from ref")
+      fetchDataRef.current(true, true) // silent = true pour éviter le scroll, force = true pour forcer le fetch
     } else {
-      fetchData(true)
+      console.error("[useDataCache] fetchDataRef.current is null! This should not happen.")
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/db8eeb53-5cb0-4ca6-b69a-c9171cec64a1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'use-data-cache.ts:163',message:'HYP-C: fetchDataRef is null',data:{eventData},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+      // #endregion
     }
-  }, [shouldInvalidate, refetchDelay, fetchData])
+  }, [shouldInvalidate]) // Ne pas inclure fetchData pour éviter les réinscriptions constantes
+
+  // Mettre à jour la référence invalidate immédiatement (pas dans useEffect pour éviter les retards)
+  // Cela garantit que la ref est toujours à jour quand les event listeners sont appelés
+  invalidateRef.current = invalidate
 
   /**
    * Fetch initial
@@ -132,18 +204,65 @@ export function useDataCache<T>(
 
   /**
    * S'abonner aux événements d'invalidation
+   * On utilise useEffect pour s'abonner à tous les événements d'un coup
+   * car on ne peut pas appeler useEvent dans une boucle (règles des hooks React)
    */
-  invalidateOn.forEach((event) => {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    useEvent(event, invalidate)
-  })
+  const eventsKey = useMemo(() => invalidateOn.join(","), [invalidateOn])
+
+  useEffect(() => {
+    console.log("[useDataCache] Setting up event listeners for events:", invalidateOn)
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/db8eeb53-5cb0-4ca6-b69a-c9171cec64a1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'use-data-cache.ts:192',message:'HYP-B: Setting up event listeners',data:{events:invalidateOn,eventsKey},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
+    const unsubscribers: Array<() => void> = []
+
+    invalidateOn.forEach((event) => {
+      const handler = (eventData: any) => {
+        console.log("[useDataCache] Event received:", event, "with data:", eventData)
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/db8eeb53-5cb0-4ca6-b69a-c9171cec64a1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'use-data-cache.ts:203',message:'HYP-B: Event received in handler',data:{event,eventData,hasInvalidateRef:!!invalidateRef.current},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+        // #endregion
+        // Utiliser invalidateRef pour éviter les closures obsolètes
+        if (invalidateRef.current) {
+          console.log("[useDataCache] Calling invalidate from ref")
+          invalidateRef.current(eventData)
+        } else {
+          console.error("[useDataCache] invalidateRef.current is null! This should not happen.")
+          // #region agent log
+          fetch('http://127.0.0.1:7242/ingest/db8eeb53-5cb0-4ca6-b69a-c9171cec64a1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'use-data-cache.ts:210',message:'HYP-B: invalidateRef is null',data:{event,eventData},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+          // #endregion
+        }
+      }
+      const unsubscribe = eventBus.on(event, handler)
+      unsubscribers.push(unsubscribe)
+      console.log("[useDataCache] Listener registered for event:", event)
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/db8eeb53-5cb0-4ca6-b69a-c9171cec64a1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'use-data-cache.ts:205',message:'HYP-B: Listener registered',data:{event},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+      // #endregion
+    })
+
+    return () => {
+      console.log("[useDataCache] Cleaning up event listeners")
+      unsubscribers.forEach((unsubscribe) => unsubscribe())
+    }
+    // Utiliser invalidateRef pour éviter les réinscriptions constantes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [eventsKey]) // eventsKey change uniquement quand les événements à écouter changent
+
+  /**
+   * Fonction pour mettre à jour les données localement (optimistic update)
+   */
+  const updateData = useCallback((updater: (current: T | undefined) => T | undefined) => {
+    setData((current) => updater(current))
+  }, [])
 
   return {
     data,
     isLoading,
     error,
-    refetch: () => fetchData(true),
+    refetch: () => fetchData(true, false), // Mode normal pour les refetch manuels
     invalidate,
+    updateData, // Permet de mettre à jour les données localement
   }
 }
 
@@ -176,9 +295,11 @@ export function useAccountCache(accountId?: string) {
       ],
       shouldInvalidate: (eventData) => {
         // Invalider uniquement si l'événement concerne ce compte
-        return !accountId || eventData?.accountId === accountId
+        const result = !accountId || eventData?.accountId === accountId
+        console.log("[useAccountCache] shouldInvalidate check:", { accountId, eventAccountId: eventData?.accountId, result })
+        return result
       },
-      refetchDelay: 100, // Petit délai pour regrouper les événements
+      refetchDelay: 0, // Pas de délai pour une mise à jour immédiate de l'affichage
     }
   )
 }

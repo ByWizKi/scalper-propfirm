@@ -106,8 +106,8 @@ export default function DashboardPage() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-zinc-900 dark:border-zinc-50 mx-auto"></div>
-          <p className="mt-4 text-sm text-zinc-600 dark:text-zinc-400">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-900 dark:border-slate-50 mx-auto"></div>
+          <p className="mt-4 text-sm text-slate-600 dark:text-slate-300">
             Chargement des statistiques...
           </p>
         </div>
@@ -166,14 +166,14 @@ export default function DashboardPage() {
 
       {/* Section Bilan Financier (toujours affichée) */}
       <div className="grid gap-3 sm:gap-4 md:gap-6 md:grid-cols-1 mb-4 sm:mb-6 md:mb-8 mt-4 sm:mt-6 md:mt-8">
-        <Card className="rounded-2xl border border-zinc-200/70 dark:border-zinc-800/70 bg-white/85 dark:bg-zinc-950/70 backdrop-blur-sm shadow-sm">
+        <Card className="rounded-2xl border border-slate-200 dark:border-[#1e293b] bg-white dark:bg-[#151b2e] backdrop-blur-sm shadow-sm">
           <CardContent className="p-3 sm:p-4 md:p-6">
             <div className="space-y-3 sm:space-y-4">
-              <h2 className="text-lg sm:text-xl font-semibold text-zinc-900 dark:text-zinc-50 mb-4">
+              <h2 className="text-lg sm:text-xl font-semibold text-slate-900 dark:text-slate-50 mb-4">
                 Bilan Financier
               </h2>
               <div className="flex items-center justify-between gap-2">
-                <span className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400">
+                <span className="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
                   Total Retraits Nets
                 </span>
                 <div className="text-right min-w-0">
@@ -192,7 +192,7 @@ export default function DashboardPage() {
                 </div>
               </div>
               <div className="flex items-center justify-between gap-2">
-                <span className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400">
+                <span className="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
                   Total Investi
                 </span>
                 <div className="text-right min-w-0">
@@ -211,9 +211,9 @@ export default function DashboardPage() {
                   </div>
                 </div>
               </div>
-              <div className="border-t border-zinc-200 dark:border-zinc-800 pt-3 sm:pt-4">
+              <div className="border-t border-slate-200 dark:border-[#1e293b] pt-3 sm:pt-4">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-base sm:text-lg font-medium">Différence</span>
+                  <span className="text-base sm:text-lg font-medium text-slate-900 dark:text-slate-50">Différence</span>
                   <div className="text-right min-w-0">
                     <div
                       className={`text-xl sm:text-2xl font-bold truncate ${
@@ -241,7 +241,7 @@ export default function DashboardPage() {
                     </div>
                   </div>
                 </div>
-                <p className="text-[10px] sm:text-xs text-zinc-500 mt-2 text-right">
+                <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 mt-2 text-right">
                   {totalNetWithdrawals - (stats?.totalInvested || 0) >= 0
                     ? "Vous êtes en profit"
                     : "Vous êtes en perte"}
@@ -253,11 +253,11 @@ export default function DashboardPage() {
       </div>
 
       {stats?.totalAccounts === 0 && (
-        <Card className="mt-8 rounded-2xl border border-zinc-200/70 dark:border-zinc-800/70 bg-white/85 dark:bg-zinc-950/70 backdrop-blur-sm shadow-sm">
+        <Card className="mt-8 rounded-2xl border border-slate-200 dark:border-[#1e293b] bg-white dark:bg-[#151b2e] backdrop-blur-sm shadow-sm">
           <CardContent className="py-12 text-center">
-            <Wallet className="h-12 w-12 text-zinc-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium mb-2">Aucun compte pour le moment</h3>
-            <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4">
+            <Wallet className="h-12 w-12 text-slate-400 dark:text-slate-500 mx-auto mb-4" />
+            <h3 className="text-lg font-medium mb-2 text-slate-900 dark:text-slate-50">Aucun compte pour le moment</h3>
+            <p className="text-sm text-slate-600 dark:text-slate-300 mb-4">
               Commencez par ajouter votre premier compte propfirm
             </p>
           </CardContent>

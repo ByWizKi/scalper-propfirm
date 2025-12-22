@@ -8,7 +8,6 @@
 
 import { useState, useCallback } from "react"
 import { emitEvent, AppEvents, EventDataMap } from "@/lib/events/event-bus"
-import { toast } from "@/hooks/use-toast"
 
 interface MutationOptions<TData, TVariables> {
   /**
@@ -22,7 +21,7 @@ interface MutationOptions<TData, TVariables> {
   getEventData?: (result: TData, variables: TVariables) => any
 
   /**
-   * Messages de toast
+   * Messages de notification (utilise le système de notification unifié)
    */
   messages?: {
     success?: string
@@ -39,6 +38,12 @@ interface MutationOptions<TData, TVariables> {
    * Callback après erreur
    */
   onError?: (error: Error) => void
+
+  /**
+   * Si true, les notifications sont gérées automatiquement par le hook
+   * Si false, les composants doivent gérer les notifications manuellement
+   */
+  autoNotify?: boolean
 }
 
 export function useMutation<TData = any, TVariables = any>(
@@ -49,33 +54,34 @@ export function useMutation<TData = any, TVariables = any>(
   const [error, setError] = useState<Error | null>(null)
   const [data, setData] = useState<TData | null>(null)
 
+  // Import dynamique pour éviter les dépendances circulaires
+  const getNotification = useCallback(() => {
+    // Lazy import pour éviter les problèmes de dépendances circulaires
+    return import("@/hooks/use-notification").then((m) => m.useNotification())
+  }, [])
+
   const mutate = useCallback(
     async (variables: TVariables) => {
       setIsLoading(true)
       setError(null)
 
-      // Toast de chargement
-      if (options.messages?.loading) {
-        toast({
-          title: options.messages.loading,
-        })
-      }
+      // Les notifications sont maintenant gérées par les composants qui utilisent useNotification
+      // Le hook mutation ne gère plus les notifications automatiquement
+      // Cela permet un meilleur contrôle et évite les conflits
 
       try {
         const result = await mutationFn(variables)
         setData(result)
 
-        // Émettre l'événement
+        // Émettre l'événement immédiatement (synchrone)
+        // Le cache écoute déjà les événements via useEvent, donc l'émission synchrone fonctionne
         if (options.successEvent && options.getEventData) {
           const eventData = options.getEventData(result, variables)
+          console.log("[useMutation] Emitting event:", options.successEvent, "with data:", eventData)
           emitEvent(options.successEvent, eventData)
-        }
-
-        // Toast de succès
-        if (options.messages?.success) {
-          toast({
-            title: options.messages.success,
-          })
+          console.log("[useMutation] Event emitted")
+        } else {
+          console.log("[useMutation] No event to emit - successEvent:", options.successEvent, "getEventData:", !!options.getEventData)
         }
 
         // Callback de succès
@@ -87,13 +93,6 @@ export function useMutation<TData = any, TVariables = any>(
       } catch (err) {
         const error = err instanceof Error ? err : new Error("Unknown error")
         setError(error)
-
-        // Toast d'erreur
-        toast({
-          title: "Erreur",
-          description: options.messages?.error || error.message,
-          variant: "destructive",
-        })
 
         // Callback d'erreur
         if (options.onError) {
@@ -138,10 +137,8 @@ export function useCreateAccountMutation() {
     {
       successEvent: AppEvents.ACCOUNT_CREATED,
       getEventData: (result) => ({ accountId: result.id }),
-      messages: {
-        success: "Compte créé avec succès",
-        error: "Erreur lors de la création du compte",
-      },
+      // Les notifications sont gérées par les composants via useNotification
+      messages: {},
     }
   )
 }
@@ -172,10 +169,8 @@ export function useUpdateAccountMutation() {
     {
       successEvent: AppEvents.ACCOUNT_UPDATED,
       getEventData: (result, variables) => ({ accountId: variables.id }),
-      messages: {
-        success: "Compte mis à jour",
-        error: "Erreur lors de la mise à jour",
-      },
+      // Les notifications sont gérées par les composants via useNotification
+      messages: {},
     }
   )
 }
@@ -197,10 +192,8 @@ export function useDeleteAccountMutation() {
     {
       successEvent: AppEvents.ACCOUNT_DELETED,
       getEventData: (result, id) => ({ accountId: id }),
-      messages: {
-        success: "Compte supprimé",
-        error: "Erreur lors de la suppression",
-      },
+      // Les notifications sont gérées par les composants via useNotification
+      messages: {},
     }
   )
 }
@@ -230,7 +223,11 @@ export function useCreatePnlMutation() {
 
       if (!response.ok) {
         const error = await response.json()
-        throw new Error(error.message || "Failed to create PnL")
+        // Préserver les informations d'erreur pour la détection de doublons
+        const errorObj = new Error(error.message || "Failed to create PnL")
+        ;(errorObj as any).errorCode = error.error
+        ;(errorObj as any).status = response.status
+        throw errorObj
       }
 
       return response.json()
@@ -241,16 +238,50 @@ export function useCreatePnlMutation() {
         accountId: result.accountId,
         pnlId: result.id,
       }),
-      messages: {
-        success: "PnL ajouté",
-        error: "Erreur lors de l'ajout du PnL",
-      },
+      // Les notifications sont gérées par les composants via useNotification
+      messages: {},
+    }
+  )
+}
+
+export function useUpdatePnlMutation() {
+  return useMutation(
+    async (data: { id: string; accountId: string; date: string; amount: number; notes?: string }) => {
+      const response = await fetch(`/api/pnl/${data.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          date: data.date,
+          amount: data.amount,
+          notes: data.notes,
+        }),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        // Préserver les informations d'erreur pour la détection de doublons
+        const errorObj = new Error(error.message || "Failed to update PnL")
+        ;(errorObj as any).errorCode = error.error
+        ;(errorObj as any).status = response.status
+        throw errorObj
+      }
+
+      return response.json()
+    },
+    {
+      successEvent: AppEvents.PNL_UPDATED,
+      getEventData: (result) => ({
+        accountId: result.accountId,
+        pnlId: result.id,
+      }),
+      // Les notifications sont gérées par les composants via useNotification
+      messages: {},
     }
   )
 }
 
 export function useDeletePnlMutation() {
-  return useMutation(
+  const mutation = useMutation(
     async ({ id, accountId }: { id: string; accountId: string }) => {
       const response = await fetch(`/api/pnl/${id}`, {
         method: "DELETE",
@@ -258,7 +289,11 @@ export function useDeletePnlMutation() {
 
       if (!response.ok) {
         const error = await response.json()
-        throw new Error(error.message || "Failed to delete PnL")
+        // Préserver les informations d'erreur pour la détection de doublons
+        const errorObj = new Error(error.message || "Failed to delete PnL")
+        ;(errorObj as any).errorCode = error.error
+        ;(errorObj as any).status = response.status
+        throw errorObj
       }
 
       return { id, accountId }
@@ -269,12 +304,18 @@ export function useDeletePnlMutation() {
         accountId: result.accountId,
         pnlId: result.id,
       }),
-      messages: {
-        success: "PnL supprimé",
-        error: "Erreur lors de la suppression",
-      },
+      // Les notifications sont gérées par les composants via useNotification
+      messages: {},
     }
   )
+
+  return {
+    ...mutation,
+    mutate: async (variables: { id: string; accountId: string }) => {
+      // La confirmation sera gérée dans les composants qui utilisent cette mutation
+      return mutation.mutate(variables)
+    },
+  }
 }
 
 /**
@@ -320,10 +361,8 @@ export function useCreateMultiplePnlMutation() {
       return results
     },
     {
-      messages: {
-        success: "PnL ajoutés avec succès",
-        error: "Erreur lors de l'ajout des PnL",
-      },
+      // Les notifications sont gérées par les composants via useNotification
+      messages: {},
     }
   )
 }
@@ -353,10 +392,8 @@ export function useCreateWithdrawalMutation() {
         accountId: result.accountId,
         withdrawalId: result.id,
       }),
-      messages: {
-        success: "Retrait ajouté",
-        error: "Erreur lors de l'ajout du retrait",
-      },
+      // Les notifications sont gérées par les composants via useNotification
+      messages: {},
     }
   )
 }
@@ -381,10 +418,8 @@ export function useDeleteWithdrawalMutation() {
         accountId: result.accountId,
         withdrawalId: result.id,
       }),
-      messages: {
-        success: "Retrait supprimé",
-        error: "Erreur lors de la suppression",
-      },
+      // Les notifications sont gérées par les composants via useNotification
+      messages: {},
     }
   )
 }
@@ -432,10 +467,8 @@ export function useCreateMultipleWithdrawalsMutation() {
       return results
     },
     {
-      messages: {
-        success: "Retraits ajoutés avec succès",
-        error: "Erreur lors de l'ajout des retraits",
-      },
+      // Les notifications sont gérées par les composants via useNotification
+      messages: {},
     }
   )
 }
