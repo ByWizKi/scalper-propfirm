@@ -11,7 +11,7 @@ const prisma = new PrismaClient({
 
 async function updateTradeDurations() {
   try {
-    console.log("🔍 Recherche des trades sans durée...")
+    console.info("🔍 Recherche des trades sans durée...")
 
     if (!prisma.trade) {
       console.error("❌ prisma.trade n'est pas disponible")
@@ -35,10 +35,10 @@ async function updateTradeDurations() {
       },
     })
 
-    console.log(`📊 ${tradesWithoutDuration.length} trades trouvés sans durée valide`)
+    console.info(`📊 ${tradesWithoutDuration.length} trades trouvés sans durée valide`)
 
     if (tradesWithoutDuration.length === 0) {
-      console.log("✅ Tous les trades ont déjà une durée valide!")
+      console.info("✅ Tous les trades ont déjà une durée valide!")
       return
     }
 
@@ -69,7 +69,7 @@ async function updateTradeDurations() {
         })
         updated++
         if (updated % 100 === 0) {
-          console.log(`   ✅ ${updated} trades mis à jour...`)
+          console.info(`   ✅ ${updated} trades mis à jour...`)
         }
       } catch (error) {
         console.error(`❌ Erreur lors de la mise à jour du trade ${trade.id}:`, error)
@@ -77,9 +77,9 @@ async function updateTradeDurations() {
       }
     }
 
-    console.log(`\n✅ Mise à jour terminée:`)
-    console.log(`   - ${updated} trades mis à jour`)
-    console.log(`   - ${skipped} trades ignorés`)
+    console.info(`\n✅ Mise à jour terminée:`)
+    console.info(`   - ${updated} trades mis à jour`)
+    console.info(`   - ${skipped} trades ignorés`)
   } catch (error) {
     console.error("❌ Erreur:", error)
     process.exit(1)

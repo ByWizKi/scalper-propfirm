@@ -11,18 +11,18 @@ const prisma = new PrismaClient({
 
 async function testStatsAPI() {
   try {
-    console.log("🔍 Test de l'API de statistiques...\n")
+    console.info("🔍 Test de l'API de statistiques...\n")
 
     // 1. Vérifier que prisma.trade existe
-    console.log("1. Vérification du modèle Trade...")
+    console.info("1. Vérification du modèle Trade...")
     if (!prisma.trade) {
       console.error("❌ prisma.trade n'est pas disponible")
       process.exit(1)
     }
-    console.log("✅ prisma.trade est disponible\n")
+    console.info("✅ prisma.trade est disponible\n")
 
     // 2. Tester le calcul des statistiques avec des données mockées
-    console.log("2. Test du calcul des statistiques...")
+    console.info("2. Test du calcul des statistiques...")
 
     // Données mockées pour tester le service
     const mockTrades = [
@@ -56,25 +56,25 @@ async function testStatsAPI() {
     ]
 
     const stats = calculateTradingStats(mockTrades)
-    console.log("✅ Statistiques calculées:")
-    console.log(`   - Total trades: ${stats.totalTrades}`)
-    console.log(`   - Trade Win %: ${stats.tradeWinPercent.toFixed(2)}%`)
-    console.log(`   - Profit Factor: ${stats.profitFactor.toFixed(2)}`)
-    console.log(`   - Day Win %: ${stats.dayWinPercent.toFixed(2)}%`)
-    console.log(`   - Total Lots: ${stats.totalLots}`)
-    console.log(`   - Avg Trade Duration: ${stats.averageTradeDuration.toFixed(0)}s\n`)
+    console.info("✅ Statistiques calculées:")
+    console.info(`   - Total trades: ${stats.totalTrades}`)
+    console.info(`   - Trade Win %: ${stats.tradeWinPercent.toFixed(2)}%`)
+    console.info(`   - Profit Factor: ${stats.profitFactor.toFixed(2)}`)
+    console.info(`   - Day Win %: ${stats.dayWinPercent.toFixed(2)}%`)
+    console.info(`   - Total Lots: ${stats.totalLots}`)
+    console.info(`   - Avg Trade Duration: ${stats.averageTradeDuration.toFixed(0)}s\n`)
 
     // 3. Tester la récupération depuis la base (si des trades existent)
-    console.log("3. Test de récupération depuis la base de données...")
+    console.info("3. Test de récupération depuis la base de données...")
     const existingTrades = await prisma.trade.findMany({
       take: 5,
       orderBy: {
         tradeDay: "desc",
       },
     })
-    console.log(`✅ ${existingTrades.length} trades existants dans la base\n`)
+    console.info(`✅ ${existingTrades.length} trades existants dans la base\n`)
 
-    console.log("✅ Tous les tests sont passés!")
+    console.info("✅ Tous les tests sont passés!")
   } catch (error) {
     console.error("❌ Erreur:", error)
     if (error instanceof Error) {

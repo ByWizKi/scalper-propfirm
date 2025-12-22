@@ -1,4 +1,11 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
+# Interdire l'utilisation de --no-verify pour contourner les règles de qualité
+if [ "$HUSKY_SKIP_HOOKS" = "1" ]; then
+  echo "❌ L'utilisation de --no-verify est interdite pour contourner les règles de qualité de code."
+  echo "📋 Corrigez les erreurs de lint avant de commiter."
+  exit 1
+fi
+
 npx lint-staged
