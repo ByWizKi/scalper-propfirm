@@ -43,7 +43,7 @@ export function useDataCache<T>(fetchFn: () => Promise<T>, options: CacheOptions
 
   const invalidate = useCallback(
     (eventData?: EventData) => {
-      if (shouldInvalidate(eventData)) {
+      if (eventData && shouldInvalidate(eventData)) {
         setData(undefined)
         fetchData(true)
       }
