@@ -1,4 +1,4 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from "next"
 
 const nextConfig: NextConfig = {
   /* config options here */
@@ -39,7 +39,7 @@ const nextConfig: NextConfig = {
           },
         ],
       },
-    ];
+    ]
   },
 
   // Variables d'environnement publiques
@@ -50,9 +50,12 @@ const nextConfig: NextConfig = {
 
   // Optimisation des performances
   poweredByHeader: false, // Cacher "X-Powered-By: Next.js"
-
-  // Compression
   compress: true,
+
+  // Code splitting et lazy loading
+  experimental: {
+    optimizePackageImports: ["@dnd-kit/core", "@dnd-kit/sortable", "d3", "lucide-react"],
+  },
 
   // Optimisation des images
   images: {
@@ -63,6 +66,6 @@ const nextConfig: NextConfig = {
 
   // React strict mode pour détecter les problèmes
   reactStrictMode: true,
-};
+}
 
-export default nextConfig;
+export default nextConfig

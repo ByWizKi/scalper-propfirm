@@ -5,10 +5,11 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Wallet } from "lucide-react"
 import { useDashboardStatsCache } from "@/hooks/use-data-cache"
 import { calculateTotalNetWithdrawals } from "@/lib/withdrawal-utils"
-import { DashboardWidgetsManager } from "@/components/dashboard-widgets-manager"
+import { DashboardWidgetsManagerMemo as DashboardWidgetsManager } from "@/components/dashboard-widgets-manager"
 import { useDashboardConfig } from "@/hooks/use-dashboard-config"
 import { useCustomStats } from "@/hooks/use-custom-stats"
 import { evaluateCustomStat } from "@/lib/custom-stat-evaluator"
+import { formatCurrencyPair } from "@/lib/currency-utils"
 import { WidgetType, WidgetData } from "@/types/dashboard-widget.types"
 import * as LucideIcons from "lucide-react"
 
@@ -178,16 +179,10 @@ export default function DashboardPage() {
                 </span>
                 <div className="text-right min-w-0">
                   <div className="font-medium text-green-600 text-sm sm:text-base truncate">
-                    {new Intl.NumberFormat("fr-FR", {
-                      style: "currency",
-                      currency: "USD",
-                    }).format(totalNetWithdrawals)}
+                    {formatCurrencyPair(totalNetWithdrawals).usd}
                   </div>
                   <div className="text-[10px] sm:text-xs text-green-600 truncate">
-                    {new Intl.NumberFormat("fr-FR", {
-                      style: "currency",
-                      currency: "EUR",
-                    }).format(totalNetWithdrawals * 0.92)}
+                    {formatCurrencyPair(totalNetWithdrawals).eur}
                   </div>
                 </div>
               </div>
@@ -197,23 +192,18 @@ export default function DashboardPage() {
                 </span>
                 <div className="text-right min-w-0">
                   <div className="font-medium text-red-600 text-sm sm:text-base truncate">
-                    -
-                    {new Intl.NumberFormat("fr-FR", {
-                      style: "currency",
-                      currency: "USD",
-                    }).format(stats?.totalInvested || 0)}
+                    -{formatCurrencyPair(stats?.totalInvested || 0).usd}
                   </div>
                   <div className="text-[10px] sm:text-xs text-red-600 truncate">
-                    {new Intl.NumberFormat("fr-FR", {
-                      style: "currency",
-                      currency: "EUR",
-                    }).format((stats?.totalInvested || 0) * 0.92)}
+                    {formatCurrencyPair(stats?.totalInvested || 0).eur}
                   </div>
                 </div>
               </div>
               <div className="border-t border-slate-200 dark:border-[#1e293b] pt-3 sm:pt-4">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-base sm:text-lg font-medium text-slate-900 dark:text-slate-50">Différence</span>
+                  <span className="text-base sm:text-lg font-medium text-slate-900 dark:text-slate-50">
+                    Différence
+                  </span>
                   <div className="text-right min-w-0">
                     <div
                       className={`text-xl sm:text-2xl font-bold truncate ${
@@ -222,10 +212,7 @@ export default function DashboardPage() {
                           : "text-red-600"
                       }`}
                     >
-                      {new Intl.NumberFormat("fr-FR", {
-                        style: "currency",
-                        currency: "USD",
-                      }).format(totalNetWithdrawals - (stats?.totalInvested || 0))}
+                      {formatCurrencyPair(totalNetWithdrawals - (stats?.totalInvested || 0)).usd}
                     </div>
                     <div
                       className={`text-[10px] sm:text-xs truncate ${
@@ -234,10 +221,7 @@ export default function DashboardPage() {
                           : "text-red-600"
                       }`}
                     >
-                      {new Intl.NumberFormat("fr-FR", {
-                        style: "currency",
-                        currency: "EUR",
-                      }).format((totalNetWithdrawals - (stats?.totalInvested || 0)) * 0.92)}
+                      {formatCurrencyPair(totalNetWithdrawals - (stats?.totalInvested || 0)).eur}
                     </div>
                   </div>
                 </div>
@@ -256,7 +240,9 @@ export default function DashboardPage() {
         <Card className="mt-8 rounded-2xl border border-slate-200 dark:border-[#1e293b] bg-white dark:bg-[#151b2e] backdrop-blur-sm shadow-sm">
           <CardContent className="py-12 text-center">
             <Wallet className="h-12 w-12 text-slate-400 dark:text-slate-500 mx-auto mb-4" />
-            <h3 className="text-lg font-medium mb-2 text-slate-900 dark:text-slate-50">Aucun compte pour le moment</h3>
+            <h3 className="text-lg font-medium mb-2 text-slate-900 dark:text-slate-50">
+              Aucun compte pour le moment
+            </h3>
             <p className="text-sm text-slate-600 dark:text-slate-300 mb-4">
               Commencez par ajouter votre premier compte propfirm
             </p>
