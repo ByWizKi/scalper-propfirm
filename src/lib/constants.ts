@@ -47,13 +47,6 @@ export const STATUS_COLORS: Record<AccountStatus, string> = {
   [AccountStatus.ARCHIVED]: "bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-300",
 }
 
-export const STATUS_GRADIENTS: Record<AccountStatus, string> = {
-  [AccountStatus.ACTIVE]: "from-blue-500/15 via-blue-500/5 to-transparent",
-  [AccountStatus.VALIDATED]: "from-emerald-500/15 via-emerald-500/5 to-transparent",
-  [AccountStatus.FAILED]: "from-rose-500/15 via-rose-500/5 to-transparent",
-  [AccountStatus.ARCHIVED]: "from-zinc-500/10 via-zinc-500/5 to-transparent",
-}
-
 // Taux de change (devrait idéalement venir d'une API)
 export const USD_TO_EUR = 0.86
 
