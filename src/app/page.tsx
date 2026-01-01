@@ -34,12 +34,18 @@ export default function Home() {
               </h1>
             </div>
             <div className="flex items-center gap-2 sm:gap-3">
-              <Button variant="ghost" size="sm" asChild className="text-xs sm:text-sm px-3 sm:px-4 whitespace-nowrap">
-                <Link href="/auth/login" className="inline-flex items-center whitespace-nowrap">Se connecter</Link>
-              </Button>
-              <Button size="sm" asChild className="text-xs sm:text-sm px-3 sm:px-4 whitespace-nowrap">
-                <Link href="/auth/register" className="inline-flex items-center whitespace-nowrap">Créer un compte</Link>
-              </Button>
+              <Link
+                href="/auth/login"
+                className="inline-flex items-center justify-center rounded-md h-8 min-h-[36px] px-3 text-xs font-medium transition-all duration-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-50 text-xs sm:text-sm px-3 sm:px-4 whitespace-nowrap"
+              >
+                Se connecter
+              </Link>
+              <Link
+                href="/auth/register"
+                className="inline-flex items-center justify-center rounded-lg h-8 min-h-[36px] px-3 text-xs bg-indigo-600 text-white hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 shadow-sm hover:shadow-md text-xs sm:text-sm px-3 sm:px-4 whitespace-nowrap"
+              >
+                Créer un compte
+              </Link>
             </div>
           </div>
         </div>
@@ -58,15 +64,19 @@ export default function Home() {
             gérer vos PnL, vos retraits et optimiser vos performances de trading.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
-            <Button size="lg" asChild className="w-full sm:w-auto text-xs sm:text-sm px-4 sm:px-6 py-4 sm:py-5 whitespace-nowrap">
-              <Link href="/auth/register" className="inline-flex items-center whitespace-nowrap">
-                Commencer gratuitement
-                <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
-              </Link>
-            </Button>
-            <Button size="lg" variant="outline" asChild className="w-full sm:w-auto text-xs sm:text-sm px-4 sm:px-6 py-4 sm:py-5 whitespace-nowrap">
-              <Link href="/auth/login" className="inline-flex items-center whitespace-nowrap">Se connecter</Link>
-            </Button>
+            <Link
+              href="/auth/register"
+              className="inline-flex items-center justify-center rounded-lg h-12 min-h-[48px] px-8 text-base font-medium transition-all duration-200 bg-indigo-600 text-white hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 shadow-sm hover:shadow-md w-full sm:w-auto text-xs sm:text-sm px-4 sm:px-6 py-4 sm:py-5 whitespace-nowrap"
+            >
+              Commencer gratuitement
+              <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+            </Link>
+            <Link
+              href="/auth/login"
+              className="inline-flex items-center justify-center rounded-lg h-12 min-h-[48px] px-8 text-base border border-slate-300 bg-transparent hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800 hover:border-slate-400 dark:hover:border-slate-600 w-full sm:w-auto text-xs sm:text-sm px-4 sm:px-6 py-4 sm:py-5 whitespace-nowrap"
+            >
+              Se connecter
+            </Link>
           </div>
         </div>
       </section>
@@ -301,20 +311,19 @@ export default function Home() {
             comptes propfirm efficacement.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
-            <Button size="lg" variant="secondary" asChild className="w-full sm:w-auto text-xs sm:text-sm px-4 sm:px-6 py-4 sm:py-5 whitespace-nowrap">
-              <Link href="/auth/register" className="inline-flex items-center whitespace-nowrap">
-                Créer un compte gratuit
-                <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
-              </Link>
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              asChild
-              className="w-full sm:w-auto text-xs sm:text-sm px-4 sm:px-6 py-4 sm:py-5 whitespace-nowrap bg-white/10 border-white/20 text-white hover:bg-white/20"
+            <Link
+              href="/auth/register"
+              className="inline-flex items-center justify-center rounded-lg h-12 min-h-[48px] px-8 text-base font-medium transition-all duration-200 bg-slate-100 text-slate-900 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-50 dark:hover:bg-slate-700 w-full sm:w-auto text-xs sm:text-sm px-4 sm:px-6 py-4 sm:py-5 whitespace-nowrap"
             >
-              <Link href="/auth/login" className="inline-flex items-center whitespace-nowrap">Se connecter</Link>
-            </Button>
+              Créer un compte gratuit
+              <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+            </Link>
+            <Link
+              href="/auth/login"
+              className="inline-flex items-center justify-center rounded-lg h-12 min-h-[48px] px-8 text-base border bg-white/10 border-white/20 text-white hover:bg-white/20 w-full sm:w-auto text-xs sm:text-sm px-4 sm:px-6 py-4 sm:py-5 whitespace-nowrap"
+            >
+              Se connecter
+            </Link>
           </div>
         </div>
       </section>
@@ -330,12 +339,18 @@ export default function Home() {
               </p>
             </div>
             <div className="flex items-center gap-4 sm:gap-6">
-              <Button variant="ghost" size="sm" asChild className="text-xs sm:text-sm px-2 sm:px-3 whitespace-nowrap">
-                <Link href="/auth/login" className="inline-flex items-center whitespace-nowrap">Connexion</Link>
-              </Button>
-              <Button variant="ghost" size="sm" asChild className="text-xs sm:text-sm px-2 sm:px-3 whitespace-nowrap">
-                <Link href="/auth/register" className="inline-flex items-center whitespace-nowrap">Inscription</Link>
-              </Button>
+              <Link
+                href="/auth/login"
+                className="inline-flex items-center justify-center rounded-md h-8 min-h-[36px] px-3 text-xs font-medium transition-all duration-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-50 text-xs sm:text-sm px-2 sm:px-3 whitespace-nowrap"
+              >
+                Connexion
+              </Link>
+              <Link
+                href="/auth/register"
+                className="inline-flex items-center justify-center rounded-md h-8 min-h-[36px] px-3 text-xs font-medium transition-all duration-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-50 text-xs sm:text-sm px-2 sm:px-3 whitespace-nowrap"
+              >
+                Inscription
+              </Link>
             </div>
           </div>
         </div>
