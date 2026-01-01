@@ -169,7 +169,7 @@ export function ApexPaRulesTracker({
     <>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-4 sm:px-5 lg:px-6 py-3 sm:py-4 border-b border-slate-200/70 dark:border-[#1e293b]/70 hover:bg-slate-50/50 dark:hover:bg-[#1e293b]/50 transition-colors"
+        className="w-full px-4 sm:px-5 lg:px-6 py-3 sm:py-4 border-b border-slate-200/70 dark:border-[#1e293b]/70 hover:bg-slate-50/50 dark:hover:bg-[#1e293b]/50 transition-colors rounded-t-2xl"
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 flex-1 text-left">

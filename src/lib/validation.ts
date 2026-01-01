@@ -36,6 +36,8 @@ export const createAccountSchema = z.object({
     "APEX",
     "BULENOX",
     "PHIDIAS",
+    "TRADEIFY",
+    "LUCID",
     "FTMO",
     "MYFUNDEDFUTURES",
     "OTHER",

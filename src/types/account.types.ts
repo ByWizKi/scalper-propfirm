@@ -10,6 +10,8 @@ export enum PropfirmType {
   MYFUNDEDFUTURES = "MYFUNDEDFUTURES",
   BULENOX = "BULENOX",
   PHIDIAS = "PHIDIAS",
+  TRADEIFY = "TRADEIFY",
+  LUCID = "LUCID",
   OTHER = "OTHER",
 }
 
@@ -46,6 +48,9 @@ export interface WithdrawalRules {
     withdrawalPercentage: number
   }
   hasBuffer: boolean
+  minWithdrawal?: number
+  maxWithdrawal?: number
+  frequency?: string // "daily", "weekly", etc.
 }
 
 // DTO pour la création de compte

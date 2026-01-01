@@ -105,6 +105,8 @@ enum PropfirmType {
   MYFUNDEDFUTURES
   BULENOX
   PHIDIAS
+  TRADEIFY
+  LUCID
   OTHER
 }
 

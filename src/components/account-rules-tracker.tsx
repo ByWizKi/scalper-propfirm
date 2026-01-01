@@ -17,6 +17,8 @@ interface AccountRulesTrackerProps {
   accountType: string
   propfirm: string
   pnlEntries: PnlEntry[]
+  accountName?: string
+  notes?: string | null
   onEligibilityChange?: (isEligible: boolean) => void
 }
 
@@ -231,6 +233,8 @@ export function AccountRulesTracker({
   accountType,
   propfirm,
   pnlEntries,
+  accountName,
+  notes,
   onEligibilityChange,
 }: AccountRulesTrackerProps) {
   /* eslint-disable react-hooks/rules-of-hooks */
@@ -239,13 +243,40 @@ export function AccountRulesTracker({
     return null
   }
 
-  const rules = RULES_CONFIG[propfirm]?.[accountSize]
-
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("fr-FR", {
       style: "currency",
       currency: "USD",
     }).format(amount)
+  }
+
+  // Utiliser la stratégie factory pour obtenir les règles
+  let rules: {
+    maxDrawdown: number
+    dailyLossLimit: number
+    profitTarget: number
+    consistencyRule: number
+    minTradingDays?: number
+    maxContracts?: { mini: number; micro: number }
+  } | null = null
+
+  try {
+    const strategy = PropfirmStrategyFactory.getStrategy(propfirm as PropfirmType)
+    const accountRules = strategy.getAccountRules(accountSize, accountType, accountName, notes)
+
+    if (accountRules) {
+      rules = {
+        maxDrawdown: accountRules.maxDrawdown,
+        dailyLossLimit: accountRules.dailyLossLimit,
+        profitTarget: accountRules.profitTarget,
+        consistencyRule: accountRules.consistencyRule || 0,
+        minTradingDays: accountRules.minTradingDays,
+        maxContracts: accountRules.maxContracts,
+      }
+    }
+  } catch (_error) {
+    // Si la stratégie n'existe pas, essayer avec RULES_CONFIG en fallback
+    rules = RULES_CONFIG[propfirm]?.[accountSize] || null
   }
 
   // Vérifier que les règles existent AVANT tout calcul
@@ -287,11 +318,12 @@ export function AccountRulesTracker({
   const consistencyStatus = consistencyPercentage <= rules.consistencyRule || totalPnl <= 0
   const minTradingDaysStatus = rules.minTradingDays ? tradingDays >= rules.minTradingDays : true
 
-  // Pour Apex, Bulenox et Phidias, utiliser la logique de la stratégie
+  // Pour Apex, Bulenox, Phidias et Tradeify, utiliser la logique de la stratégie
   // Phidias utilise une perte statique (pas de trailing)
+  // Tradeify a des règles spécifiques selon le type de compte
   // Pour les autres, utiliser la logique end-of-day
   const useStrategyEligibility =
-    propfirm === "APEX" || propfirm === "BULENOX" || propfirm === "PHIDIAS"
+    propfirm === "APEX" || propfirm === "BULENOX" || propfirm === "PHIDIAS" || propfirm === "TRADEIFY"
 
   // Calculer l'éligibilité selon la méthode appropriée
   let isEligible: boolean
@@ -308,8 +340,8 @@ export function AccountRulesTracker({
       accountSize,
       normalizedPnlEntries,
       accountType,
-      undefined, // accountName non disponible dans ce composant
-      undefined // notes non disponible dans ce composant
+      accountName,
+      notes
     )
   } else {
     // Logique end-of-day pour TopStep et TakeProfitTrader
@@ -341,15 +373,15 @@ export function AccountRulesTracker({
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             <Target
-              className={`h-4 w-4 ${profitTargetStatus ? "text-green-600 dark:text-green-500" : "text-zinc-500 dark:text-zinc-400"}`}
+              className={`h-4 w-4 ${profitTargetStatus ? "text-green-600 dark:text-green-500" : "text-slate-600 dark:text-slate-400"}`}
             />
             <span className="text-sm font-medium">Objectif de Profit</span>
           </div>
-          <span className="text-sm font-medium">
+          <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
             {formatCurrency(totalPnl)} / {formatCurrency(rules.profitTarget)}
           </span>
         </div>
-        <div className="h-2 bg-zinc-200/70 dark:bg-zinc-800/70 rounded-full overflow-hidden">
+        <div className="h-2 bg-slate-200/70 dark:bg-slate-800/70 rounded-full overflow-hidden mb-2">
           <div
             className={`h-full transition-all ${
               profitTargetStatus
@@ -358,16 +390,18 @@ export function AccountRulesTracker({
                   ? "bg-blue-600 dark:bg-blue-500"
                   : profitProgress > 50
                     ? "bg-yellow-600 dark:bg-yellow-500"
-                    : "bg-zinc-400 dark:bg-zinc-500"
+                    : "bg-slate-500 dark:bg-slate-400"
             }`}
             style={{ width: `${profitProgress}%` }}
           />
         </div>
-        <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
-          {profitTargetStatus
-            ? "Objectif atteint"
-            : `Reste ${formatCurrency(rules.profitTarget - totalPnl)}`}
-        </p>
+        <div className="bg-slate-50 dark:bg-slate-900/50 p-3 sm:p-4 rounded-lg">
+          <p className="text-xs text-slate-600 dark:text-slate-400">
+            {profitTargetStatus
+              ? "Objectif atteint"
+              : `Reste ${formatCurrency(rules.profitTarget - totalPnl)}`}
+          </p>
+        </div>
       </div>
 
       {/* Drawdown Maximum (End of Day) */}
@@ -379,11 +413,11 @@ export function AccountRulesTracker({
             />
             <span className="text-sm font-medium">Drawdown Max (End of Day)</span>
           </div>
-          <span className="text-sm font-medium">
+          <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
             {formatCurrency(currentDrawdownLevel)} / {formatCurrency(startingBalance)}
           </span>
         </div>
-        <div className="h-2 bg-zinc-200/70 dark:bg-zinc-800/70 rounded-full overflow-hidden">
+        <div className="h-2 bg-slate-200/70 dark:bg-slate-800/70 rounded-full overflow-hidden mb-2">
           <div
             className={`h-full transition-all ${
               drawdownProgress < 50
@@ -397,119 +431,131 @@ export function AccountRulesTracker({
             style={{ width: `${drawdownProgress}%` }}
           />
         </div>
-        <div className="flex items-center gap-1 mt-1">
-          {drawdownStatus ? (
-            <p className="text-xs text-zinc-500 dark:text-zinc-400">
-              Utilisé : {formatCurrency(drawdownUsed)} / {formatCurrency(rules.maxDrawdown)}
-            </p>
-          ) : (
-            <>
-              <AlertTriangle className="h-3 w-3 text-red-600 dark:text-red-500" />
-              <p className="text-xs text-red-600 dark:text-red-500">Drawdown maximum dépassé</p>
-            </>
-          )}
-        </div>
-        <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
-          Niveau : {formatCurrency(startingBalance)} + profits du jour
-        </p>
-      </div>
-
-      {/* Perte Journalière */}
-      <div>
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2">
-            <Calendar
-              className={`h-4 w-4 ${dailyLossStatus ? "text-green-600 dark:text-green-500" : "text-red-600 dark:text-red-500"}`}
-            />
-            <span className="text-sm font-medium">Perte Max Journalière</span>
-          </div>
-          <span className="text-sm font-medium">
-            {formatCurrency(dailyLossUsed)} / {formatCurrency(rules.dailyLossLimit)}
-          </span>
-        </div>
-        <div className="h-2 bg-zinc-200/70 dark:bg-zinc-800/70 rounded-full overflow-hidden">
-          <div
-            className={`h-full transition-all ${
-              dailyLossProgress < 50
-                ? "bg-green-600 dark:bg-green-500"
-                : dailyLossProgress < 75
-                  ? "bg-yellow-600 dark:bg-yellow-500"
-                  : dailyLossProgress < 100
-                    ? "bg-orange-600 dark:bg-orange-500"
-                    : "bg-red-600 dark:bg-red-500"
-            }`}
-            style={{ width: `${dailyLossProgress}%` }}
-          />
-        </div>
-        <div className="flex items-center gap-1 mt-1">
-          {todayPnl >= 0 ? (
-            <p className="text-xs text-green-600 dark:text-green-500">
-              Aujourd&apos;hui : {formatCurrency(todayPnl)}
-            </p>
-          ) : dailyLossStatus ? (
-            <p className="text-xs text-zinc-500 dark:text-zinc-400">
-              Aujourd&apos;hui : {formatCurrency(todayPnl)} (
-              {formatCurrency(rules.dailyLossLimit - dailyLossUsed)} disponible)
-            </p>
-          ) : (
-            <>
-              <AlertTriangle className="h-3 w-3 text-red-600 dark:text-red-500" />
-              <p className="text-xs text-red-600 dark:text-red-500">Limite journalière dépassée</p>
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* Règle de Cohérence */}
-      <div>
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2">
-            <TrendingUp
-              className={`h-4 w-4 ${consistencyStatus ? "text-green-600 dark:text-green-500" : "text-orange-600 dark:text-orange-500"}`}
-            />
-            <span className="text-sm font-medium">Règle de Cohérence</span>
-          </div>
-          <span className="text-sm font-medium">
-            {consistencyPercentage.toFixed(1)}% / {rules.consistencyRule}%
-          </span>
-        </div>
-        <div className="h-2 bg-zinc-200/70 dark:bg-zinc-800/70 rounded-full overflow-hidden">
-          <div
-            className={`h-full transition-all ${
-              consistencyProgress <= rules.consistencyRule
-                ? "bg-green-600 dark:bg-green-500"
-                : "bg-orange-600 dark:bg-orange-500"
-            }`}
-            style={{ width: `${consistencyProgress}%` }}
-          />
-        </div>
-        <div className="flex items-center gap-1 mt-1">
-          {totalPnl <= 0 ? (
-            <p className="text-xs text-zinc-500 dark:text-zinc-400">Pas encore de données</p>
-          ) : consistencyStatus ? (
-            <p className="text-xs text-zinc-500 dark:text-zinc-400">
-              Plus gros jour : {formatCurrency(biggestDay)} ({consistencyPercentage.toFixed(1)}%)
-            </p>
-          ) : (
-            <>
-              <AlertTriangle className="h-3 w-3 text-orange-600 dark:text-orange-400" />
-              <p className="text-xs text-orange-600 dark:text-orange-400">
-                Plus gros jour ({formatCurrency(biggestDay)}) dépasse {rules.consistencyRule}%
+        <div className="bg-slate-50 dark:bg-slate-900/50 p-3 sm:p-4 rounded-lg space-y-2">
+          <div className="flex items-center gap-1">
+            {drawdownStatus ? (
+              <p className="text-xs text-slate-600 dark:text-slate-400">
+                Utilisé : {formatCurrency(drawdownUsed)} / {formatCurrency(rules.maxDrawdown)}
               </p>
-            </>
-          )}
+            ) : (
+              <>
+                <AlertTriangle className="h-3 w-3 text-red-600 dark:text-red-500" />
+                <p className="text-xs text-red-600 dark:text-red-500">Drawdown maximum dépassé</p>
+              </>
+            )}
+          </div>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            Niveau : {formatCurrency(startingBalance)} + profits du jour
+          </p>
         </div>
       </div>
+
+      {/* Perte Journalière - Seulement si applicable */}
+      {rules.dailyLossLimit > 0 && (
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <Calendar
+                className={`h-4 w-4 ${dailyLossStatus ? "text-green-600 dark:text-green-500" : "text-red-600 dark:text-red-500"}`}
+              />
+              <span className="text-sm font-medium">Perte Max Journalière</span>
+            </div>
+            <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
+              {formatCurrency(dailyLossUsed)} / {formatCurrency(rules.dailyLossLimit)}
+            </span>
+          </div>
+          <div className="h-2 bg-slate-200/70 dark:bg-slate-800/70 rounded-full overflow-hidden mb-2">
+            <div
+              className={`h-full transition-all ${
+                dailyLossProgress < 50
+                  ? "bg-green-600 dark:bg-green-500"
+                  : dailyLossProgress < 75
+                    ? "bg-yellow-600 dark:bg-yellow-500"
+                : dailyLossProgress < 100
+                  ? "bg-orange-600 dark:bg-orange-500"
+                  : "bg-red-600 dark:bg-red-500"
+              }`}
+              style={{ width: `${dailyLossProgress}%` }}
+            />
+          </div>
+          <div className="bg-slate-50 dark:bg-slate-900/50 p-3 sm:p-4 rounded-lg">
+            <div className="flex items-center gap-1">
+              {todayPnl >= 0 ? (
+                <p className="text-xs text-green-600 dark:text-green-500">
+                  Aujourd&apos;hui : {formatCurrency(todayPnl)}
+                </p>
+              ) : dailyLossStatus ? (
+                <p className="text-xs text-slate-600 dark:text-slate-400">
+                  Aujourd&apos;hui : {formatCurrency(todayPnl)} (
+                  {formatCurrency(rules.dailyLossLimit - dailyLossUsed)} disponible)
+                </p>
+              ) : (
+                <>
+                  <AlertTriangle className="h-3 w-3 text-red-600 dark:text-red-500" />
+                  <p className="text-xs text-red-600 dark:text-red-500">Limite journalière dépassée</p>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Règle de Cohérence - Seulement si applicable */}
+      {rules.consistencyRule > 0 && (
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <TrendingUp
+                className={`h-4 w-4 ${consistencyStatus ? "text-green-600 dark:text-green-500" : "text-orange-600 dark:text-orange-500"}`}
+              />
+              <span className="text-sm font-medium">Règle de Cohérence</span>
+            </div>
+            <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
+              {consistencyPercentage.toFixed(1)}% / {rules.consistencyRule}%
+            </span>
+          </div>
+          <div className="h-2 bg-slate-200/70 dark:bg-slate-800/70 rounded-full overflow-hidden mb-2">
+            <div
+              className={`h-full transition-all ${
+                consistencyProgress <= rules.consistencyRule
+                  ? "bg-green-600 dark:bg-green-500"
+                  : "bg-orange-600 dark:bg-orange-500"
+              }`}
+              style={{ width: `${consistencyProgress}%` }}
+            />
+          </div>
+          <div className="bg-slate-50 dark:bg-slate-900/50 p-3 sm:p-4 rounded-lg space-y-2">
+            <div className="flex items-center gap-1">
+              {totalPnl <= 0 ? (
+                <p className="text-xs text-slate-600 dark:text-slate-400">Pas encore de données</p>
+              ) : consistencyStatus ? (
+                <p className="text-xs text-slate-600 dark:text-slate-400">
+                  Plus gros jour : {formatCurrency(biggestDay)} ({consistencyPercentage.toFixed(1)}%)
+                </p>
+              ) : (
+                <>
+                  <AlertTriangle className="h-3 w-3 text-orange-600 dark:text-orange-400" />
+                  <p className="text-xs text-orange-600 dark:text-orange-400">
+                    Plus gros jour ({formatCurrency(biggestDay)}) dépasse {rules.consistencyRule}%
+                  </p>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Résumé */}
-      <div className="pt-4 border-t border-zinc-200/70 dark:border-zinc-800/70">
+      <div className="pt-4 border-t border-slate-200/70 dark:border-slate-800/70">
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <p className="text-xs text-zinc-600 dark:text-zinc-400">Balance de départ</p>
-            <p className="font-medium">{formatCurrency(accountSize)}</p>
+            <p className="text-xs text-slate-600 dark:text-slate-400">Balance de départ</p>
+            <p className="font-medium text-slate-900 dark:text-slate-100">
+              {formatCurrency(accountSize)}
+            </p>
           </div>
           <div className="space-y-2">
-            <p className="text-xs text-zinc-600 dark:text-zinc-400">Balance actuelle</p>
+            <p className="text-xs text-slate-600 dark:text-slate-400">Balance actuelle</p>
             <p
               className={`font-medium ${totalPnl >= 0 ? "text-green-600 dark:text-green-500" : "text-red-600 dark:text-red-500"}`}
             >
@@ -521,21 +567,21 @@ export function AccountRulesTracker({
 
       {/* Limites de contrats */}
       {rules.maxContracts && (
-        <div className="pt-3 border-t border-zinc-200/70 dark:border-zinc-800/70">
+        <div className="pt-3 border-t border-slate-200/70 dark:border-slate-800/70">
           <div className="flex items-center gap-2">
-            <FileText className="h-4 w-4 text-blue-600 dark:text-blue-500" />
-            <p className="text-xs font-medium text-zinc-700 dark:text-zinc-300">Contrats max :</p>
+            <FileText className="h-4 w-4 text-slate-600 dark:text-slate-400" />
+            <p className="text-xs font-medium text-slate-700 dark:text-slate-300">Contrats max :</p>
             <div className="flex items-center gap-3 ml-auto">
               <div className="flex items-center gap-1">
-                <span className="text-xs text-zinc-500">Mini</span>
-                <span className="text-sm font-semibold text-blue-600 dark:text-blue-500">
+                <span className="text-xs text-slate-500 dark:text-slate-400">Mini</span>
+                <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                   {rules.maxContracts.mini}
                 </span>
               </div>
-              <div className="h-4 w-px bg-zinc-300 dark:bg-zinc-700"></div>
+              <div className="h-4 w-px bg-slate-300 dark:bg-slate-700"></div>
               <div className="flex items-center gap-1">
-                <span className="text-xs text-zinc-500 dark:text-zinc-400">Micro</span>
-                <span className="text-sm font-semibold text-blue-600 dark:text-blue-500">
+                <span className="text-xs text-slate-500 dark:text-slate-400">Micro</span>
+                <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                   {rules.maxContracts.micro}
                 </span>
               </div>

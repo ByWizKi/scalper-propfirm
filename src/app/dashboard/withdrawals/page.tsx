@@ -389,7 +389,7 @@ export default function WithdrawalsPage() {
           </Button>
         </div>
       ) : (
-        <div className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 items-start">
+        <div className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
           {(() => {
             // Regrouper les retraits par compte
             const withdrawalsByAccount = filteredWithdrawals.reduce(
@@ -490,9 +490,9 @@ function WithdrawalAccountCard({
   const USD_TO_EUR = 0.92
 
   return (
-    <Card className="border-none bg-transparent shadow-none group overflow-hidden rounded-2xl">
-      <CardContent className="p-0">
-        <div className="overflow-hidden rounded-2xl border border-slate-200 dark:border-[#1e293b] bg-white dark:bg-[#151b2e] shadow-sm hover:shadow-md transition-all duration-200 w-full">
+    <Card className="border-none bg-transparent shadow-none group overflow-hidden rounded-2xl h-full flex flex-col">
+      <CardContent className="p-0 h-full flex flex-col">
+        <div className="overflow-hidden rounded-2xl border border-slate-200 dark:border-[#1e293b] bg-white dark:bg-[#151b2e] shadow-sm hover:shadow-md transition-all duration-200 w-full h-full flex flex-col">
           {/* Header */}
           <div className="flex flex-col gap-2 sm:gap-3 border-b border-slate-200 dark:border-[#1e293b] bg-slate-50 dark:bg-[#1e293b]/50 p-3 sm:p-4 rounded-t-2xl">
             <div className="flex items-start justify-between gap-2 min-w-0 w-full">
@@ -554,7 +554,7 @@ function WithdrawalAccountCard({
           </div>
 
           {/* Infos du compte */}
-          <div className="p-3 sm:p-4 space-y-2 sm:space-y-3 bg-white dark:bg-[#151b2e] rounded-b-2xl">
+          <div className="p-3 sm:p-4 space-y-2 sm:space-y-3 bg-white dark:bg-[#151b2e] rounded-b-2xl flex-1 flex flex-col">
             <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
               <div className="rounded-lg border border-slate-200 dark:border-[#1e293b] bg-slate-50 dark:bg-[#1e293b]/50 p-2 sm:p-3 transition-colors hover:bg-slate-100 dark:hover:bg-[#1e293b]">
                 <div className="flex items-center gap-1 sm:gap-1.5 mb-1 sm:mb-1.5">
@@ -597,7 +597,7 @@ function WithdrawalAccountCard({
           </div>
 
           {/* Liste des retraits */}
-          <div className="px-3 sm:px-4 pb-3 sm:pb-4 space-y-2 sm:space-y-3 bg-white dark:bg-[#151b2e]">
+          <div className="px-3 sm:px-4 pb-3 sm:pb-4 space-y-2 sm:space-y-3 bg-white dark:bg-[#151b2e] flex-1 flex flex-col">
             <button
               onClick={() => setIsWithdrawalsExpanded(!isWithdrawalsExpanded)}
               className="w-full flex items-center justify-between gap-2 p-2 hover:bg-slate-50 dark:hover:bg-[#1e293b]/50 rounded-lg transition-colors cursor-pointer"

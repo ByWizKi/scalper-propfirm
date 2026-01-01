@@ -9,6 +9,8 @@ import { TakeProfitTraderStrategy } from "./takeprofittrader-strategy"
 import { ApexStrategy } from "./apex-strategy"
 import { BulenoxStrategy } from "./bulenox-strategy"
 import { PhidiasStrategy } from "./phidias-strategy"
+import { TradeifyStrategy } from "./tradeify-strategy"
+import { LucidStrategy } from "./lucid-strategy"
 import { PropfirmType } from "@/types/account.types"
 
 /**
@@ -47,6 +49,12 @@ export class PropfirmStrategyFactory {
         break
       case PropfirmType.PHIDIAS:
         strategy = new PhidiasStrategy()
+        break
+      case PropfirmType.TRADEIFY:
+        strategy = new TradeifyStrategy()
+        break
+      case PropfirmType.LUCID:
+        strategy = new LucidStrategy()
         break
       // Ajouter d'autres propfirms ici
       default:

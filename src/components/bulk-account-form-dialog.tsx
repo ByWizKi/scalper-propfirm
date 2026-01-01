@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { PROPFIRM_LABELS, ACCOUNT_SIZES_BY_PROPFIRM, getAccountPrice } from "@/lib/constants"
+import { PROPFIRM_LABELS, ACCOUNT_SIZES_BY_PROPFIRM, getAccountPrice, AVAILABLE_PROPFIRMS } from "@/lib/constants"
 import { PropfirmType, AccountType } from "@/types/account.types"
 import { toast } from "@/hooks/use-toast"
 import { Loader2, Plus } from "lucide-react"
@@ -31,9 +31,10 @@ interface BulkAccountFormDialogProps {
   onSuccess: () => void
 }
 
-const PROPFIRM_TYPES = Object.entries(PROPFIRM_LABELS)
-  .filter(([key]) => key !== PropfirmType.OTHER)
-  .map(([value, label]) => ({ value, label }))
+const PROPFIRM_TYPES = AVAILABLE_PROPFIRMS.map((key) => ({
+  value: key,
+  label: PROPFIRM_LABELS[key],
+}))
 
 const ACCOUNT_TYPES = [
   { value: "EVAL", label: "Évaluation" },
