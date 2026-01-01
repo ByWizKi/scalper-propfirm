@@ -19,7 +19,7 @@ export class ApexStrategy implements PropfirmStrategy {
       profitTarget: 1500,
       maxDrawdown: 1500,
       dailyLossLimit: 0, // Pas de limite journalière
-      consistencyRule: 0, // Pas de règle de cohérence
+      consistencyRule: 30, // 30% Windfall Rule pour les payouts
       minTradingDays: 1,
       maxContracts: { mini: 4, micro: 40 },
     },
@@ -27,15 +27,23 @@ export class ApexStrategy implements PropfirmStrategy {
       profitTarget: 3000,
       maxDrawdown: 2500,
       dailyLossLimit: 0,
-      consistencyRule: 0,
+      consistencyRule: 30,
       minTradingDays: 1,
       maxContracts: { mini: 10, micro: 100 },
+    },
+    75000: {
+      profitTarget: 4500,
+      maxDrawdown: 2750,
+      dailyLossLimit: 0,
+      consistencyRule: 30,
+      minTradingDays: 1,
+      maxContracts: { mini: 12, micro: 120 },
     },
     100000: {
       profitTarget: 6000,
       maxDrawdown: 3000,
       dailyLossLimit: 0,
-      consistencyRule: 0,
+      consistencyRule: 30,
       minTradingDays: 1,
       maxContracts: { mini: 14, micro: 140 },
     },
@@ -43,7 +51,7 @@ export class ApexStrategy implements PropfirmStrategy {
       profitTarget: 9000,
       maxDrawdown: 5000,
       dailyLossLimit: 0,
-      consistencyRule: 0,
+      consistencyRule: 30,
       minTradingDays: 1,
       maxContracts: { mini: 17, micro: 170 },
     },
@@ -51,7 +59,7 @@ export class ApexStrategy implements PropfirmStrategy {
       profitTarget: 15000,
       maxDrawdown: 6500,
       dailyLossLimit: 0,
-      consistencyRule: 0,
+      consistencyRule: 30,
       minTradingDays: 1,
       maxContracts: { mini: 27, micro: 270 },
     },
@@ -59,7 +67,7 @@ export class ApexStrategy implements PropfirmStrategy {
       profitTarget: 20000,
       maxDrawdown: 7500,
       dailyLossLimit: 0,
-      consistencyRule: 0,
+      consistencyRule: 30,
       minTradingDays: 1,
       maxContracts: { mini: 35, micro: 350 },
     },
@@ -97,10 +105,11 @@ export class ApexStrategy implements PropfirmStrategy {
   }
 
   calculateBuffer(accountSize: number): number {
-    // Buffer = Balance initiale + Max Drawdown (comme TakeProfitTrader)
+    // Safety Net = Balance initiale + Max Drawdown + $100
+    // Le trailing drawdown s'arrête une fois le safety net atteint
     const rules = this.getAccountRules(accountSize)
     if (!rules) return 0
-    return accountSize + rules.maxDrawdown
+    return accountSize + rules.maxDrawdown + 100
   }
 
   calculateAvailableForWithdrawal(
@@ -112,31 +121,64 @@ export class ApexStrategy implements PropfirmStrategy {
     _accountName?: string,
     _notes?: string | null
   ): number {
-    const buffer = this.calculateBuffer(accountSize)
+    const safetyNet = this.calculateBuffer(accountSize)
     const currentBalance = accountSize + totalPnl - totalWithdrawals
 
-    // 1. Vérifier si le buffer est atteint
-    if (currentBalance < buffer) {
-      return 0 // Pas de retrait possible avant d'atteindre le buffer
+    // 1. Vérifier si le safety net est atteint
+    if (currentBalance < safetyNet) {
+      return 0 // Pas de retrait possible avant d'atteindre le safety net
     }
 
-    // 2. Calculer le nombre de jours de trading (cycles de 8 jours)
-    const tradingDays = new Set(
-      pnlEntries.map((entry) => format(new Date(entry.date), "yyyy-MM-dd"))
-    ).size
+    // 2. Grouper les PnL par jour
+    const dailyPnl: Record<string, number> = {}
+    pnlEntries.forEach((entry) => {
+      const dateKey = format(new Date(entry.date), "yyyy-MM-dd")
+      dailyPnl[dateKey] = (dailyPnl[dateKey] || 0) + entry.amount
+    })
 
-    // 3. Calculer le nombre de cycles complétés (8 jours = 1 cycle)
+    // 3. Compter les jours de trading (minimum 8 jours)
+    const tradingDays = Object.keys(dailyPnl).length
+    if (tradingDays < 8) {
+      return 0 // Minimum 8 jours de trading requis
+    }
+
+    // 4. Compter les jours à +$50 de profit ou plus (minimum 5 jours requis)
+    const profitableDays = Object.values(dailyPnl).filter((amount) => amount >= 50).length
+    if (profitableDays < 5) {
+      return 0 // Minimum 5 jours à +$50 de profit requis
+    }
+
+    // 5. Calculer le nombre de cycles complétés (8 jours = 1 cycle)
     const completedCycles = Math.floor(tradingDays / 8)
 
-    // 4. Pas de retrait possible avant d'avoir complété au moins 1 cycle
+    // 6. Pas de retrait possible avant d'avoir complété au moins 1 cycle
     if (completedCycles === 0) {
       return 0
     }
 
-    // 5. Montant disponible = tout ce qui est au-dessus du buffer
-    const availableAmount = currentBalance - buffer
+    // 7. Calculer le montant disponible au-dessus du safety net
+    const amountAboveSafetyNet = currentBalance - safetyNet
 
-    return Math.max(0, availableAmount)
+    // 8. Appliquer les règles de payout :
+    // - 100% des premiers $25,000 de profit par compte
+    // - 90% ensuite
+    const totalProfit = Math.max(0, totalPnl)
+    const profitAfterWithdrawals = totalProfit - totalWithdrawals
+
+    let withdrawableAmount = 0
+    if (profitAfterWithdrawals <= 25000) {
+      // 100% des premiers $25,000
+      withdrawableAmount = Math.min(amountAboveSafetyNet, profitAfterWithdrawals)
+    } else {
+      // 100% des premiers $25,000 + 90% du reste
+      const first25000 = Math.min(25000, profitAfterWithdrawals)
+      const remaining = Math.max(0, profitAfterWithdrawals - 25000)
+      withdrawableAmount = first25000 + remaining * 0.9
+      // Ne pas dépasser le montant au-dessus du safety net
+      withdrawableAmount = Math.min(withdrawableAmount, amountAboveSafetyNet)
+    }
+
+    return Math.max(0, withdrawableAmount)
   }
 
   isEligibleForValidation(

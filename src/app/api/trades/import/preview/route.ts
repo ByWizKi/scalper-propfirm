@@ -23,6 +23,41 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "Plateforme non supportée" }, { status: 400 })
     }
 
+    // Vérifier la compatibilité plateforme / propfirm si un compte est fourni
+    if (accountId) {
+      const account = await prisma.propfirmAccount.findFirst({
+        where: {
+          id: accountId,
+          userId: session.user.id,
+        },
+      })
+
+      if (account) {
+        // Apex ne peut utiliser QUE Tradovate
+        if (account.propfirm === "APEX" && platform !== "TRADOVATE") {
+          return NextResponse.json(
+            {
+              message: "Les comptes Apex ne peuvent utiliser que Tradovate pour l'import de trades",
+              error: "INCOMPATIBLE_PLATFORM",
+            },
+            { status: 400 }
+          )
+        }
+
+        // Project X n'est pas compatible avec Apex
+        if (platform === "PROJECT_X" && account.propfirm === "APEX") {
+          return NextResponse.json(
+            {
+              message:
+                "Les comptes Apex ne sont pas compatibles avec Project X. Utilisez Tradovate.",
+              error: "INCOMPATIBLE_PLATFORM",
+            },
+            { status: 400 }
+          )
+        }
+      }
+    }
+
     console.info(
       `[API Preview] 🚀 Début - Plateforme: ${platform}, AccountId: ${accountId ? "fourni" : "non fourni"}, Taille CSV: ${csvContent.length} caractères`
     )
