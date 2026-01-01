@@ -2,12 +2,7 @@ import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import {
-  parseProjectXCsv,
-  parseTradovateCsv,
-  groupTradesByDay,
-  type TradingPlatform,
-} from "@/lib/parsers/trade-parser"
+import { parseProjectXCsv, parseTradovateCsv, groupTradesByDay } from "@/lib/parsers/trade-parser"
 
 export async function POST(request: Request) {
   try {
@@ -28,14 +23,46 @@ export async function POST(request: Request) {
     }
 
     if (platform !== "PROJECT_X" && platform !== "TRADOVATE") {
+      return NextResponse.json({ message: "Plateforme non supportée" }, { status: 400 })
+    }
+
+    // Vérifier que le compte appartient à l'utilisateur
+    const account = await prisma.propfirmAccount.findFirst({
+      where: {
+        id: accountId,
+        userId: session.user.id,
+      },
+    })
+
+    if (!account) {
+      return NextResponse.json({ message: "Compte non trouvé" }, { status: 404 })
+    }
+
+    // Vérifier la compatibilité plateforme / propfirm
+    // Apex ne peut utiliser QUE Tradovate
+    if (account.propfirm === "APEX" && platform !== "TRADOVATE") {
       return NextResponse.json(
-        { message: "Plateforme non supportée" },
+        {
+          message: "Les comptes Apex ne peuvent utiliser que Tradovate pour l'import de trades",
+          error: "INCOMPATIBLE_PLATFORM",
+        },
+        { status: 400 }
+      )
+    }
+
+    // Project X n'est pas compatible avec Apex
+    if (platform === "PROJECT_X" && account.propfirm === "APEX") {
+      return NextResponse.json(
+        {
+          message: "Les comptes Apex ne sont pas compatibles avec Project X. Utilisez Tradovate.",
+          error: "INCOMPATIBLE_PLATFORM",
+        },
         { status: 400 }
       )
     }
 
     console.info(
-      `[Import] 🚀 Début import - Plateforme: ${platform}, AccountId: ${accountId}, Taille CSV: ${csvContent.length} caractères`
+      `[Import] 🚀 Début import - Plateforme: ${platform}, AccountId: ${accountId}, Propfirm: ${account.propfirm}, Taille CSV: ${csvContent.length} caractères`
     )
 
     // ÉTAPE 1: Parser le fichier CSV
@@ -55,22 +82,7 @@ export async function POST(request: Request) {
 
     if (allTrades.length === 0) {
       console.warn(`[Import] ⚠️  Aucun trade trouvé dans le fichier`)
-      return NextResponse.json(
-        { message: "Aucun trade trouvé dans le fichier" },
-        { status: 400 }
-      )
-    }
-
-    // Vérifier que le compte appartient à l'utilisateur
-    const account = await prisma.propfirmAccount.findFirst({
-      where: {
-        id: accountId,
-        userId: session.user.id,
-      },
-    })
-
-    if (!account) {
-      return NextResponse.json({ message: "Compte non trouvé" }, { status: 404 })
+      return NextResponse.json({ message: "Aucun trade trouvé dans le fichier" }, { status: 400 })
     }
 
     // Vérifier que prisma.trade est disponible
@@ -78,8 +90,9 @@ export async function POST(request: Request) {
       console.error("[Import] prisma.trade n'est pas disponible")
       return NextResponse.json(
         {
-          message: "Le modèle Trade n'est pas disponible. Veuillez régénérer le client Prisma et redémarrer le serveur.",
-          error: "PRISMA_CLIENT_NOT_UPDATED"
+          message:
+            "Le modèle Trade n'est pas disponible. Veuillez régénérer le client Prisma et redémarrer le serveur.",
+          error: "PRISMA_CLIENT_NOT_UPDATED",
         },
         { status: 500 }
       )
@@ -173,7 +186,9 @@ export async function POST(request: Request) {
       existingPnlMap.set(dateKey, { id: entry.id, date: entry.date, amount: entry.amount })
     }
 
-    console.info(`[Import] 💰 ${existingPnlMap.size} entrée(s) PnL existante(s) dans la plage de dates`)
+    console.info(
+      `[Import] 💰 ${existingPnlMap.size} entrée(s) PnL existante(s) dans la plage de dates`
+    )
 
     // ÉTAPE 7: Traiter les trades et les PnL
     let tradesStored = 0
@@ -206,9 +221,9 @@ export async function POST(request: Request) {
           type: String(trade.type || ""),
           pnl: Number(trade.pnl) || 0,
           fees: Number(trade.fees) || 0,
-          commissions: trade.commissions != null ? Number(trade.commissions) : null,
+          commissions: trade.commissions !== null ? Number(trade.commissions) : null,
           tradeDay: new Date(trade.tradeDay),
-          tradeDuration: trade.tradeDuration != null ? Number(trade.tradeDuration) : null,
+          tradeDuration: trade.tradeDuration !== null ? Number(trade.tradeDuration) : null,
         }
 
         await prisma.trade.create({
@@ -218,13 +233,14 @@ export async function POST(request: Request) {
       } catch (tradeError) {
         tradesFailed++
         const errorMsg = tradeError instanceof Error ? tradeError.message : String(tradeError)
-        console.error(`[Import] ❌ Erreur création trade ${trade.id?.substring(0, 30) || "unknown"}:`, errorMsg)
+        console.error(
+          `[Import] ❌ Erreur création trade ${trade.id?.substring(0, 30) || "unknown"}:`,
+          errorMsg
+        )
       }
     }
 
-    console.info(
-      `[Import] 📦 Trades traités: ${tradesStored} créé(s), ${tradesFailed} échoué(s)`
-    )
+    console.info(`[Import] 📦 Trades traités: ${tradesStored} créé(s), ${tradesFailed} échoué(s)`)
 
     // Traiter les PnL par jour
     for (const day of dailySummary) {
@@ -241,9 +257,10 @@ export async function POST(request: Request) {
           where: { id: existingPnl.id },
           data: {
             amount: newAmount,
-            notes: existingPnl.amount !== newAmount
-              ? `Import: ${day.tradeCount} trade(s) depuis ${platform} (ajouté ${day.totalPnl})`
-              : undefined,
+            notes:
+              existingPnl.amount !== newAmount
+                ? `Import: ${day.tradeCount} trade(s) depuis ${platform} (ajouté ${day.totalPnl})`
+                : undefined,
           },
         })
         pnlUpdated++
@@ -252,7 +269,7 @@ export async function POST(request: Request) {
         )
       } else {
         // Créer un nouveau PnL
-        const newEntry = await prisma.pnlEntry.create({
+        await prisma.pnlEntry.create({
           data: {
             userId: session.user.id,
             accountId,
@@ -262,7 +279,9 @@ export async function POST(request: Request) {
           },
         })
         pnlCreated++
-        console.info(`[Import] ➕ PnL créé pour ${dateKey}: ${day.totalPnl} (${day.tradeCount} trades)`)
+        console.info(
+          `[Import] ➕ PnL créé pour ${dateKey}: ${day.totalPnl} (${day.tradeCount} trades)`
+        )
       }
 
       // Lier tous les trades de ce jour au PnL
@@ -339,7 +358,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         message: `Erreur lors de l'import: ${errorMessage}`,
-        details: process.env.NODE_ENV === "development" ? errorStack : undefined
+        details: process.env.NODE_ENV === "development" ? errorStack : undefined,
       },
       { status: 500 }
     )

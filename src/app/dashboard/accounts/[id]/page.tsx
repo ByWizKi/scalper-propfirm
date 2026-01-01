@@ -176,6 +176,36 @@ export default function AccountDetailPage() {
   const [isPnlHistoryOpen, setIsPnlHistoryOpen] = useState(false)
   const [isWithdrawalHistoryOpen, setIsWithdrawalHistoryOpen] = useState(false)
 
+  // Calculer l'éligibilité pour la validation (même si la section n'est pas ouverte)
+  const calculatedEligibility = useMemo(() => {
+    if (!account || account.accountType !== "EVAL" || account.status !== "ACTIVE") {
+      return false
+    }
+
+    try {
+      const strategy = PropfirmStrategyFactory.getStrategy(account.propfirm)
+      const normalizedPnlEntries = account.pnlEntries.map(
+        (entry: { date: string; amount: number }) => ({
+          date: new Date(entry.date),
+          amount: entry.amount,
+        })
+      )
+      return strategy.isEligibleForValidation(
+        account.size,
+        normalizedPnlEntries,
+        account.accountType,
+        account.name,
+        account.notes
+      )
+    } catch (error) {
+      console.error("Erreur lors du calcul de l'éligibilité:", error)
+      return false
+    }
+  }, [account])
+
+  // Utiliser l'éligibilité calculée ou celle du tracker (si la section est ouverte)
+  const finalEligibility = isRulesOpen ? isEligibleForValidation : calculatedEligibility
+
   const handleDelete = async () => {
     if (!window.confirm("Êtes-vous sûr de vouloir supprimer ce compte ?")) {
       return
@@ -503,19 +533,17 @@ export default function AccountDetailPage() {
 
           {/* Barre d'actions */}
           <div className="flex flex-wrap items-center gap-2 sm:gap-3 pt-3 sm:pt-4 border-t border-slate-200/70 dark:border-[#1e293b]/70">
-            {account.accountType === "EVAL" &&
-              account.status === "ACTIVE" &&
-              isEligibleForValidation && (
-                <Button
-                  onClick={handleValidate}
-                  size="default"
-                  className="bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700 text-xs sm:text-sm font-semibold h-9 sm:h-10 px-3 sm:px-4"
-                >
-                  <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5" />
-                  <span className="hidden sm:inline">Valider le compte</span>
-                  <span className="sm:hidden">Valider</span>
-                </Button>
-              )}
+            {account.accountType === "EVAL" && account.status === "ACTIVE" && finalEligibility && (
+              <Button
+                onClick={handleValidate}
+                size="default"
+                className="bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700 text-xs sm:text-sm font-semibold h-9 sm:h-10 px-3 sm:px-4"
+              >
+                <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5" />
+                <span className="hidden sm:inline">Valider le compte</span>
+                <span className="sm:hidden">Valider</span>
+              </Button>
+            )}
             <Button
               variant="outline"
               size="default"
@@ -792,7 +820,7 @@ export default function AccountDetailPage() {
               </div>
               <div className="flex items-center gap-2">
                 <Info className="h-4 w-4 text-zinc-400" />
-                {isEligibleForValidation && (
+                {finalEligibility && (
                   <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-green-100 dark:bg-green-900/30">
                     <CheckCircle2 className="h-3.5 w-3.5 text-green-600 dark:text-green-500" />
                     <span className="text-xs font-medium text-green-600 dark:text-green-500">
@@ -862,7 +890,11 @@ export default function AccountDetailPage() {
       {/* Règles PA (comptes financés Apex uniquement) */}
       {account.accountType === "FUNDED" && account.propfirm === "APEX" && (
         <section className="rounded-2xl border border-slate-200/70 dark:border-[#1e293b]/70 bg-white/85 dark:bg-[#151b2e]/90 backdrop-blur-sm shadow-sm">
-          <ApexPaRulesTracker accountSize={account.size} pnlEntries={account.pnlEntries} />
+          <ApexPaRulesTracker
+            accountSize={account.size}
+            pnlEntries={account.pnlEntries}
+            totalWithdrawals={totalWithdrawals}
+          />
         </section>
       )}
 

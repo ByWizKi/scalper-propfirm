@@ -86,7 +86,7 @@ export default function TradesImportPage() {
   // Filtrer les comptes selon la plateforme sélectionnée et présélectionner le premier compte
   React.useEffect(() => {
     if (selectedPlatform === "PROJECT_X") {
-      // Filtrer uniquement les comptes compatibles avec Project X
+      // Filtrer uniquement les comptes compatibles avec Project X (exclure Apex)
       const compatibleAccounts = allAccounts.filter((acc) => isProjectXCompatible(acc.propfirm))
       setAccounts(compatibleAccounts)
       // Vérifier si le compte actuel est compatible
@@ -98,7 +98,7 @@ export default function TradesImportPage() {
         setSelectedAccountId(compatibleAccounts[0].id)
       }
     } else if (selectedPlatform === "TRADOVATE") {
-      // Pour Tradovate, on affiche tous les comptes
+      // Pour Tradovate, on affiche tous les comptes (y compris Apex)
       setAccounts(allAccounts)
       // Vérifier si le compte actuel existe toujours
       const currentAccountExists = allAccounts.find((acc) => acc.id === selectedAccountId)
@@ -385,7 +385,18 @@ export default function TradesImportPage() {
                     {PROJECT_X_COMPATIBLE_LIST.slice(0, 5).join(", ")}
                     {PROJECT_X_COMPATIBLE_LIST.length > 5 &&
                       " et " + (PROJECT_X_COMPATIBLE_LIST.length - 5) + " autres"}
-                    . Seuls les comptes compatibles sont affichés ci-dessous.
+                    . Seuls les comptes compatibles sont affichés ci-dessous.{" "}
+                    <strong>Note : Les comptes Apex ne sont pas compatibles avec Project X.</strong>
+                  </AlertDescription>
+                </Alert>
+              )}
+              {selectedPlatform === "TRADOVATE" && (
+                <Alert className="mt-2">
+                  <Info className="h-4 w-4" />
+                  <AlertTitle className="text-xs sm:text-sm">Plateforme Tradovate</AlertTitle>
+                  <AlertDescription className="text-xs mt-1">
+                    Tradovate est compatible avec tous les comptes, y compris les comptes Apex.{" "}
+                    <strong>Les comptes Apex doivent utiliser uniquement Tradovate.</strong>
                   </AlertDescription>
                 </Alert>
               )}
