@@ -24,7 +24,7 @@ import {
   type LucideIcon,
 } from "lucide-react"
 import { StatCard } from "@/components/stat-card"
-import { USD_TO_EUR, PROPFIRM_LABELS, ACCOUNT_TYPE_LABELS } from "@/lib/constants"
+import { USD_TO_EUR, PROPFIRM_LABELS, ACCOUNT_TYPE_LABELS, AVAILABLE_PROPFIRMS } from "@/lib/constants"
 import { PropfirmType, AccountType } from "@/types/account.types"
 import { PropfirmStrategyFactory } from "@/lib/strategies/propfirm-strategy.factory"
 
@@ -372,16 +372,11 @@ export default function CalculationsPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="w-[var(--radix-select-trigger-width)]">
-                  {Object.entries(PROPFIRM_LABELS)
-                    .filter(
-                      ([key]) =>
-                        key === PropfirmType.TOPSTEP || key === PropfirmType.TAKEPROFITTRADER
-                    )
-                    .map(([key, label]) => (
-                      <SelectItem key={key} value={key} className="break-words">
-                        {label}
-                      </SelectItem>
-                    ))}
+                  {AVAILABLE_PROPFIRMS.map((key) => (
+                    <SelectItem key={key} value={key} className="break-words">
+                      {PROPFIRM_LABELS[key]}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               <p className="text-xs text-slate-500 dark:text-slate-400 break-words mt-1">

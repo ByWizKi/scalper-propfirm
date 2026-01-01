@@ -225,7 +225,7 @@ export function TradingCyclesTracker({
     <Card className="rounded-2xl border border-slate-200/70 dark:border-[#1e293b]/70 bg-white/85 dark:bg-[#151b2e]/90 backdrop-blur-sm shadow-sm">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-4 sm:px-5 lg:px-6 py-3 sm:py-4 border-b border-zinc-200/50 dark:border-zinc-800/30 hover:bg-zinc-50/50 dark:hover:bg-zinc-900/50 transition-colors"
+        className="w-full px-4 sm:px-5 lg:px-6 py-3 sm:py-4 border-b border-zinc-200/50 dark:border-zinc-800/30 hover:bg-zinc-50/50 dark:hover:bg-zinc-900/50 transition-colors rounded-t-2xl"
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 flex-1 text-left">

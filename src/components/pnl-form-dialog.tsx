@@ -382,7 +382,7 @@ export function PnlFormDialog({
           accountId: importAccountId,
         }
         localStorage.setItem("lastPnlImport", JSON.stringify(importSettings))
-        console.log("[PnlFormDialog] Saved last import settings:", importSettings)
+        // console.log("[PnlFormDialog] Saved last import settings:", importSettings)
       } catch (error) {
         console.error("Error saving last import settings:", error)
       }
@@ -500,18 +500,18 @@ export function PnlFormDialog({
                       setTimeout(() => {
                         try {
                           const lastImport = localStorage.getItem("lastPnlImport")
-                          console.log("[PnlFormDialog] Loading last import:", lastImport)
+                          // console.log("[PnlFormDialog] Loading last import:", lastImport)
                           if (lastImport) {
                             const { platform, accountId } = JSON.parse(lastImport)
-                            console.log("[PnlFormDialog] Parsed:", { platform, accountId })
+                            // console.log("[PnlFormDialog] Parsed:", { platform, accountId })
                             // Ne préremplir que si c'était Project X
                             if (platform === "PROJECT_X") {
                               const accountExists = accounts.find(
                                 (acc) => acc.id === accountId && acc.status === "ACTIVE"
                               )
-                              console.log("[PnlFormDialog] Account exists:", accountExists)
+                              // console.log("[PnlFormDialog] Account exists:", accountExists)
                               if (accountExists && isProjectXCompatible(accountExists.propfirm)) {
-                                console.log("[PnlFormDialog] Setting platform and account")
+                                // console.log("[PnlFormDialog] Setting platform and account")
                                 setImportPlatform(platform)
                                 setImportAccountId(accountId)
                               }
@@ -728,7 +728,7 @@ export function PnlFormDialog({
                               {groupAccounts.map((account) => (
                                 <div
                                   key={account.id}
-                                  className="flex items-center gap-2 px-2.5 py-1.5 hover:bg-slate-50/50 dark:hover:bg-[#1e293b]/30 cursor-pointer transition-colors"
+                                  className="flex items-center gap-2 px-2.5 py-1.5 hover:bg-slate-50/50 dark:hover:bg-[#1e293b]/30 cursor-pointer transition-colors rounded"
                                   onClick={() => toggleAccountSelection(account.id)}
                                 >
                                   <div
@@ -1061,8 +1061,8 @@ export function PnlFormDialog({
                   </div>
                   <div className="space-y-2 max-h-[180px] overflow-y-auto">
                     {importPreview.map((day, index) => {
-                      const pnlToShow = day.isDuplicate && day.pnlToAdd !== undefined ? day.pnlToAdd : day.totalPnl
-                      const tradesToShow = day.newTradesCount !== undefined ? day.newTradesCount : day.tradeCount
+                      // const pnlToShow = day.isDuplicate && day.pnlToAdd !== undefined ? day.pnlToAdd : day.totalPnl
+                      // const tradesToShow = day.newTradesCount !== undefined ? day.newTradesCount : day.tradeCount
 
                       return (
                         <div

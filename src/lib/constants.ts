@@ -12,21 +12,39 @@ export const PROPFIRM_LABELS: Record<PropfirmType, string> = {
   [PropfirmType.APEX]: "Apex",
   [PropfirmType.BULENOX]: "Bulenox",
   [PropfirmType.PHIDIAS]: "Phidias",
+  [PropfirmType.TRADEIFY]: "Tradeify",
+  [PropfirmType.LUCID]: "Lucid Trading",
   [PropfirmType.OTHER]: "Autre",
   // Propfirms non utilisées (gardées pour compatibilité DB)
   [PropfirmType.FTMO]: "FTMO",
   [PropfirmType.MYFUNDEDFUTURES]: "My Funded Futures",
 }
 
-// Liste des propfirms disponibles dans l'interface utilisateur (sans FTMO et MYFUNDEDFUTURES)
+// Liste des propfirms disponibles dans l'interface utilisateur (uniquement celles implémentées)
 export const AVAILABLE_PROPFIRMS = [
   PropfirmType.TOPSTEP,
   PropfirmType.TAKEPROFITTRADER,
   PropfirmType.APEX,
   PropfirmType.BULENOX,
   PropfirmType.PHIDIAS,
-  PropfirmType.OTHER,
+  PropfirmType.TRADEIFY,
+  PropfirmType.LUCID,
 ] as const
+
+// Mapping des logos des propfirms (utilise les images ajoutées par l'utilisateur)
+export const PROPFIRM_LOGOS: Record<PropfirmType, string> = {
+  [PropfirmType.TOPSTEP]: "/logos/propfirms/topstep.svg",
+  [PropfirmType.TAKEPROFITTRADER]: "/logos/propfirms/TPT.svg",
+  [PropfirmType.APEX]: "/logos/propfirms/apex.png",
+  [PropfirmType.BULENOX]: "/logos/propfirms/bulenox.png",
+  [PropfirmType.PHIDIAS]: "/logos/propfirms/phidias.webp",
+  [PropfirmType.TRADEIFY]: "/logos/propfirms/tradeify.svg",
+  [PropfirmType.LUCID]: "/logos/propfirms/lucid.webp",
+  [PropfirmType.OTHER]: "/logos/propfirms/other.svg",
+  // Propfirms non utilisées (gardées pour compatibilité DB)
+  [PropfirmType.FTMO]: "/logos/propfirms/ftmo.svg",
+  [PropfirmType.MYFUNDEDFUTURES]: "/logos/propfirms/myfundedfutures.svg",
+}
 
 export const ACCOUNT_TYPE_LABELS: Record<AccountType, string> = {
   [AccountType.EVAL]: "Évaluation",
@@ -88,8 +106,20 @@ export const ACCOUNT_SIZES_BY_PROPFIRM: Record<
     { value: "100000", label: "100K" },
     { value: "150000", label: "150K" },
   ],
+  [PropfirmType.TRADEIFY]: [
+    { value: "25000", label: "25K" },
+    { value: "50000", label: "50K" },
+    { value: "100000", label: "100K" },
+    { value: "150000", label: "150K" },
+  ],
+  [PropfirmType.LUCID]: [
+    { value: "25000", label: "25K" },
+    { value: "50000", label: "50K" },
+    { value: "100000", label: "100K" },
+    { value: "150000", label: "150K" },
+  ],
+  // Propfirms non implémentées (gardées pour compatibilité DB uniquement)
   [PropfirmType.OTHER]: [],
-  // Propfirms non utilisées (gardées pour compatibilité DB)
   [PropfirmType.FTMO]: [],
   [PropfirmType.MYFUNDEDFUTURES]: [],
 }
@@ -140,11 +170,19 @@ export const ACCOUNT_PRICES: Record<
     [AccountType.EVAL]: {},
     [AccountType.FUNDED]: {},
   },
+  [PropfirmType.TRADEIFY]: {
+    [AccountType.EVAL]: {},
+    [AccountType.FUNDED]: {},
+  },
+  [PropfirmType.LUCID]: {
+    [AccountType.EVAL]: {},
+    [AccountType.FUNDED]: {},
+  },
+  // Propfirms non implémentées (gardées pour compatibilité DB uniquement)
   [PropfirmType.OTHER]: {
     [AccountType.EVAL]: {},
     [AccountType.FUNDED]: {},
   },
-  // Propfirms non utilisées (gardées pour compatibilité DB)
   [PropfirmType.FTMO]: {
     [AccountType.EVAL]: {},
     [AccountType.FUNDED]: {},

@@ -809,7 +809,7 @@ export default function AccountDetailPage() {
         <section className="rounded-2xl border border-slate-200/70 dark:border-[#1e293b]/70 bg-white/85 dark:bg-[#151b2e]/90 backdrop-blur-sm shadow-sm">
           <button
             onClick={() => setIsRulesOpen(!isRulesOpen)}
-            className="w-full px-4 sm:px-5 lg:px-6 py-3 sm:py-4 border-b border-slate-200/50 dark:border-[#1e293b]/30 hover:bg-slate-50/50 dark:hover:bg-[#1e293b]/50 transition-colors"
+            className="w-full px-4 sm:px-5 lg:px-6 py-3 sm:py-4 border-b border-slate-200/50 dark:border-[#1e293b]/30 hover:bg-slate-50/50 dark:hover:bg-[#1e293b]/50 transition-colors rounded-t-2xl"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 flex-1 text-left">
@@ -846,6 +846,8 @@ export default function AccountDetailPage() {
                 accountType={account.accountType}
                 propfirm={account.propfirm}
                 pnlEntries={account.pnlEntries}
+                accountName={account.name}
+                notes={account.notes}
                 onEligibilityChange={setIsEligibleForValidation}
               />
             </div>
@@ -906,7 +908,7 @@ export default function AccountDetailPage() {
       <section className="rounded-2xl border border-slate-200/70 dark:border-[#1e293b]/70 bg-white/85 dark:bg-[#151b2e]/90 backdrop-blur-sm shadow-sm">
         <button
           onClick={() => setIsTradingStatsOpen(!isTradingStatsOpen)}
-          className="w-full px-4 sm:px-5 lg:px-6 py-3 sm:py-4 border-b border-slate-200/70 dark:border-[#1e293b]/70 hover:bg-slate-50/50 dark:hover:bg-[#1e293b]/50 transition-colors"
+          className="w-full px-4 sm:px-5 lg:px-6 py-3 sm:py-4 border-b border-slate-200/70 dark:border-[#1e293b]/70 hover:bg-slate-50/50 dark:hover:bg-[#1e293b]/50 transition-colors rounded-t-2xl"
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 flex-1 text-left">
@@ -944,7 +946,7 @@ export default function AccountDetailPage() {
         <section className="rounded-2xl border border-slate-200/70 dark:border-[#1e293b]/70 bg-white/85 dark:bg-[#151b2e]/90 backdrop-blur-sm shadow-sm">
           <button
             onClick={() => setIsPnlHistoryOpen(!isPnlHistoryOpen)}
-            className="w-full px-4 sm:px-5 lg:px-6 py-3 sm:py-4 border-b border-slate-200/50 dark:border-[#1e293b]/30 hover:bg-slate-50/50 dark:hover:bg-[#1e293b]/50 transition-colors"
+            className="w-full px-4 sm:px-5 lg:px-6 py-3 sm:py-4 border-b border-slate-200/50 dark:border-[#1e293b]/30 hover:bg-slate-50/50 dark:hover:bg-[#1e293b]/50 transition-colors rounded-t-2xl"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 flex-1 text-left">
@@ -1112,7 +1114,7 @@ export default function AccountDetailPage() {
           <section className="rounded-2xl border border-slate-200/70 dark:border-[#1e293b]/70 bg-white/85 dark:bg-[#151b2e]/90 backdrop-blur-sm shadow-sm">
             <button
               onClick={() => setIsWithdrawalHistoryOpen(!isWithdrawalHistoryOpen)}
-              className="w-full px-4 sm:px-5 lg:px-6 py-3 sm:py-4 border-b border-slate-200/50 dark:border-[#1e293b]/30 hover:bg-slate-50/50 dark:hover:bg-[#1e293b]/50 transition-colors"
+              className="w-full px-4 sm:px-5 lg:px-6 py-3 sm:py-4 border-b border-slate-200/50 dark:border-[#1e293b]/30 hover:bg-slate-50/50 dark:hover:bg-[#1e293b]/50 transition-colors rounded-t-2xl"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 flex-1 text-left">
