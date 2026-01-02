@@ -52,26 +52,35 @@ Une fois le script exécuté, le prochain déploiement devrait réussir. La migr
 
 ## Comment résoudre le problème
 
-### Option 1 : Utiliser Prisma CLI (Recommandé)
+### Option 1 : Modifier la commande de build sur Render (Recommandé - Automatique)
+
+Si le terminal ne fonctionne pas, modifiez directement la commande de build dans Render :
+
+1. Allez dans le Dashboard Render
+2. Sélectionnez votre service web
+3. Allez dans "Settings" → "Build Command"
+4. Remplacez la commande actuelle par :
+   ```bash
+   npm install && npx prisma generate && (npx prisma migrate resolve --applied 20260101182646_add_tradeify || true) && npx prisma migrate deploy && npm run build
+   ```
+5. Sauvegardez et redéployez
+
+Cette commande résoudra automatiquement la migration échouée avant d'essayer d'appliquer les migrations.
+
+### Option 2 : SQL via l'interface de base de données Render
+
+1. Allez dans le Dashboard Render
+2. Sélectionnez votre service de base de données PostgreSQL
+3. Cliquez sur "Connect" (interface web de la base de données)
+4. Exécutez le script SQL ci-dessus dans l'éditeur SQL
+
+### Option 3 : Utiliser Prisma CLI (si terminal disponible)
 
 1. Connectez-vous à votre environnement de production (via SSH ou shell Render)
 2. Exécutez la commande Prisma :
    ```bash
    npx prisma migrate resolve --applied 20260101182646_add_tradeify
    ```
-
-### Option 2 : SQL manuel
-
-1. Allez dans le Dashboard Render
-2. Sélectionnez votre service de base de données PostgreSQL
-3. Cliquez sur "Connect" ou "Shell"
-4. Exécutez le script SQL ci-dessus
-
-Ou utilisez `psql` avec la connection string de votre base de données :
-
-```bash
-psql $DATABASE_URL -f scripts/resolve-failed-migration.sql
-```
 
 ## Après la résolution
 
