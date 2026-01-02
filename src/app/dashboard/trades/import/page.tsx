@@ -21,6 +21,7 @@ import {
   isProjectXCompatible,
   PROJECT_X_COMPATIBLE_LIST,
 } from "@/lib/constants/project-x-compatible"
+import { isTradovateCompatible } from "@/lib/constants/tradovate-compatible"
 import { Info } from "lucide-react"
 
 interface ExtendedError extends Error {
@@ -98,10 +99,17 @@ export default function TradesImportPage() {
         setSelectedAccountId(compatibleAccounts[0].id)
       }
     } else if (selectedPlatform === "TRADOVATE") {
-      // Pour Tradovate, on affiche tous les comptes (y compris Apex)
-      setAccounts(allAccounts)
+      // Filtrer uniquement les comptes compatibles avec Tradovate (Apex et Tradeify)
+      const compatibleAccounts = allAccounts.filter((acc) => isTradovateCompatible(acc.propfirm))
+      setAccounts(compatibleAccounts)
+      // Vérifier si le compte actuel est compatible
+      const currentAccountCompatible = compatibleAccounts.find((acc) => acc.id === selectedAccountId)
+      // Si le compte actuel n'est pas compatible ou si aucun compte n'est sélectionné, présélectionner le premier
+      if (!currentAccountCompatible && compatibleAccounts.length > 0) {
+        setSelectedAccountId(compatibleAccounts[0].id)
+      }
       // Vérifier si le compte actuel existe toujours
-      const currentAccountExists = allAccounts.find((acc) => acc.id === selectedAccountId)
+      const currentAccountExists = compatibleAccounts.find((acc) => acc.id === selectedAccountId)
       // Si le compte actuel n'existe pas ou si aucun compte n'est sélectionné, présélectionner le premier
       if (!currentAccountExists && allAccounts.length > 0) {
         setSelectedAccountId(allAccounts[0].id)
@@ -395,8 +403,7 @@ export default function TradesImportPage() {
                   <Info className="h-4 w-4" />
                   <AlertTitle className="text-xs sm:text-sm">Plateforme Tradovate</AlertTitle>
                   <AlertDescription className="text-xs mt-1">
-                    Tradovate est compatible avec tous les comptes, y compris les comptes Apex.{" "}
-                    <strong>Les comptes Apex doivent utiliser uniquement Tradovate.</strong>
+                    Tradovate est compatible avec les comptes <strong>Apex et Tradeify</strong> uniquement.
                   </AlertDescription>
                 </Alert>
               )}

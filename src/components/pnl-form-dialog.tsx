@@ -24,6 +24,7 @@ import { useCreatePnlMutation, useCreateMultiplePnlMutation, useUpdatePnlMutatio
 import { useNotification } from "@/hooks/use-notification"
 import type { TradingPlatform } from "@/lib/parsers/trade-parser"
 import { isProjectXCompatible } from "@/lib/constants/project-x-compatible"
+import { isTradovateCompatible } from "@/lib/constants/tradovate-compatible"
 import { emitEvent, AppEvents } from "@/lib/events/event-bus"
 
 interface PnlEntry {
@@ -459,7 +460,9 @@ export function PnlFormDialog({
   // Filtrer les comptes selon la plateforme pour l'import
   const importFilteredAccounts = accounts.filter((account) => {
     if (account.status !== "ACTIVE") return false
+    // Filtrer selon la compatibilité avec la plateforme sélectionnée
     if (importPlatform === "PROJECT_X" && !isProjectXCompatible(account.propfirm)) return false
+    if (importPlatform === "TRADOVATE" && !isTradovateCompatible(account.propfirm)) return false
     return true
   })
 
@@ -1004,10 +1007,11 @@ export function PnlFormDialog({
                       ))}
                     </SelectContent>
                   </Select>
-                  {importPlatform === "PROJECT_X" && importFilteredAccounts.length === 0 && (
+                  {importFilteredAccounts.length === 0 && importPlatform && (
                     <p className="text-xs text-orange-600 dark:text-orange-400 mt-1">
-                      Aucun compte compatible avec Project X trouvé. Seuls certains propfirms sont
-                      compatibles.
+                      Aucun compte compatible avec {importPlatform === "PROJECT_X" ? "Project X" : "Tradovate"} trouvé.
+                      {importPlatform === "PROJECT_X" && " Seuls TopStep, Bulenox et Lucid sont compatibles avec Project X."}
+                      {importPlatform === "TRADOVATE" && " Seuls Apex et Tradeify sont compatibles avec Tradovate."}
                     </p>
                   )}
                 </div>
