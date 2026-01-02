@@ -4,9 +4,21 @@
 
 La migration `20260101182646_add_tradeify` a échoué en production et Prisma bloque l'application de nouvelles migrations tant que cette migration n'est pas résolue.
 
-## Solution immédiate (à exécuter manuellement)
+**Erreur Prisma :** `P3009 - migrate found failed migrations in the target database`
 
-**Connectez-vous à votre base de données PostgreSQL de production** et exécutez le script suivant :
+## Solution recommandée par Prisma
+
+Selon la [documentation officielle Prisma](https://pris.ly/d/migrate-resolve), utilisez la commande suivante :
+
+```bash
+npx prisma migrate resolve --applied 20260101182646_add_tradeify
+```
+
+Cette commande marque la migration comme appliquée dans la table `_prisma_migrations`.
+
+## Solution alternative (SQL manuel)
+
+Si vous ne pouvez pas exécuter la commande Prisma, **connectez-vous à votre base de données PostgreSQL de production** et exécutez le script suivant :
 
 ```sql
 -- Marquer la migration échouée comme résolue
@@ -38,7 +50,17 @@ END $$;
 
 Une fois le script exécuté, le prochain déploiement devrait réussir. La migration de résolution `20260102203000_resolve_failed_tradeify_migration_production` sera automatiquement appliquée lors du prochain déploiement.
 
-## Comment se connecter à la base de données Render
+## Comment résoudre le problème
+
+### Option 1 : Utiliser Prisma CLI (Recommandé)
+
+1. Connectez-vous à votre environnement de production (via SSH ou shell Render)
+2. Exécutez la commande Prisma :
+   ```bash
+   npx prisma migrate resolve --applied 20260101182646_add_tradeify
+   ```
+
+### Option 2 : SQL manuel
 
 1. Allez dans le Dashboard Render
 2. Sélectionnez votre service de base de données PostgreSQL
@@ -50,3 +72,7 @@ Ou utilisez `psql` avec la connection string de votre base de données :
 ```bash
 psql $DATABASE_URL -f scripts/resolve-failed-migration.sql
 ```
+
+## Après la résolution
+
+Une fois la migration marquée comme résolue, le prochain déploiement devrait réussir. La migration de résolution `20260102203000_resolve_failed_tradeify_migration_production` sera automatiquement appliquée lors du prochain déploiement.
