@@ -3,10 +3,10 @@
 
 -- Étape 1: Marquer la migration échouée comme résolue dans _prisma_migrations
 UPDATE "_prisma_migrations"
-SET
+SET 
   "finished_at" = NOW(),
   "logs" = 'Migration resolved: TRADEIFY enum value already exists or was successfully added'
-WHERE
+WHERE 
   "migration_name" = '20260101182646_add_tradeify'
   AND "finished_at" IS NULL;
 
@@ -15,9 +15,9 @@ DO $$
 BEGIN
   -- Vérifier si TRADEIFY existe déjà dans l'enum PropfirmType
   IF NOT EXISTS (
-    SELECT 1
-    FROM pg_enum
-    WHERE enumlabel = 'TRADEIFY'
+    SELECT 1 
+    FROM pg_enum 
+    WHERE enumlabel = 'TRADEIFY' 
     AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'PropfirmType')
   ) THEN
     -- Ajouter TRADEIFY seulement s'il n'existe pas
