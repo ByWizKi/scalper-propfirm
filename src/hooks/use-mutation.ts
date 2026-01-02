@@ -55,10 +55,10 @@ export function useMutation<TData = any, TVariables = any>(
   const [data, setData] = useState<TData | null>(null)
 
   // Import dynamique pour éviter les dépendances circulaires
-  const getNotification = useCallback(() => {
-    // Lazy import pour éviter les problèmes de dépendances circulaires
-    return import("@/hooks/use-notification").then((m) => m.useNotification())
-  }, [])
+  // const getNotification = useCallback(() => {
+  //   // Lazy import pour éviter les problèmes de dépendances circulaires
+  //   return import("@/hooks/use-notification").then((m) => m.useNotification())
+  // }, [])
 
   const mutate = useCallback(
     async (variables: TVariables) => {
@@ -77,11 +77,21 @@ export function useMutation<TData = any, TVariables = any>(
         // Le cache écoute déjà les événements via useEvent, donc l'émission synchrone fonctionne
         if (options.successEvent && options.getEventData) {
           const eventData = options.getEventData(result, variables)
-          console.log("[useMutation] Emitting event:", options.successEvent, "with data:", eventData)
+          console.info(
+            "[useMutation] Emitting event:",
+            options.successEvent,
+            "with data:",
+            eventData
+          )
           emitEvent(options.successEvent, eventData)
-          console.log("[useMutation] Event emitted")
+          console.info("[useMutation] Event emitted")
         } else {
-          console.log("[useMutation] No event to emit - successEvent:", options.successEvent, "getEventData:", !!options.getEventData)
+          console.info(
+            "[useMutation] No event to emit - successEvent:",
+            options.successEvent,
+            "getEventData:",
+            !!options.getEventData
+          )
         }
 
         // Callback de succès
@@ -246,7 +256,13 @@ export function useCreatePnlMutation() {
 
 export function useUpdatePnlMutation() {
   return useMutation(
-    async (data: { id: string; accountId: string; date: string; amount: number; notes?: string }) => {
+    async (data: {
+      id: string
+      accountId: string
+      date: string
+      amount: number
+      notes?: string
+    }) => {
       const response = await fetch(`/api/pnl/${data.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -329,7 +345,7 @@ export function useCreateMultiplePnlMutation() {
         throw new Error("Montant invalide")
       }
 
-      const promises = data.accountIds.map(accountId =>
+      const promises = data.accountIds.map((accountId) =>
         fetch("/api/pnl", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -435,7 +451,7 @@ export function useCreateMultipleWithdrawalsMutation() {
         throw new Error("Montant invalide")
       }
 
-      const promises = data.accountIds.map(accountId =>
+      const promises = data.accountIds.map((accountId) =>
         fetch("/api/withdrawals", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -472,4 +488,3 @@ export function useCreateMultipleWithdrawalsMutation() {
     }
   )
 }
-

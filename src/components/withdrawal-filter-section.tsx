@@ -1,6 +1,6 @@
 "use client"
 
-import { Filter, Activity, DollarSign } from "lucide-react"
+import { Filter, DollarSign } from "lucide-react"
 import {
   Select,
   SelectContent,
@@ -204,4 +204,3 @@ export function WithdrawalFilterSection({
     </section>
   )
 }
-

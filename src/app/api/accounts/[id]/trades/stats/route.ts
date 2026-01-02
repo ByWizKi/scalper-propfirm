@@ -3,14 +3,12 @@ import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { calculateTradingStats } from "@/services/trading-stats.service"
+import { Prisma } from "@prisma/client"
 
 /**
  * GET - Récupérer les statistiques de trading d'un compte
  */
-export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = (await getServerSession(authOptions)) as { user?: { id?: string } } | null
 
@@ -34,11 +32,14 @@ export async function GET(
 
     // Vérifier que prisma.trade est disponible
     if (!prisma.trade) {
-      console.error("[Stats] prisma.trade n'est pas disponible. Le client Prisma doit être régénéré.")
+      console.error(
+        "[Stats] prisma.trade n'est pas disponible. Le client Prisma doit être régénéré."
+      )
       return NextResponse.json(
         {
-          message: "Le modèle Trade n'est pas disponible. Veuillez régénérer le client Prisma et redémarrer le serveur.",
-          error: "PRISMA_CLIENT_NOT_UPDATED"
+          message:
+            "Le modèle Trade n'est pas disponible. Veuillez régénérer le client Prisma et redémarrer le serveur.",
+          error: "PRISMA_CLIENT_NOT_UPDATED",
         },
         { status: 500 }
       )
@@ -49,12 +50,10 @@ export async function GET(
     const startDateParam = searchParams.get("startDate")
     const endDateParam = searchParams.get("endDate")
 
-    console.log("[Stats API] Date params received:", { startDateParam, endDateParam })
-
     // Récupérer tous les trades du compte dans la plage de dates
     let trades
     try {
-      let whereCondition: any = {
+      const whereCondition: Prisma.TradeWhereInput = {
         accountId,
         userId: session.user.id,
       }
@@ -67,19 +66,10 @@ export async function GET(
         startDateOnly = startDateParam.split("T")[0]
         endDateOnly = endDateParam.split("T")[0]
 
-        console.log("[Stats API] Date params:", { startDateParam, endDateParam, startDateOnly, endDateOnly })
-
         // Créer les dates en UTC pour éviter les problèmes de fuseau horaire
         // startDateParam est au format "YYYY-MM-DDTHH:mm:ss.sssZ"
         const startDate = new Date(startDateOnly + "T00:00:00.000Z")
         const endDate = new Date(endDateOnly + "T23:59:59.999Z")
-
-        console.log("[Stats API] Parsed dates:", {
-          startDate: startDate.toISOString(),
-          endDate: endDate.toISOString(),
-          startDateUTC: startDate.getTime(),
-          endDateUTC: endDate.getTime(),
-        })
 
         // Si début = fin (comparer seulement les dates sans les heures), utiliser uniquement ce jour avec lte
         if (startDateOnly === endDateOnly) {
@@ -87,10 +77,7 @@ export async function GET(
             gte: startDate,
             lte: endDate,
           }
-          console.log("[Stats API] Single day filter:", {
-            gte: startDate.toISOString(),
-            lte: endDate.toISOString(),
-          })
+          // Single day filter applied
         } else {
           // Pour une plage, ajouter 1 jour pour inclure toute la journée de fin
           const endDateExclusive = new Date(endDate)
@@ -100,10 +87,7 @@ export async function GET(
             gte: startDate,
             lt: endDateExclusive,
           }
-          console.log("[Stats API] Date range filter:", {
-            gte: startDate.toISOString(),
-            lt: endDateExclusive.toISOString(),
-          })
+          // Date range filter applied
         }
       } else {
         // Par défaut, journée courante
@@ -123,28 +107,29 @@ export async function GET(
           tradeDay: "asc",
         },
       })
-      const dateRange = startDateParam && endDateParam && startDateOnly && endDateOnly
-        ? startDateOnly === endDateOnly
-          ? startDateOnly
-          : `${startDateOnly} - ${endDateOnly}`
-        : "journée courante"
-      console.info(`[Stats] ${trades.length} trades trouvés pour le compte ${accountId} (${dateRange})`)
+      const dateRange =
+        startDateParam && endDateParam && startDateOnly && endDateOnly
+          ? startDateOnly === endDateOnly
+            ? startDateOnly
+            : `${startDateOnly} - ${endDateOnly}`
+          : "journée courante"
+      console.info(
+        `[Stats] ${trades.length} trades trouvés pour le compte ${accountId} (${dateRange})`
+      )
 
       // Log des dates des trades trouvés pour déboguer
       if (trades.length > 0) {
-        const tradeDates = trades.map(t => ({
+        const _tradeDates = trades.map((t) => ({
           id: t.id,
           tradeDay: t.tradeDay,
-          tradeDayISO: t.tradeDay instanceof Date ? t.tradeDay.toISOString() : new Date(t.tradeDay).toISOString(),
+          tradeDayISO:
+            t.tradeDay instanceof Date
+              ? t.tradeDay.toISOString()
+              : new Date(t.tradeDay).toISOString(),
         }))
-        console.log("[Stats] Sample trade dates (first 5):", tradeDates.slice(0, 5))
+        // Sample trade dates logged
       } else {
-        console.log("[Stats] Aucun trade trouvé avec la condition:", JSON.stringify(whereCondition, (key, value) => {
-          if (value instanceof Date) {
-            return value.toISOString()
-          }
-          return value
-        }, 2))
+        // No trades found with condition
       }
     } catch (dbError) {
       console.error("[Stats] Erreur lors de la récupération des trades:", dbError)
@@ -180,14 +165,9 @@ export async function GET(
     // Calculer les statistiques
     let stats
     try {
-      console.log(`[Stats] Calculating stats for ${formattedTrades.length} trades`)
+      // Calculating stats
       stats = calculateTradingStats(formattedTrades)
-      console.log("[Stats] Stats calculated:", {
-        totalTrades: stats.totalTrades,
-        avgWin: stats.avgWin,
-        avgLoss: stats.avgLoss,
-        tradeWinPercent: stats.tradeWinPercent,
-      })
+      // Stats calculated
     } catch (calcError) {
       console.error("[Stats] Erreur lors du calcul:", calcError)
       throw calcError
@@ -210,10 +190,9 @@ export async function GET(
     return NextResponse.json(
       {
         message: `Erreur lors du calcul des statistiques: ${errorMessage}`,
-        details: process.env.NODE_ENV === "development" ? errorStack : undefined
+        details: process.env.NODE_ENV === "development" ? errorStack : undefined,
       },
       { status: 500 }
     )
   }
 }
-

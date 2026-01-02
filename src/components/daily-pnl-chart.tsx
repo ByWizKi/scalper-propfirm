@@ -20,11 +20,16 @@ const COLORS = {
   red: "#ef4444",
 }
 
-export function DailyPnlChart({ data, currentDate, totalPnl }: DailyPnlChartProps) {
+export function DailyPnlChart({
+  data,
+  currentDate: _currentDate,
+  totalPnl: _totalPnl,
+}: DailyPnlChartProps) {
   const svgRef = useRef<SVGSVGElement>(null)
 
   const chartData = useMemo(() => {
-    if (data.length === 0) return { segments: [], minTime: 0, maxTime: 0, minBalance: 0, maxBalance: 0 }
+    if (data.length === 0)
+      return { segments: [], minTime: 0, maxTime: 0, minBalance: 0, maxBalance: 0 }
 
     // Utiliser directement les timestamps des données
     const dataWithTimestamps = data
@@ -54,8 +59,7 @@ export function DailyPnlChart({ data, currentDate, totalPnl }: DailyPnlChartProp
 
       // Si on change de signe, créer un nouveau segment avec un point à zéro
       if (isPositive !== currentIsPositive && currentSegment.length > 0) {
-        // Ajouter le dernier point du segment précédent
-        const lastPoint = currentSegment[currentSegment.length - 1]
+        // Ajouter le dernier point du segment précédent (utilisé implicitement via currentSegment)
         // Créer un point à zéro pour la transition
         const zeroPoint = {
           timestamp: point.timestamp,
@@ -116,15 +120,10 @@ export function DailyPnlChart({ data, currentDate, totalPnl }: DailyPnlChartProp
       svg.attr("width", containerWidth).attr("height", totalHeight)
 
       // Créer le groupe principal
-      const g = svg
-        .append("g")
-        .attr("transform", `translate(${margin.left},${margin.top})`)
+      const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`)
 
       // Échelles
-      const xScale = d3
-        .scaleTime()
-        .domain([chartData.minTime, chartData.maxTime])
-        .range([0, width])
+      const xScale = d3.scaleTime().domain([chartData.minTime, chartData.maxTime]).range([0, width])
 
       const yScale = d3
         .scaleLinear()
@@ -142,9 +141,9 @@ export function DailyPnlChart({ data, currentDate, totalPnl }: DailyPnlChartProp
       // Zone remplie
       const area = d3
         .area<{ timestamp: number; balance: number }>()
-        .x((d) => xScale(d.timestamp))
-        .y0((d) => yScale(0))
-        .y1((d) => yScale(d.balance))
+        .x((_d) => xScale(_d.timestamp))
+        .y0((_d) => yScale(0))
+        .y1((_d) => yScale(_d.balance))
         .curve(d3.curveStepAfter)
 
       // Créer les définitons (dégradés et filtres)
@@ -243,7 +242,7 @@ export function DailyPnlChart({ data, currentDate, totalPnl }: DailyPnlChartProp
             hour12: false,
           })
         })
-        .ticks(isMobile ? (data.length > 6 ? 6 : data.length) : (data.length > 10 ? 10 : data.length))
+        .ticks(isMobile ? (data.length > 6 ? 6 : data.length) : data.length > 10 ? 10 : data.length)
 
       g.append("g")
         .attr("transform", `translate(0,${height})`)
@@ -297,8 +296,7 @@ export function DailyPnlChart({ data, currentDate, totalPnl }: DailyPnlChartProp
         .text("Profit ($)")
 
       // Points interactifs avec marqueur au survol
-      const points = g
-        .selectAll(".trade-point")
+      g.selectAll(".trade-point")
         .data(data)
         .enter()
         .append("circle")
@@ -344,7 +342,6 @@ export function DailyPnlChart({ data, currentDate, totalPnl }: DailyPnlChartProp
 
     // Variables pour la gestion des performances
     let resizeTimeout: NodeJS.Timeout | null = null
-    let rafId: number | null = null
 
     // Rendre le graphique initial
     renderChart()
@@ -381,9 +378,8 @@ export function DailyPnlChart({ data, currentDate, totalPnl }: DailyPnlChartProp
         width="100%"
         height="350"
         className="overflow-visible"
-        style={{ minWidth: '320px', minHeight: '280px' }}
+        style={{ minWidth: "320px", minHeight: "280px" }}
       />
     </div>
   )
 }
-

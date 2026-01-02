@@ -1,6 +1,6 @@
 "use client"
 
-import { Filter, Activity, Target, Wallet, ShieldCheck, Eye } from "lucide-react"
+import { Filter, Activity } from "lucide-react"
 import {
   Select,
   SelectContent,
@@ -8,7 +8,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Button } from "@/components/ui/button"
 
 interface FilterSectionProps {
   statusFilter: "all" | "active" | "validated" | "failed"

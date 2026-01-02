@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useMemo } from "react"
+import { useEffect, useState, useMemo, useCallback } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   TrendingUp,
@@ -14,7 +14,6 @@ import {
   DollarSign,
   AlertCircle,
   Loader2,
-  TrendingUp as TrendingUpIcon,
   ArrowUpDown,
   ArrowDownToLine,
   ArrowUpFromLine,
@@ -38,11 +37,7 @@ interface DailyBalanceData {
   timestamp: number
 }
 
-const COLORS = {
-  green: "#16a34a", // green-600 (plus sobre)
-  red: "#dc2626", // red-600 (plus sobre)
-  neutral: "#6b7280", // zinc-500
-}
+// Colors are defined inline where needed
 
 export function TradingStatsComponent({ accountId }: TradingStatsProps) {
   const [stats, setStats] = useState<TradingStats | null>(null)
@@ -69,6 +64,85 @@ export function TradingStatsComponent({ accountId }: TradingStatsProps) {
   // Clé pour forcer le re-render des stats
   const [statsKey, setStatsKey] = useState(0)
 
+  const calculateDailyBalance = useCallback(
+    (trades: Array<{ enteredAt: string; pnl: number; fees: number; commissions?: number }>) => {
+      // Filtrer les trades selon la plage de dates sélectionnée
+      const startDate = dateRange.start ? new Date(dateRange.start) : null
+      const endDate = dateRange.end ? new Date(dateRange.end) : null
+
+      if (startDate) {
+        startDate.setHours(0, 0, 0, 0)
+      }
+      if (endDate) {
+        // Si début = fin, utiliser uniquement ce jour
+        if (dateRange.start === dateRange.end) {
+          endDate.setHours(23, 59, 59, 999)
+        } else {
+          // Pour une plage, inclure toute la journée de fin
+          endDate.setHours(23, 59, 59, 999)
+        }
+      }
+
+      const filteredTrades = trades.filter((trade) => {
+        const tradeDate = new Date(trade.enteredAt)
+        if (startDate && tradeDate < startDate) return false
+        if (endDate) {
+          // Si début = fin, utiliser <= pour inclure toute la journée
+          if (dateRange.start === dateRange.end) {
+            if (tradeDate > endDate) return false
+          } else {
+            // Pour une plage, exclure le jour suivant
+            const tradeDayOnly = new Date(tradeDate)
+            tradeDayOnly.setHours(0, 0, 0, 0)
+            const endDayOnly = new Date(endDate)
+            endDayOnly.setHours(0, 0, 0, 0)
+            if (tradeDayOnly > endDayOnly) return false
+          }
+        }
+        return true
+      })
+
+      if (filteredTrades.length === 0) {
+        setDailyBalance([])
+        return
+      }
+
+      // Trier par heure d'entrée
+      filteredTrades.sort(
+        (a, b) => new Date(a.enteredAt).getTime() - new Date(b.enteredAt).getTime()
+      )
+
+      // Calculer la balance cumulative au fil du temps
+      let cumulativeBalance = 0
+      const balanceData: DailyBalanceData[] = []
+
+      filteredTrades.forEach((trade) => {
+        const netPnl = trade.pnl - trade.fees - (trade.commissions || 0)
+        cumulativeBalance += netPnl
+
+        const tradeTime = new Date(trade.enteredAt)
+        // Format HH:MM en français (24h)
+        const timeString = tradeTime.toLocaleTimeString("fr-FR", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false,
+        })
+
+        // Calculer le timestamp pour D3.js
+        const timestamp = tradeTime.getTime()
+
+        balanceData.push({
+          time: timeString,
+          balance: Math.round(cumulativeBalance * 100) / 100,
+          timestamp,
+        })
+      })
+
+      setDailyBalance(balanceData)
+    },
+    [dateRange.start, dateRange.end]
+  )
+
   useEffect(() => {
     if (!accountId) {
       setIsLoading(false)
@@ -92,7 +166,7 @@ export function TradingStatsComponent({ accountId }: TradingStatsProps) {
         const queryString = params.toString()
         const urlSuffix = queryString ? `?${queryString}` : ""
 
-        console.log("[TradingStats] Fetching data with date range:", dateRange, "URL suffix:", urlSuffix)
+        // Fetching data with date range
 
         const [statsRes, tradesRes] = await Promise.all([
           fetch(`/api/accounts/${accountId}/trades/stats${urlSuffix}`),
@@ -101,18 +175,14 @@ export function TradingStatsComponent({ accountId }: TradingStatsProps) {
 
         if (!statsRes.ok) {
           const errorData = await statsRes.json().catch(() => ({}))
-          const errorMessage = errorData.message || `Erreur ${statsRes.status}: ${statsRes.statusText}`
+          const errorMessage =
+            errorData.message || `Erreur ${statsRes.status}: ${statsRes.statusText}`
           console.error("[TradingStats] Error fetching stats:", errorMessage)
           throw new Error(errorMessage)
         }
 
         const statsData = await statsRes.json()
-        console.log("[TradingStats] Stats data received:", {
-          hasStats: !!statsData.stats,
-          totalTrades: statsData.totalTrades,
-          hasTrades: statsData.hasTrades,
-          dateRange: dateRange,
-        })
+        // Stats data received
 
         if (statsData.stats) {
           setStats(statsData.stats)
@@ -140,81 +210,7 @@ export function TradingStatsComponent({ accountId }: TradingStatsProps) {
     }
 
     fetchData()
-  }, [accountId, dateRange.start, dateRange.end])
-
-  const calculateDailyBalance = (trades: Array<{ enteredAt: string; pnl: number; fees: number; commissions?: number }>) => {
-    // Filtrer les trades selon la plage de dates sélectionnée
-    const startDate = dateRange.start ? new Date(dateRange.start) : null
-    const endDate = dateRange.end ? new Date(dateRange.end) : null
-
-    if (startDate) {
-      startDate.setHours(0, 0, 0, 0)
-    }
-    if (endDate) {
-      // Si début = fin, utiliser uniquement ce jour
-      if (dateRange.start === dateRange.end) {
-        endDate.setHours(23, 59, 59, 999)
-      } else {
-        // Pour une plage, inclure toute la journée de fin
-        endDate.setHours(23, 59, 59, 999)
-      }
-    }
-
-    const filteredTrades = trades.filter((trade) => {
-      const tradeDate = new Date(trade.enteredAt)
-      if (startDate && tradeDate < startDate) return false
-      if (endDate) {
-        // Si début = fin, utiliser <= pour inclure toute la journée
-        if (dateRange.start === dateRange.end) {
-          if (tradeDate > endDate) return false
-        } else {
-          // Pour une plage, exclure le jour suivant
-          const tradeDayOnly = new Date(tradeDate)
-          tradeDayOnly.setHours(0, 0, 0, 0)
-          const endDayOnly = new Date(endDate)
-          endDayOnly.setHours(0, 0, 0, 0)
-          if (tradeDayOnly > endDayOnly) return false
-        }
-      }
-      return true
-    })
-
-    if (filteredTrades.length === 0) {
-      setDailyBalance([])
-      return
-    }
-
-    // Trier par heure d'entrée
-    filteredTrades.sort((a, b) => new Date(a.enteredAt).getTime() - new Date(b.enteredAt).getTime())
-
-    // Calculer la balance cumulative au fil du temps
-    let cumulativeBalance = 0
-    const balanceData: DailyBalanceData[] = []
-
-    filteredTrades.forEach((trade) => {
-      const netPnl = trade.pnl - trade.fees - (trade.commissions || 0)
-      cumulativeBalance += netPnl
-
-      const tradeTime = new Date(trade.enteredAt)
-      // Format HH:MM en français (24h)
-      const timeString = tradeTime.toLocaleTimeString("fr-FR", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-      })
-
-      // Calculer le timestamp pour D3.js
-      const timestamp = tradeTime.getTime()
-
-      balanceData.push({
-        time: timeString,
-        balance: Math.round(cumulativeBalance * 100) / 100,
-        timestamp,
-      })
-    })
-
-    setDailyBalance(balanceData)
-  }
+  }, [accountId, dateRange.start, dateRange.end, calculateDailyBalance])
 
   // Obtenir la date formatée pour le titre (format français)
   const currentDate = useMemo(() => {
@@ -316,8 +312,8 @@ export function TradingStatsComponent({ accountId }: TradingStatsProps) {
                   <p>
                     <strong>Trades importés :</strong> Lorsque vous importez un fichier CSV depuis
                     Project X ou Tradovate, chaque trade individuel est stocké dans la base de
-                    données. Cela permet de calculer des statistiques détaillées comme le pourcentage
-                    de trades gagnants, la durée moyenne des trades, etc.
+                    données. Cela permet de calculer des statistiques détaillées comme le
+                    pourcentage de trades gagnants, la durée moyenne des trades, etc.
                   </p>
                   <p>
                     <strong>PnL manuels :</strong> Quand vous ajoutez un PnL manuellement (montant
@@ -353,7 +349,10 @@ export function TradingStatsComponent({ accountId }: TradingStatsProps) {
         <CardContent className="p-3 sm:p-4">
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
             <div className="flex-1 space-y-2">
-              <Label htmlFor="startDate" className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400">
+              <Label
+                htmlFor="startDate"
+                className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400"
+              >
                 Date de début
               </Label>
               <Input
@@ -366,7 +365,10 @@ export function TradingStatsComponent({ accountId }: TradingStatsProps) {
               />
             </div>
             <div className="flex-1 space-y-2">
-              <Label htmlFor="endDate" className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400">
+              <Label
+                htmlFor="endDate"
+                className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400"
+              >
                 Date de fin
               </Label>
               <Input
@@ -408,12 +410,12 @@ export function TradingStatsComponent({ accountId }: TradingStatsProps) {
                 </CardDescription>
               </div>
               <div className="text-left sm:text-right">
-                <div className="text-xs text-zinc-600 dark:text-zinc-400 mb-1">
-                  Profit cumulé
-                </div>
+                <div className="text-xs text-zinc-600 dark:text-zinc-400 mb-1">Profit cumulé</div>
                 <div
                   className={`text-sm sm:text-base font-semibold ${
-                    isNegative ? "text-red-600 dark:text-red-500" : "text-green-600 dark:text-green-500"
+                    isNegative
+                      ? "text-red-600 dark:text-red-500"
+                      : "text-green-600 dark:text-green-500"
                   }`}
                 >
                   {formatCurrency(totalPnl)}
@@ -428,7 +430,10 @@ export function TradingStatsComponent({ accountId }: TradingStatsProps) {
       )}
 
       {/* Statistiques principales */}
-      <div key={`stats-main-${statsKey}`} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
+      <div
+        key={`stats-main-${statsKey}`}
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6"
+      >
         <StatCard
           title="Taux de Réussite"
           value={formatPercent(stats.tradeWinPercent)}
@@ -467,7 +472,10 @@ export function TradingStatsComponent({ accountId }: TradingStatsProps) {
       </div>
 
       {/* Statistiques secondaires */}
-      <div key={`stats-secondary-${statsKey}`} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
+      <div
+        key={`stats-secondary-${statsKey}`}
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6"
+      >
         <StatCard
           title="Gain Moyen"
           value={formatCurrency(stats.avgWin)}
@@ -495,7 +503,10 @@ export function TradingStatsComponent({ accountId }: TradingStatsProps) {
       </div>
 
       {/* Meilleur et pire trade */}
-      <div key={`stats-trades-${statsKey}`} className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
+      <div
+        key={`stats-trades-${statsKey}`}
+        className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 md:gap-6"
+      >
         {stats.bestTrade && (
           <Card className="rounded-2xl border border-slate-200/70 dark:border-[#1e293b]/70 bg-white/85 dark:bg-[#151b2e]/90 backdrop-blur-sm shadow-sm">
             <CardHeader className="border-b border-zinc-200/70 dark:border-zinc-800/70 p-3 sm:p-4">
@@ -508,7 +519,9 @@ export function TradingStatsComponent({ accountId }: TradingStatsProps) {
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-1.5">
                   <DollarSign className="h-3.5 w-3.5 text-zinc-500 dark:text-zinc-400 shrink-0" />
-                  <span className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400">Profit</span>
+                  <span className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400">
+                    Profit
+                  </span>
                 </div>
                 <span className="text-sm sm:text-base font-semibold text-green-600 dark:text-green-500">
                   {formatCurrency(stats.bestTrade.pnl)}
@@ -630,7 +643,10 @@ export function TradingStatsComponent({ accountId }: TradingStatsProps) {
       </div>
 
       {/* Statistiques de volume */}
-      <div key={`stats-volume-${statsKey}`} className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
+      <div
+        key={`stats-volume-${statsKey}`}
+        className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 md:gap-6"
+      >
         <StatCard
           title="Nombre Total de Trades"
           value={stats.totalTrades}

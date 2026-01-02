@@ -1,6 +1,6 @@
 "use client"
 
-import { Filter, Activity, Calendar } from "lucide-react"
+import { Filter, Activity } from "lucide-react"
 import {
   Select,
   SelectContent,
@@ -226,4 +226,3 @@ export function PnlFilterSection({
     </section>
   )
 }
-

@@ -2,14 +2,12 @@ import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { Prisma } from "@prisma/client"
 
 /**
  * GET - Récupérer tous les trades d'un compte
  */
-export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = (await getServerSession(authOptions)) as { user?: { id?: string } } | null
 
@@ -37,7 +35,7 @@ export async function GET(
     const endDateParam = searchParams.get("endDate")
 
     // Construire la condition where
-    const whereCondition: any = {
+    const whereCondition: Prisma.TradeWhereInput = {
       accountId,
       userId: session.user.id,
     }
@@ -88,4 +86,3 @@ export async function GET(
     )
   }
 }
-

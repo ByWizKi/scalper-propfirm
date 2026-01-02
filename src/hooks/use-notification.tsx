@@ -2,7 +2,6 @@
 
 import { useCallback } from "react"
 import { notificationStore } from "@/lib/notification-store"
-import type { NotificationType } from "@/lib/notification-store"
 
 export interface NotificationOptions {
   title?: string
@@ -189,7 +188,9 @@ export function useNotification() {
     (error: unknown, defaultMessage = "Une erreur est survenue") => {
       const errorObj = error instanceof Error ? error : new Error(String(error))
       const errorMessage = errorObj.message || defaultMessage
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const errorCode = (errorObj as any).errorCode || ""
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const status = (errorObj as any).status || 0
 
       const isDuplicate =

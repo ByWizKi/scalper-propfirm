@@ -55,15 +55,7 @@ export interface Trade {
   exitPrice?: number | null
 }
 
-const DAYS_OF_WEEK = [
-  "Dimanche",
-  "Lundi",
-  "Mardi",
-  "Mercredi",
-  "Jeudi",
-  "Vendredi",
-  "Samedi",
-]
+const DAYS_OF_WEEK = ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"]
 
 /**
  * Calcule toutes les statistiques de trading à partir d'une liste de trades
@@ -94,10 +86,10 @@ export function calculateTradingStats(trades: Trade[]): TradingStats {
   const validTrades = trades.filter((trade) => {
     // Vérifier que les champs essentiels sont présents
     return (
-      trade.pnl != null &&
-      trade.fees != null &&
-      trade.size != null &&
-      trade.tradeDay != null &&
+      trade.pnl !== null &&
+      trade.fees !== null &&
+      trade.size !== null &&
+      trade.tradeDay !== null &&
       !isNaN(Number(trade.pnl)) &&
       !isNaN(Number(trade.fees)) &&
       !isNaN(Number(trade.size))
@@ -138,7 +130,7 @@ export function calculateTradingStats(trades: Trade[]): TradingStats {
   const avgWinLossRatio = avgLoss > 0 ? avgWin / avgLoss : avgWin > 0 ? 999 : 0
 
   // Log pour déboguer
-  console.log("[TradingStats] Calculs:", {
+  console.info("[TradingStats] Calculs:", {
     totalValidTrades,
     winningTrades: winningTrades.length,
     losingTrades: losingTrades.length,
@@ -171,7 +163,8 @@ export function calculateTradingStats(trades: Trade[]): TradingStats {
   const totalProfit = tradesWithNetPnl.reduce((sum, t) => sum + Math.max(0, t.netPnl), 0)
   const positiveDays = Array.from(dailyPnl.values()).filter((pnl) => pnl > 0)
   const bestDayPnl = positiveDays.length > 0 ? Math.max(...positiveDays) : 0
-  const bestDayPercentOfTotal = totalProfit > 0 && bestDayPnl > 0 ? (bestDayPnl / totalProfit) * 100 : 0
+  const bestDayPercentOfTotal =
+    totalProfit > 0 && bestDayPnl > 0 ? (bestDayPnl / totalProfit) * 100 : 0
 
   // 6. Most Active Day, Most Profitable Day, Least Profitable Day
   const dayOfWeekStats = new Map<number, { count: number; pnl: number }>()
@@ -185,8 +178,8 @@ export function calculateTradingStats(trades: Trade[]): TradingStats {
         console.warn(`Date invalide pour le trade ${trade.id}: ${trade.tradeDay}`)
         return // Ignorer ce trade
       }
-    } catch (error) {
-      console.warn(`Erreur lors de la conversion de la date pour le trade ${trade.id}:`, error)
+    } catch (_error) {
+      console.warn(`Erreur lors de la conversion de la date pour le trade ${trade.id}`)
       return // Ignorer ce trade
     }
 
@@ -232,7 +225,8 @@ export function calculateTradingStats(trades: Trade[]): TradingStats {
 
   // 9. Average Trade Duration
   const tradesWithDuration = validTrades.filter(
-    (t) => t.tradeDuration != null && !isNaN(Number(t.tradeDuration)) && Number(t.tradeDuration) > 0
+    (t) =>
+      t.tradeDuration !== null && !isNaN(Number(t.tradeDuration)) && Number(t.tradeDuration) > 0
   )
   const averageTradeDuration =
     tradesWithDuration.length > 0
@@ -242,7 +236,8 @@ export function calculateTradingStats(trades: Trade[]): TradingStats {
 
   // 10. Trade Direction % (pourcentage de trades longs)
   const longTrades = validTrades.filter((t) => t.type?.toLowerCase() === "long")
-  const tradeDirectionPercent = totalValidTrades > 0 ? (longTrades.length / totalValidTrades) * 100 : 0
+  const tradeDirectionPercent =
+    totalValidTrades > 0 ? (longTrades.length / totalValidTrades) * 100 : 0
 
   // 11. Best Trade et Worst Trade
   let bestTrade: BestWorstTrade | null = null
@@ -307,4 +302,3 @@ export function calculateTradingStats(trades: Trade[]): TradingStats {
     worstTrade,
   }
 }
-

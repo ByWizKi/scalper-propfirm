@@ -99,7 +99,7 @@ function extractSymbolFromContract(contract: string, product?: string): string {
   // Les symboles vont de 2 à 4 caractères généralement
   for (let len = 4; len >= 2; len--) {
     const potentialSymbol = contractUpper.substring(0, len)
-    if (TRADOVATE_FEES[potentialSymbol]) {
+    if (TRADOVATE_FEES[potentialSymbol] !== undefined) {
       return potentialSymbol
     }
   }
@@ -121,8 +121,10 @@ function getTradovateFees(symbol: string, size: number): number {
 
   if (feesPerContract === undefined) {
     // Si le symbole n'est pas trouvé, utiliser une estimation par défaut
-    console.warn(`[Parser Tradovate] Symbole "${symbolUpper}" non trouvé dans la map des fees, utilisation de l'estimation par défaut (1.50)`)
-    return Math.abs(size) * 1.50
+    console.warn(
+      `[Parser Tradovate] Symbole "${symbolUpper}" non trouvé dans la map des fees, utilisation de l'estimation par défaut (1.50)`
+    )
+    return Math.abs(size) * 1.5
   }
 
   return Math.abs(size) * feesPerContract
@@ -164,20 +166,24 @@ export function parseProjectXCsv(csvContent: string): ParsedTrade[] {
   const lines = allLines.map((line) => line.trim()).filter((line) => line.length > 0)
 
   // Log pour déboguer
-  console.info(`[Parser] Total lignes brutes: ${allLines.length}, Lignes non vides: ${lines.length}`)
+  console.info(
+    `[Parser] Total lignes brutes: ${allLines.length}, Lignes non vides: ${lines.length}`
+  )
 
   if (lines.length < 2) {
-    const preview = allLines.slice(0, 3).map((l, i) => `Ligne ${i + 1}: "${l}"`).join("\n")
-    throw new Error(
+    const preview = allLines
+      .slice(0, 3)
+      .map((l, i) => `Ligne ${i + 1}: "${l}"`)
+      .join("\n")
+    const errorMessage =
       `Le fichier CSV ne contient que l'en-tête, aucune donnée de trade trouvée.\n\n` +
       `Détails:\n` +
       `- Lignes non vides: ${lines.length}\n` +
       `- Lignes brutes totales: ${allLines.length}\n\n` +
       `Aperçu du fichier:\n${preview}\n\n` +
       `Vérifiez que votre fichier d'export depuis Project X contient bien des trades. ` +
-      `Le fichier doit contenir au moins une ligne de données après l'en-tête avec les colonnes: ` +
-      `Id, EnteredAt, ExitedAt, PnL, TradeDay.`
-    )
+      `Le fichier doit contenir au moins une ligne de données après l'en-tête avec les colonnes: `
+    throw new Error(errorMessage + `Id, EnteredAt, ExitedAt, PnL, TradeDay.`)
   }
 
   // Parser l'en-tête pour trouver les indices des colonnes
@@ -244,9 +250,10 @@ export function parseProjectXCsv(csvContent: string): ParsedTrade[] {
         }
       }
 
-      const commissions = columnIndices["Commissions"] !== undefined
-        ? parseFloat(values[columnIndices["Commissions"]] || "0")
-        : undefined
+      const commissions =
+        columnIndices["Commissions"] !== undefined
+          ? parseFloat(values[columnIndices["Commissions"]] || "0")
+          : undefined
 
       trades.push({
         id,
@@ -283,10 +290,10 @@ export function parseProjectXCsv(csvContent: string): ParsedTrade[] {
       const firstDataLine = lines[1] || "Aucune ligne de données"
       throw new Error(
         `Aucun trade valide trouvé dans le fichier.\n` +
-        `- ${totalDataLines} ligne(s) de données analysée(s)\n` +
-        `- ${skippedLines} ligne(s) ignorée(s) ou invalide(s)\n` +
-        `- Exemple de première ligne de données: "${firstDataLine.substring(0, 100)}"\n` +
-        `Vérifiez que les colonnes requises (Id, EnteredAt, ExitedAt, PnL, TradeDay) sont présentes et que les dates sont au bon format.`
+          `- ${totalDataLines} ligne(s) de données analysée(s)\n` +
+          `- ${skippedLines} ligne(s) ignorée(s) ou invalide(s)\n` +
+          `- Exemple de première ligne de données: "${firstDataLine.substring(0, 100)}"\n` +
+          `Vérifiez que les colonnes requises (Id, EnteredAt, ExitedAt, PnL, TradeDay) sont présentes et que les dates sont au bon format.`
       )
     }
   }
@@ -304,18 +311,23 @@ export function parseTradovateCsv(csvContent: string): ParsedTrade[] {
   const allLines = normalizedContent.split("\n")
   const lines = allLines.map((line) => line.trim()).filter((line) => line.length > 0)
 
-  console.info(`[Parser Tradovate] Total lignes brutes: ${allLines.length}, Lignes non vides: ${lines.length}`)
+  console.info(
+    `[Parser Tradovate] Total lignes brutes: ${allLines.length}, Lignes non vides: ${lines.length}`
+  )
 
   if (lines.length < 2) {
-    const preview = allLines.slice(0, 3).map((l, i) => `Ligne ${i + 1}: "${l}"`).join("\n")
+    const preview = allLines
+      .slice(0, 3)
+      .map((l, i) => `Ligne ${i + 1}: "${l}"`)
+      .join("\n")
     throw new Error(
       `Le fichier CSV ne contient que l'en-tête, aucune donnée de trade trouvée.\n\n` +
-      `Détails:\n` +
-      `- Lignes non vides: ${lines.length}\n` +
-      `- Lignes brutes totales: ${allLines.length}\n\n` +
-      `Aperçu du fichier:\n${preview}\n\n` +
-      `Vérifiez que votre fichier d'export depuis Tradeovate contient bien des trades. ` +
-      `Le fichier doit contenir au moins une ligne de données après l'en-tête.`
+        `Détails:\n` +
+        `- Lignes non vides: ${lines.length}\n` +
+        `- Lignes brutes totales: ${allLines.length}\n\n` +
+        `Aperçu du fichier:\n${preview}\n\n` +
+        `Vérifiez que votre fichier d'export depuis Tradeovate contient bien des trades. ` +
+        `Le fichier doit contenir au moins une ligne de données après l'en-tête.`
     )
   }
 
@@ -345,11 +357,21 @@ export function parseTradovateCsv(csvContent: string): ParsedTrade[] {
 
   const tradeDateCol = findRequiredColumn(["Trade Date", "trade date", "tradedate", "TradeDate"])
   const pnlCol = findRequiredColumn(["P/L", "p/l", "pnl", "profit/loss", "Profit/Loss"])
-  const boughtTimestampCol = findRequiredColumn(["Bought Timestamp", "bought timestamp", "boughttimestamp", "BoughtTimestamp"])
-  const soldTimestampCol = findRequiredColumn(["Sold Timestamp", "sold timestamp", "soldtimestamp", "SoldTimestamp"])
+  const boughtTimestampCol = findRequiredColumn([
+    "Bought Timestamp",
+    "bought timestamp",
+    "boughttimestamp",
+    "BoughtTimestamp",
+  ])
+  const soldTimestampCol = findRequiredColumn([
+    "Sold Timestamp",
+    "sold timestamp",
+    "soldtimestamp",
+    "SoldTimestamp",
+  ])
 
   // Vérifier la présence de Pair ID (optionnel mais recommandé pour l'unicité)
-  const pairIdCol = findRequiredColumn(["Pair ID", "pair id", "pairid", "PairID"])
+  findRequiredColumn(["Pair ID", "pair id", "pairid", "PairID"])
 
   const missingColumns: string[] = []
   if (tradeDateCol === undefined) missingColumns.push("Trade Date")
@@ -360,7 +382,7 @@ export function parseTradovateCsv(csvContent: string): ParsedTrade[] {
   if (missingColumns.length > 0) {
     throw new Error(
       `Colonnes requises manquantes: ${missingColumns.join(", ")}. ` +
-      `Colonnes trouvées: ${header.join(", ")}`
+        `Colonnes trouvées: ${header.join(", ")}`
     )
   }
 
@@ -407,7 +429,11 @@ export function parseTradovateCsv(csvContent: string): ParsedTrade[] {
 
       const tradeDateStr = getValue(["Trade Date", "trade date", "tradedate"])
       const pnlStr = getValue(["P/L", "p/l", "pnl", "profit/loss"]) || "0"
-      const boughtTimestampStr = getValue(["Bought Timestamp", "bought timestamp", "boughttimestamp"])
+      const boughtTimestampStr = getValue([
+        "Bought Timestamp",
+        "bought timestamp",
+        "boughttimestamp",
+      ])
       const soldTimestampStr = getValue(["Sold Timestamp", "sold timestamp", "soldtimestamp"])
       const buyPriceStr = getValue(["Buy Price", "buy price", "buyprice"]) || "0"
       const sellPriceStr = getValue(["Sell Price", "sell price", "sellprice"]) || "0"
@@ -446,8 +472,24 @@ export function parseTradovateCsv(csvContent: string): ParsedTrade[] {
 
       // Calculer les fees pour Tradeovate
       // Chercher des colonnes de fees dans le CSV (si disponibles)
-      const feesStr = getValue(["Fees", "fees", "Commission", "commission", "Total Fees", "total fees", "Fee", "fee"])
-      const commissionsStr = getValue(["Commissions", "commissions", "Exchange Fees", "exchange fees", "Exchange Fee", "exchange fee"])
+      const feesStr = getValue([
+        "Fees",
+        "fees",
+        "Commission",
+        "commission",
+        "Total Fees",
+        "total fees",
+        "Fee",
+        "fee",
+      ])
+      const commissionsStr = getValue([
+        "Commissions",
+        "commissions",
+        "Exchange Fees",
+        "exchange fees",
+        "Exchange Fee",
+        "exchange fee",
+      ])
 
       // Utiliser les fees du CSV si disponibles, sinon calculer basé sur le symbole et le nombre de contrats
       let fees = 0
@@ -465,8 +507,10 @@ export function parseTradovateCsv(csvContent: string): ParsedTrade[] {
           fees = getTradovateFees(symbol, size)
         } else {
           // Fallback: estimation par défaut si le symbole n'est pas trouvé
-          console.warn(`[Parser Tradovate] Impossible d'extraire le symbole depuis "${contractStr}" / "${productStr}", utilisation de l'estimation par défaut`)
-          fees = Math.abs(size) * 1.50
+          console.warn(
+            `[Parser Tradovate] Impossible d'extraire le symbole depuis "${contractStr}" / "${productStr}", utilisation de l'estimation par défaut`
+          )
+          fees = Math.abs(size) * 1.5
         }
       }
 
@@ -476,7 +520,8 @@ export function parseTradovateCsv(csvContent: string): ParsedTrade[] {
       }
 
       // Déterminer le type de trade (Long ou Short basé sur le P/L et les prix)
-      const type = buyPrice > 0 && sellPrice > 0 ? (sellPrice > buyPrice ? "Long" : "Short") : "Unknown"
+      const type =
+        buyPrice > 0 && sellPrice > 0 ? (sellPrice > buyPrice ? "Long" : "Short") : "Unknown"
 
       // Générer un ID unique basé sur les identifiants du trade pour éviter les doublons
       // Priorité: Pair ID > Buy Fill ID + Sell Fill ID > Position ID > Hash basé sur les données
@@ -488,17 +533,28 @@ export function parseTradovateCsv(csvContent: string): ParsedTrade[] {
         console.info(`[Parser Tradovate] Utilisation du Pair ID: ${tradeId}`)
       }
       // 2. Sinon, utiliser la combinaison Buy Fill ID + Sell Fill ID
-      else if (buyFillIdStr && sellFillIdStr && buyFillIdStr.trim() !== "" && sellFillIdStr.trim() !== "") {
+      else if (
+        buyFillIdStr &&
+        sellFillIdStr &&
+        buyFillIdStr.trim() !== "" &&
+        sellFillIdStr.trim() !== ""
+      ) {
         tradeId = `tradovate-fills-${buyFillIdStr.trim()}-${sellFillIdStr.trim()}`
         console.info(`[Parser Tradovate] Utilisation des Fill IDs: ${tradeId}`)
       }
       // 3. Sinon, utiliser Position ID (mais attention, il peut être le même pour plusieurs trades)
-      else if (positionIdStr && positionIdStr.trim() !== "" && positionIdStr !== `trade-${i}` && !positionIdStr.startsWith("trade-")) {
+      else if (
+        positionIdStr &&
+        positionIdStr.trim() !== "" &&
+        positionIdStr !== `trade-${i}` &&
+        !positionIdStr.startsWith("trade-")
+      ) {
         // Si on utilise Position ID, on doit le combiner avec d'autres données pour le rendre unique
         // Utiliser Position ID + Buy Fill ID + Sell Fill ID ou timestamps
-        const uniqueSuffix = buyFillIdStr && sellFillIdStr
-          ? `${buyFillIdStr.trim()}-${sellFillIdStr.trim()}`
-          : `${enteredAt.getTime()}-${exitedAt.getTime()}`
+        const uniqueSuffix =
+          buyFillIdStr && sellFillIdStr
+            ? `${buyFillIdStr.trim()}-${sellFillIdStr.trim()}`
+            : `${enteredAt.getTime()}-${exitedAt.getTime()}`
         tradeId = `tradovate-pos-${positionIdStr.trim()}-${uniqueSuffix}`
         console.info(`[Parser Tradovate] Utilisation du Position ID avec suffixe: ${tradeId}`)
       }
@@ -507,13 +563,16 @@ export function parseTradovateCsv(csvContent: string): ParsedTrade[] {
         // Utiliser: contract + enteredAt + exitedAt + size + entryPrice + exitPrice + pnl
         const tradeSignature = `${contractName}-${enteredAt.getTime()}-${exitedAt.getTime()}-${size}-${buyPrice}-${sellPrice}-${pnl}`
         try {
-          const hash = Buffer.from(tradeSignature).toString('base64').replace(/[+/=]/g, '').substring(0, 32)
+          const hash = Buffer.from(tradeSignature)
+            .toString("base64")
+            .replace(/[+/=]/g, "")
+            .substring(0, 32)
           tradeId = `tradovate-hash-${hash}`
           console.info(`[Parser Tradovate] Utilisation d'un hash généré: ${tradeId}`)
-        } catch (error) {
+        } catch (_error) {
           // Fallback si Buffer n'est pas disponible
-          const simpleHash = tradeSignature.split('').reduce((acc, char) => {
-            const hash = ((acc << 5) - acc) + char.charCodeAt(0)
+          const simpleHash = tradeSignature.split("").reduce((acc, char) => {
+            const hash = (acc << 5) - acc + char.charCodeAt(0)
             return hash & hash
           }, 0)
           tradeId = `tradovate-hash-${Math.abs(simpleHash).toString(36)}`
@@ -542,7 +601,9 @@ export function parseTradovateCsv(csvContent: string): ParsedTrade[] {
     }
   }
 
-  console.info(`[Parser Tradovate] Trades parsés: ${trades.length}, Lignes ignorées: ${skippedLines}`)
+  console.info(
+    `[Parser Tradovate] Trades parsés: ${trades.length}, Lignes ignorées: ${skippedLines}`
+  )
 
   // Vérifier qu'on a trouvé au moins un trade
   if (trades.length === 0) {
@@ -553,10 +614,10 @@ export function parseTradovateCsv(csvContent: string): ParsedTrade[] {
       const firstDataLine = lines[1] || "Aucune ligne de données"
       throw new Error(
         `Aucun trade valide trouvé dans le fichier Tradeovate.\n` +
-        `- ${totalDataLines} ligne(s) de données analysée(s)\n` +
-        `- ${skippedLines} ligne(s) ignorée(s) ou invalide(s)\n` +
-        `- Exemple de première ligne de données: "${firstDataLine.substring(0, 100)}"\n` +
-        `Vérifiez que les colonnes requises (Trade Date, P/L, Bought Timestamp, Sold Timestamp) sont présentes et que les dates sont au bon format.`
+          `- ${totalDataLines} ligne(s) de données analysée(s)\n` +
+          `- ${skippedLines} ligne(s) ignorée(s) ou invalide(s)\n` +
+          `- Exemple de première ligne de données: "${firstDataLine.substring(0, 100)}"\n` +
+          `Vérifiez que les colonnes requises (Trade Date, P/L, Bought Timestamp, Sold Timestamp) sont présentes et que les dates sont au bon format.`
       )
     }
   }
@@ -589,7 +650,7 @@ export function groupTradesByDay(trades: ParsedTrade[]): DailyPnlSummary[] {
     // On doit soustraire les fees pour obtenir le PnL net
     daily.totalPnl += trade.pnl
     daily.totalFees += trade.fees
-    daily.totalCommissions += (trade.commissions || 0)
+    daily.totalCommissions += trade.commissions || 0
     daily.tradeCount += 1
     daily.trades.push(trade)
   }
@@ -639,7 +700,7 @@ function parseDate(dateStr: string): Date {
   }
 
   // Nettoyer la chaîne (enlever les guillemets, espaces en trop)
-  let cleaned = dateStr.trim().replace(/['"]/g, "")
+  const cleaned = dateStr.trim().replace(/['"]/g, "")
 
   // Essayer de parser directement avec Date
   let parsed = new Date(cleaned)
@@ -715,7 +776,7 @@ function formatDateKey(date: Date): string {
 /**
  * Helper pour trouver une colonne par plusieurs noms possibles
  */
-function findColumn(columnIndices: Record<string, number>, names: string[]): number | undefined {
+function _findColumn(columnIndices: Record<string, number>, names: string[]): number | undefined {
   for (const name of names) {
     if (columnIndices[name] !== undefined) {
       return columnIndices[name]
@@ -723,4 +784,3 @@ function findColumn(columnIndices: Record<string, number>, names: string[]): num
   }
   return undefined
 }
-

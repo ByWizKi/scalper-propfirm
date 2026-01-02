@@ -2,12 +2,7 @@
  * Tests pour le parser de trades CSV
  */
 
-import {
-  parseProjectXCsv,
-  parseTradovateCsv,
-  groupTradesByDay,
-  type ParsedTrade,
-} from "@/lib/parsers/trade-parser"
+import { parseProjectXCsv, groupTradesByDay, type ParsedTrade } from "@/lib/parsers/trade-parser"
 
 describe("Trade Parser", () => {
   describe("parseProjectXCsv", () => {
@@ -28,7 +23,8 @@ describe("Trade Parser", () => {
     })
 
     it("devrait gérer les retours à la ligne Windows (\\r\\n)", () => {
-      const csvContent = "Id,ContractName,EnteredAt,ExitedAt,EntryPrice,ExitPrice,Fees,PnL,Size,Type,TradeDay,TradeDuration,Commissions\r\n42817425,MNQH6,12/18/2025 13:26:13 +01:00,12/18/2025 13:26:46 +01:00,25097.25,25099.25,2.22,12.00,3,Long,12/18/2025 00:00:00 -06:00,32.5,"
+      const csvContent =
+        "Id,ContractName,EnteredAt,ExitedAt,EntryPrice,ExitPrice,Fees,PnL,Size,Type,TradeDay,TradeDuration,Commissions\r\n42817425,MNQH6,12/18/2025 13:26:13 +01:00,12/18/2025 13:26:46 +01:00,25097.25,25099.25,2.22,12.00,3,Long,12/18/2025 00:00:00 -06:00,32.5,"
 
       const trades = parseProjectXCsv(csvContent)
 
@@ -37,7 +33,8 @@ describe("Trade Parser", () => {
     })
 
     it("devrait lancer une erreur si le fichier ne contient que l'en-tête", () => {
-      const csvContent = "Id,ContractName,EnteredAt,ExitedAt,EntryPrice,ExitPrice,Fees,PnL,Size,Type,TradeDay,TradeDuration,Commissions"
+      const csvContent =
+        "Id,ContractName,EnteredAt,ExitedAt,EntryPrice,ExitPrice,Fees,PnL,Size,Type,TradeDay,TradeDuration,Commissions"
 
       expect(() => parseProjectXCsv(csvContent)).toThrow("Le fichier CSV ne contient que l'en-tête")
     })
@@ -144,4 +141,3 @@ describe("Trade Parser", () => {
     })
   })
 })
-
