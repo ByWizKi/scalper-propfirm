@@ -3,6 +3,8 @@ import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { parseProjectXCsv, parseTradovateCsv, groupTradesByDay } from "@/lib/parsers/trade-parser"
+import { isProjectXCompatible } from "@/lib/constants/project-x-compatible"
+import { isTradovateCompatible } from "@/lib/constants/tradovate-compatible"
 
 export async function POST(request: Request) {
   try {
@@ -33,23 +35,21 @@ export async function POST(request: Request) {
       })
 
       if (account) {
-        // Apex ne peut utiliser QUE Tradovate
-        if (account.propfirm === "APEX" && platform !== "TRADOVATE") {
+        // Vérifier la compatibilité plateforme / propfirm
+        if (platform === "PROJECT_X" && !isProjectXCompatible(account.propfirm)) {
           return NextResponse.json(
             {
-              message: "Les comptes Apex ne peuvent utiliser que Tradovate pour l'import de trades",
+              message: `Les comptes ${account.propfirm} ne sont pas compatibles avec Project X. Utilisez Tradovate.`,
               error: "INCOMPATIBLE_PLATFORM",
             },
             { status: 400 }
           )
         }
 
-        // Project X n'est pas compatible avec Apex
-        if (platform === "PROJECT_X" && account.propfirm === "APEX") {
+        if (platform === "TRADOVATE" && !isTradovateCompatible(account.propfirm)) {
           return NextResponse.json(
             {
-              message:
-                "Les comptes Apex ne sont pas compatibles avec Project X. Utilisez Tradovate.",
+              message: `Les comptes ${account.propfirm} ne sont pas compatibles avec Tradovate. Utilisez Project X.`,
               error: "INCOMPATIBLE_PLATFORM",
             },
             { status: 400 }

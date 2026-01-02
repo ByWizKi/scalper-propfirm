@@ -12,6 +12,7 @@ import { PropfirmType } from "@/types/account.types"
 export const PROJECT_X_COMPATIBLE_PROPFIRMS: PropfirmType[] = [
   PropfirmType.TOPSTEP,
   PropfirmType.BULENOX,
+  PropfirmType.LUCID,
   // Note: Les autres propfirms listées (Alpha Futures, TickTickTrader, etc.)
   // ne sont pas encore dans notre enum PropfirmType
   // Elles peuvent être ajoutées plus tard ou utilisées avec PropfirmType.OTHER
