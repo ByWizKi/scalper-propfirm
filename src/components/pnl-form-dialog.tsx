@@ -179,7 +179,7 @@ export function PnlFormDialog({
         }
       }
     }
-  }, [mode, open, entry, accounts])
+  }, [mode, open, entry, accounts, importAccountId, importPlatform])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
