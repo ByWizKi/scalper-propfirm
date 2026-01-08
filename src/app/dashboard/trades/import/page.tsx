@@ -99,11 +99,13 @@ export default function TradesImportPage() {
         setSelectedAccountId(compatibleAccounts[0].id)
       }
     } else if (selectedPlatform === "TRADOVATE") {
-      // Filtrer uniquement les comptes compatibles avec Tradovate (Apex et Tradeify)
+      // Filtrer uniquement les comptes compatibles avec Tradovate (Apex, Tradeify et TakeProfit Trader)
       const compatibleAccounts = allAccounts.filter((acc) => isTradovateCompatible(acc.propfirm))
       setAccounts(compatibleAccounts)
       // Vérifier si le compte actuel est compatible
-      const currentAccountCompatible = compatibleAccounts.find((acc) => acc.id === selectedAccountId)
+      const currentAccountCompatible = compatibleAccounts.find(
+        (acc) => acc.id === selectedAccountId
+      )
       // Si le compte actuel n'est pas compatible ou si aucun compte n'est sélectionné, présélectionner le premier
       if (!currentAccountCompatible && compatibleAccounts.length > 0) {
         setSelectedAccountId(compatibleAccounts[0].id)
@@ -403,7 +405,8 @@ export default function TradesImportPage() {
                   <Info className="h-4 w-4" />
                   <AlertTitle className="text-xs sm:text-sm">Plateforme Tradovate</AlertTitle>
                   <AlertDescription className="text-xs mt-1">
-                    Tradovate est compatible avec les comptes <strong>Apex et Tradeify</strong> uniquement.
+                    Tradovate est compatible avec les comptes{" "}
+                    <strong>Apex, Tradeify et TakeProfit Trader</strong> uniquement.
                   </AlertDescription>
                 </Alert>
               )}

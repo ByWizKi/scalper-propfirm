@@ -20,7 +20,11 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Check, Upload, FileText, AlertCircle, Loader2 } from "lucide-react"
-import { useCreatePnlMutation, useCreateMultiplePnlMutation, useUpdatePnlMutation } from "@/hooks/use-mutation"
+import {
+  useCreatePnlMutation,
+  useCreateMultiplePnlMutation,
+  useUpdatePnlMutation,
+} from "@/hooks/use-mutation"
 import { useNotification } from "@/hooks/use-notification"
 import type { TradingPlatform } from "@/lib/parsers/trade-parser"
 import { isProjectXCompatible } from "@/lib/constants/project-x-compatible"
@@ -211,7 +215,8 @@ export function PnlFormDialog({
           })
 
           // Durée adaptée selon le nombre de comptes (plus de comptes = plus de temps pour lire)
-          const duration = selectedAccountIds.length > 5 ? 3500 : selectedAccountIds.length > 2 ? 3000 : 2500
+          const duration =
+            selectedAccountIds.length > 5 ? 3500 : selectedAccountIds.length > 2 ? 3000 : 2500
           notification.showCreate(
             `${selectedAccountIds.length} PnL ajouté(s) avec succès`,
             duration,
@@ -559,7 +564,10 @@ export function PnlFormDialog({
               {/* Single account selector */}
               {!entry && !multipleMode && (
                 <div className="grid gap-2">
-                  <Label htmlFor="accountId" className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                  <Label
+                    htmlFor="accountId"
+                    className="text-sm font-medium text-slate-700 dark:text-slate-300"
+                  >
                     Compte *
                   </Label>
                   <Select
@@ -638,7 +646,10 @@ export function PnlFormDialog({
                   {/* Filters */}
                   <div className="grid grid-cols-2 gap-2">
                     <div className="grid gap-1.5">
-                      <Label htmlFor="filterPropfirm" className="text-xs font-medium text-slate-700 dark:text-slate-300">
+                      <Label
+                        htmlFor="filterPropfirm"
+                        className="text-xs font-medium text-slate-700 dark:text-slate-300"
+                      >
                         Propfirm
                       </Label>
                       <Select
@@ -646,20 +657,27 @@ export function PnlFormDialog({
                         onValueChange={(value) => {
                           setFilterPropfirm(value)
                           setTimeout(() => {
-                            const trigger = document.getElementById("filterPropfirm") as HTMLButtonElement
+                            const trigger = document.getElementById(
+                              "filterPropfirm"
+                            ) as HTMLButtonElement
                             trigger?.blur()
                           }, 0)
                         }}
                         onOpenChange={(open) => {
                           if (!open) {
                             setTimeout(() => {
-                              const trigger = document.getElementById("filterPropfirm") as HTMLButtonElement
+                              const trigger = document.getElementById(
+                                "filterPropfirm"
+                              ) as HTMLButtonElement
                               trigger?.blur()
                             }, 0)
                           }
                         }}
                       >
-                        <SelectTrigger id="filterPropfirm" className="h-8 text-xs min-w-0 [&>span]:truncate [&>span]:min-w-0 [&>span]:flex-1 [&>span]:text-left [&>span]:block">
+                        <SelectTrigger
+                          id="filterPropfirm"
+                          className="h-8 text-xs min-w-0 [&>span]:truncate [&>span]:min-w-0 [&>span]:flex-1 [&>span]:text-left [&>span]:block"
+                        >
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent className="w-[var(--radix-select-trigger-width)] max-w-[calc(100vw-2rem)] sm:max-w-none">
@@ -673,7 +691,10 @@ export function PnlFormDialog({
                       </Select>
                     </div>
                     <div className="grid gap-1.5">
-                      <Label htmlFor="filterAccountType" className="text-xs font-medium text-slate-700 dark:text-slate-300">
+                      <Label
+                        htmlFor="filterAccountType"
+                        className="text-xs font-medium text-slate-700 dark:text-slate-300"
+                      >
                         Type
                       </Label>
                       <Select
@@ -681,20 +702,27 @@ export function PnlFormDialog({
                         onValueChange={(value) => {
                           setFilterAccountType(value)
                           setTimeout(() => {
-                            const trigger = document.getElementById("filterAccountType") as HTMLButtonElement
+                            const trigger = document.getElementById(
+                              "filterAccountType"
+                            ) as HTMLButtonElement
                             trigger?.blur()
                           }, 0)
                         }}
                         onOpenChange={(open) => {
                           if (!open) {
                             setTimeout(() => {
-                              const trigger = document.getElementById("filterAccountType") as HTMLButtonElement
+                              const trigger = document.getElementById(
+                                "filterAccountType"
+                              ) as HTMLButtonElement
                               trigger?.blur()
                             }, 0)
                           }
                         }}
                       >
-                        <SelectTrigger id="filterAccountType" className="h-8 text-xs min-w-0 [&>span]:truncate [&>span]:min-w-0 [&>span]:flex-1 [&>span]:text-left [&>span]:block">
+                        <SelectTrigger
+                          id="filterAccountType"
+                          className="h-8 text-xs min-w-0 [&>span]:truncate [&>span]:min-w-0 [&>span]:flex-1 [&>span]:text-left [&>span]:block"
+                        >
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent className="w-[var(--radix-select-trigger-width)] max-w-[calc(100vw-2rem)] sm:max-w-none">
@@ -746,7 +774,9 @@ export function PnlFormDialog({
                                     )}
                                   </div>
                                   <div className="flex-1 min-w-0">
-                                    <p className="text-xs font-medium truncate text-slate-900 dark:text-slate-50">{account.name}</p>
+                                    <p className="text-xs font-medium truncate text-slate-900 dark:text-slate-50">
+                                      {account.name}
+                                    </p>
                                     <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
                                       {formatCurrency(account.size)}
                                     </p>
@@ -763,7 +793,10 @@ export function PnlFormDialog({
               )}
 
               <div className="grid gap-2">
-                <Label htmlFor="date" className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                <Label
+                  htmlFor="date"
+                  className="text-sm font-medium text-slate-700 dark:text-slate-300"
+                >
                   Date *
                 </Label>
                 <Input
@@ -778,7 +811,10 @@ export function PnlFormDialog({
               </div>
 
               <div className="grid gap-2">
-                <Label htmlFor="amount" className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                <Label
+                  htmlFor="amount"
+                  className="text-sm font-medium text-slate-700 dark:text-slate-300"
+                >
                   Montant (USD) *
                 </Label>
                 <Input
@@ -808,7 +844,10 @@ export function PnlFormDialog({
               </div>
 
               <div className="grid gap-2">
-                <Label htmlFor="notes" className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                <Label
+                  htmlFor="notes"
+                  className="text-sm font-medium text-slate-700 dark:text-slate-300"
+                >
                   Notes
                 </Label>
                 <textarea
@@ -852,7 +891,13 @@ export function PnlFormDialog({
             </DialogFooter>
           </form>
         ) : (
-          <form onSubmit={(e) => { e.preventDefault(); handleImport(); }} className="flex flex-col flex-1 min-h-0">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              handleImport()
+            }}
+            className="flex flex-col flex-1 min-h-0"
+          >
             <div className="space-y-3 px-4 sm:px-5 lg:px-6 pb-4 pt-3 overflow-y-auto flex-1">
               {/* Mode selector */}
               {(!entry || isImportedEntry) && (
@@ -918,7 +963,10 @@ export function PnlFormDialog({
 
               {/* Sélection de la plateforme */}
               <div className="grid gap-2">
-                <Label htmlFor="importPlatform" className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                <Label
+                  htmlFor="importPlatform"
+                  className="text-sm font-medium text-slate-700 dark:text-slate-300"
+                >
                   Plateforme *
                 </Label>
                 <Select
@@ -938,7 +986,9 @@ export function PnlFormDialog({
                   onOpenChange={(open) => {
                     if (!open) {
                       setTimeout(() => {
-                        const trigger = document.getElementById("importPlatform") as HTMLButtonElement
+                        const trigger = document.getElementById(
+                          "importPlatform"
+                        ) as HTMLButtonElement
                         trigger?.blur()
                       }, 0)
                     }
@@ -964,7 +1014,10 @@ export function PnlFormDialog({
               {/* Sélection du compte */}
               {importPlatform && (
                 <div className="grid gap-2">
-                  <Label htmlFor="importAccountId" className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                  <Label
+                    htmlFor="importAccountId"
+                    className="text-sm font-medium text-slate-700 dark:text-slate-300"
+                  >
                     Compte *
                   </Label>
                   <Select
@@ -976,14 +1029,18 @@ export function PnlFormDialog({
                       setImportFileDisplayName("")
                       setImportPreview([])
                       setTimeout(() => {
-                        const trigger = document.getElementById("importAccountId") as HTMLButtonElement
+                        const trigger = document.getElementById(
+                          "importAccountId"
+                        ) as HTMLButtonElement
                         trigger?.blur()
                       }, 0)
                     }}
                     onOpenChange={(open) => {
                       if (!open) {
                         setTimeout(() => {
-                          const trigger = document.getElementById("importAccountId") as HTMLButtonElement
+                          const trigger = document.getElementById(
+                            "importAccountId"
+                          ) as HTMLButtonElement
                           trigger?.blur()
                         }, 0)
                       }
@@ -1009,9 +1066,12 @@ export function PnlFormDialog({
                   </Select>
                   {importFilteredAccounts.length === 0 && importPlatform && (
                     <p className="text-xs text-orange-600 dark:text-orange-400 mt-1">
-                      Aucun compte compatible avec {importPlatform === "PROJECT_X" ? "Project X" : "Tradovate"} trouvé.
-                      {importPlatform === "PROJECT_X" && " Seuls TopStep, Bulenox et Lucid sont compatibles avec Project X."}
-                      {importPlatform === "TRADOVATE" && " Seuls Apex et Tradeify sont compatibles avec Tradovate."}
+                      Aucun compte compatible avec{" "}
+                      {importPlatform === "PROJECT_X" ? "Project X" : "Tradovate"} trouvé.
+                      {importPlatform === "PROJECT_X" &&
+                        " Seuls TopStep, Bulenox et Lucid sont compatibles avec Project X."}
+                      {importPlatform === "TRADOVATE" &&
+                        " Seuls Apex, Tradeify et TakeProfit Trader sont compatibles avec Tradovate."}
                     </p>
                   )}
                 </div>
@@ -1020,7 +1080,10 @@ export function PnlFormDialog({
               {/* Upload de fichier */}
               {importPlatform && importAccountId && (
                 <div className="grid gap-2">
-                  <Label htmlFor="importFile" className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                  <Label
+                    htmlFor="importFile"
+                    className="text-sm font-medium text-slate-700 dark:text-slate-300"
+                  >
                     Fichier CSV *
                   </Label>
                   <div className="relative">
@@ -1095,17 +1158,25 @@ export function PnlFormDialog({
                             </div>
                             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                               {day.tradeCount} trade{day.tradeCount > 1 ? "s" : ""} au total
-                              {day.duplicateTradesCount !== undefined && day.duplicateTradesCount > 0 && (
-                                <span className="ml-1 text-orange-600 dark:text-orange-400">
-                                  ({day.duplicateTradesCount} en doublon, {day.newTradesCount || 0} nouveau{day.newTradesCount && day.newTradesCount > 1 ? "x" : ""})
-                                </span>
-                              )}
+                              {day.duplicateTradesCount !== undefined &&
+                                day.duplicateTradesCount > 0 && (
+                                  <span className="ml-1 text-orange-600 dark:text-orange-400">
+                                    ({day.duplicateTradesCount} en doublon,{" "}
+                                    {day.newTradesCount || 0} nouveau
+                                    {day.newTradesCount && day.newTradesCount > 1 ? "x" : ""})
+                                  </span>
+                                )}
                             </p>
-                            {day.isDuplicate && day.existingAmount !== undefined && day.pnlToAdd !== undefined && day.pnlToAdd !== 0 && (
-                              <p className="text-xs text-orange-600 dark:text-orange-400 mt-1">
-                                PnL existant: {formatCurrency(day.existingAmount)} → +{formatCurrency(day.pnlToAdd)} = {formatCurrency(day.existingAmount + day.pnlToAdd)}
-                              </p>
-                            )}
+                            {day.isDuplicate &&
+                              day.existingAmount !== undefined &&
+                              day.pnlToAdd !== undefined &&
+                              day.pnlToAdd !== 0 && (
+                                <p className="text-xs text-orange-600 dark:text-orange-400 mt-1">
+                                  PnL existant: {formatCurrency(day.existingAmount)} → +
+                                  {formatCurrency(day.pnlToAdd)} ={" "}
+                                  {formatCurrency(day.existingAmount + day.pnlToAdd)}
+                                </p>
+                              )}
                           </div>
                           <div className="text-right shrink-0">
                             {day.isDuplicate && day.pnlToAdd !== undefined ? (
@@ -1119,7 +1190,9 @@ export function PnlFormDialog({
                                 >
                                   +{formatCurrency(day.pnlToAdd)}
                                 </p>
-                                <p className="text-xs text-slate-500 dark:text-slate-400">PnL à ajouter</p>
+                                <p className="text-xs text-slate-500 dark:text-slate-400">
+                                  PnL à ajouter
+                                </p>
                               </>
                             ) : (
                               <>
@@ -1133,7 +1206,9 @@ export function PnlFormDialog({
                                   {day.totalPnl >= 0 ? "+" : ""}
                                   {formatCurrency(day.totalPnl)}
                                 </p>
-                                <p className="text-xs text-slate-500 dark:text-slate-400">PnL net</p>
+                                <p className="text-xs text-slate-500 dark:text-slate-400">
+                                  PnL net
+                                </p>
                               </>
                             )}
                           </div>
@@ -1143,20 +1218,64 @@ export function PnlFormDialog({
                   </div>
                   <div className="mt-3 pt-3 border-t border-slate-200 dark:border-[#1e293b]">
                     <p className="text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300">
-                      Total: <span className="font-semibold">{importPreview.length}</span> jour{importPreview.length > 1 ? "s" : ""},{" "}
+                      Total: <span className="font-semibold">{importPreview.length}</span> jour
+                      {importPreview.length > 1 ? "s" : ""},{" "}
                       <span className="font-semibold">
-                        {importPreview.reduce((sum, day) => sum + (day.newTradesCount || day.tradeCount), 0)}
+                        {importPreview.reduce(
+                          (sum, day) => sum + (day.newTradesCount || day.tradeCount),
+                          0
+                        )}
                       </span>{" "}
-                      nouveau{importPreview.reduce((sum, day) => sum + (day.newTradesCount || day.tradeCount), 0) > 1 ? "x" : ""} trade{importPreview.reduce((sum, day) => sum + (day.newTradesCount || day.tradeCount), 0) > 1 ? "s" : ""}
-                      {importPreview.some(day => day.isDuplicate) && (
+                      nouveau
+                      {importPreview.reduce(
+                        (sum, day) => sum + (day.newTradesCount || day.tradeCount),
+                        0
+                      ) > 1
+                        ? "x"
+                        : ""}{" "}
+                      trade
+                      {importPreview.reduce(
+                        (sum, day) => sum + (day.newTradesCount || day.tradeCount),
+                        0
+                      ) > 1
+                        ? "s"
+                        : ""}
+                      {importPreview.some((day) => day.isDuplicate) && (
                         <span className="text-orange-600 dark:text-orange-400">
-                          {" "}({importPreview.reduce((sum, day) => sum + (day.duplicateTradesCount || 0), 0)} doublon{importPreview.reduce((sum, day) => sum + (day.duplicateTradesCount || 0), 0) > 1 ? "s" : ""} ignoré{importPreview.reduce((sum, day) => sum + (day.duplicateTradesCount || 0), 0) > 1 ? "s" : ""})
+                          {" "}
+                          (
+                          {importPreview.reduce(
+                            (sum, day) => sum + (day.duplicateTradesCount || 0),
+                            0
+                          )}{" "}
+                          doublon
+                          {importPreview.reduce(
+                            (sum, day) => sum + (day.duplicateTradesCount || 0),
+                            0
+                          ) > 1
+                            ? "s"
+                            : ""}{" "}
+                          ignoré
+                          {importPreview.reduce(
+                            (sum, day) => sum + (day.duplicateTradesCount || 0),
+                            0
+                          ) > 1
+                            ? "s"
+                            : ""}
+                          )
                         </span>
                       )}
                     </p>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                      PnL total à ajouter: <span className="font-semibold">
-                        {formatCurrency(importPreview.reduce((sum, day) => sum + (day.pnlToAdd !== undefined ? day.pnlToAdd : day.totalPnl), 0))}
+                      PnL total à ajouter:{" "}
+                      <span className="font-semibold">
+                        {formatCurrency(
+                          importPreview.reduce(
+                            (sum, day) =>
+                              sum + (day.pnlToAdd !== undefined ? day.pnlToAdd : day.totalPnl),
+                            0
+                          )
+                        )}
                       </span>
                     </p>
                   </div>
@@ -1176,7 +1295,10 @@ export function PnlFormDialog({
                 Annuler
               </Button>
               {(() => {
-                const totalNewTrades = importPreview.reduce((sum, day) => sum + (day.newTradesCount || 0), 0)
+                const totalNewTrades = importPreview.reduce(
+                  (sum, day) => sum + (day.newTradesCount || 0),
+                  0
+                )
                 const hasNewTrades = totalNewTrades > 0
 
                 if (!hasNewTrades && importPreview.length > 0) {
@@ -1189,7 +1311,8 @@ export function PnlFormDialog({
                             Aucun nouveau trade à importer
                           </p>
                           <p className="text-xs text-orange-800 dark:text-orange-200 mt-1">
-                            Tous les trades de ce fichier sont déjà en base de données. L&apos;import sera annulé.
+                            Tous les trades de ce fichier sont déjà en base de données.
+                            L&apos;import sera annulé.
                           </p>
                         </div>
                       </div>
