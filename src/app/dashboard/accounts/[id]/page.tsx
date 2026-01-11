@@ -17,6 +17,7 @@ import {
   CheckCircle2,
   ChevronDown,
   ChevronUp,
+  AlertTriangle,
 } from "lucide-react"
 import { StatCard, useStatVariant } from "@/components/stat-card"
 import { useAccountCache } from "@/hooks/use-data-cache"
@@ -278,6 +279,53 @@ export default function AccountDetailPage() {
     [account] // Utiliser account complet pour détecter tous les changements
   )
 
+  // Détecter si le compte est "cramé" (drawdown dépassé) - AVANT les early returns pour respecter les règles des hooks
+  const isBurned = useMemo(() => {
+    if (!account || account.status !== "ACTIVE") return false
+
+    try {
+      const strategy = PropfirmStrategyFactory.getStrategy(account.propfirm)
+      const accountRules = strategy.getAccountRules(
+        account.size,
+        account.accountType,
+        account.name,
+        account.notes
+      )
+
+      if (!accountRules) return false
+
+      // Calculer le trailing drawdown
+      let highestBalance = account.size
+      let currentBalanceCalc = account.size
+      let maxDrawdownExceeded = false
+
+      const normalizedPnlEntries = account.pnlEntries.map(
+        (entry: { date: string; amount: number }) => ({
+          date: new Date(entry.date),
+          amount: entry.amount,
+        })
+      )
+
+      normalizedPnlEntries
+        .sort((a, b) => a.date.getTime() - b.date.getTime())
+        .forEach((entry) => {
+          currentBalanceCalc += entry.amount
+          if (currentBalanceCalc > highestBalance) {
+            highestBalance = currentBalanceCalc
+          }
+          const trailingDrawdown = highestBalance - currentBalanceCalc
+          if (trailingDrawdown > accountRules.maxDrawdown) {
+            maxDrawdownExceeded = true
+          }
+        })
+
+      return maxDrawdownExceeded
+    } catch (error) {
+      console.error("Erreur lors de la détection du compte cramé:", error)
+      return false
+    }
+  }, [account])
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -423,6 +471,33 @@ export default function AccountDetailPage() {
   // Calculer la balance actuelle
   const currentBalance = account.size + totalPnl - totalWithdrawals
 
+  const handleFailed = async () => {
+    if (
+      !window.confirm(
+        "Êtes-vous sûr de vouloir marquer ce compte comme échoué ? Il passera en statut FAILED."
+      )
+    ) {
+      return
+    }
+
+    if (!account) return
+
+    try {
+      await updateAccount({
+        id: accountId,
+        data: {
+          ...account,
+          status: "FAILED",
+        },
+      })
+      notification.showSuccess("Compte marqué comme échoué", {
+        duration: 2500,
+      })
+    } catch (error) {
+      notification.handleError(error, "Erreur lors de la mise à jour du statut")
+    }
+  }
+
   return (
     <div className="space-y-6 sm:space-y-8 p-4 sm:p-6 lg:p-8">
       {/* ============================================
@@ -542,6 +617,18 @@ export default function AccountDetailPage() {
                 <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5" />
                 <span className="hidden sm:inline">Valider le compte</span>
                 <span className="sm:hidden">Valider</span>
+              </Button>
+            )}
+            {isBurned && account.status === "ACTIVE" && (
+              <Button
+                onClick={handleFailed}
+                size="default"
+                variant="destructive"
+                className="bg-red-600 hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700 text-xs sm:text-sm font-semibold h-9 sm:h-10 px-3 sm:px-4"
+              >
+                <AlertTriangle className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5" />
+                <span className="hidden sm:inline">Marquer comme échoué</span>
+                <span className="sm:hidden">Échoué</span>
               </Button>
             )}
             <Button
