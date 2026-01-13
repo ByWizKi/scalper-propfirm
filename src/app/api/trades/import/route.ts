@@ -71,7 +71,7 @@ export async function POST(request: Request) {
       if (platform === "PROJECT_X") {
         allTrades = parseProjectXCsv(csvContent)
       } else {
-        allTrades = parseTradovateCsv(csvContent)
+        allTrades = parseTradovateCsv(csvContent, account.propfirm)
       }
       console.info(`[Import] ✅ Parsing réussi: ${allTrades.length} trades parsés`)
     } catch (error) {

@@ -65,10 +65,24 @@ export async function POST(request: Request) {
     // ÉTAPE 1: Parser le fichier CSV
     let allTrades
     try {
+      // Récupérer le propfirm si accountId est fourni
+      let propfirm: string | undefined
+      if (accountId) {
+        const account = await prisma.propfirmAccount.findFirst({
+          where: {
+            id: accountId,
+            userId: session.user.id,
+          },
+        })
+        if (account) {
+          propfirm = account.propfirm
+        }
+      }
+
       if (platform === "PROJECT_X") {
         allTrades = parseProjectXCsv(csvContent)
       } else {
-        allTrades = parseTradovateCsv(csvContent)
+        allTrades = parseTradovateCsv(csvContent, propfirm)
       }
       console.info(`[API Preview] ✅ Parsing réussi: ${allTrades.length} trades parsés`)
     } catch (error) {
