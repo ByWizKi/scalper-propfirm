@@ -565,33 +565,43 @@ export function parseTradovateCsv(csvContent: string, propfirm?: string): Parsed
       let fees = 0
       let commissions = 0
 
-      if (feesStr && feesStr.trim() !== "") {
-        // Fees explicites dans le CSV
-        fees = parseFloat(feesStr || "0")
-      } else if (Math.abs(size) > 0) {
-        // Extraire le symbole depuis le contrat ou le product
-        const symbol = extractSymbolFromContract(contractStr, productStr)
-
-        if (symbol) {
-          // Calculer les fees basées sur le symbole et le nombre de contrats (round turn)
-          fees = getTradovateFees(symbol, size)
-        } else {
-          // Fallback: estimation par défaut si le symbole n'est pas trouvé
-          console.warn(
-            `[Parser Tradovate] Impossible d'extraire le symbole depuis "${contractStr}" / "${productStr}", utilisation de l'estimation par défaut`
-          )
-          fees = Math.abs(size) * 1.5
+      // Pour les comptes Lucid, on utilise uniquement les commissions Lucid, pas les fees Tradovate standards
+      if (propfirm === "LUCID") {
+        // Pour Lucid, calculer uniquement les commissions selon les tarifs Lucid
+        if (commissionsStr && commissionsStr.trim() !== "") {
+          // Commissions explicites dans le CSV
+          commissions = parseFloat(commissionsStr || "0")
+        } else if (Math.abs(size) > 0) {
+          const symbol = extractSymbolFromContract(contractStr, productStr)
+          if (symbol) {
+            commissions = getLucidTradovateCommissions(symbol, size)
+          }
         }
-      }
+        // Pas de fees pour Lucid (les commissions remplacent les fees)
+      } else {
+        // Pour les autres propfirms, calculer les fees Tradovate standards
+        if (feesStr && feesStr.trim() !== "") {
+          // Fees explicites dans le CSV
+          fees = parseFloat(feesStr || "0")
+        } else if (Math.abs(size) > 0) {
+          // Extraire le symbole depuis le contrat ou le product
+          const symbol = extractSymbolFromContract(contractStr, productStr)
 
-      if (commissionsStr && commissionsStr.trim() !== "") {
-        // Commissions explicites dans le CSV
-        commissions = parseFloat(commissionsStr || "0")
-      } else if (propfirm === "LUCID" && Math.abs(size) > 0) {
-        // Pour les comptes Lucid, calculer les commissions selon les tarifs Lucid
-        const symbol = extractSymbolFromContract(contractStr, productStr)
-        if (symbol) {
-          commissions = getLucidTradovateCommissions(symbol, size)
+          if (symbol) {
+            // Calculer les fees basées sur le symbole et le nombre de contrats (round turn)
+            fees = getTradovateFees(symbol, size)
+          } else {
+            // Fallback: estimation par défaut si le symbole n'est pas trouvé
+            console.warn(
+              `[Parser Tradovate] Impossible d'extraire le symbole depuis "${contractStr}" / "${productStr}", utilisation de l'estimation par défaut`
+            )
+            fees = Math.abs(size) * 1.5
+          }
+        }
+
+        if (commissionsStr && commissionsStr.trim() !== "") {
+          // Commissions explicites dans le CSV
+          commissions = parseFloat(commissionsStr || "0")
         }
       }
 
