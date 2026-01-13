@@ -83,9 +83,7 @@ export class TopStepStrategy implements PropfirmStrategy {
     })
 
     // Compter les jours à +150$ ou plus
-    const qualifyingDays = Object.values(dailyPnl).filter(
-      (amount) => amount >= 150
-    ).length
+    const qualifyingDays = Object.values(dailyPnl).filter((amount) => amount >= 150).length
 
     // Calculer le nombre de cycles complétés (5 jours = 1 cycle)
     const completedCycles = Math.floor(qualifyingDays / 5)
@@ -135,21 +133,36 @@ export class TopStepStrategy implements PropfirmStrategy {
     const maxDayProfit = Math.max(...Object.values(dailyPnl).filter((v) => v > 0))
     const consistencyCheck = maxDayProfit <= totalPnl * (rules.consistencyRule / 100)
 
-    // Vérifier le drawdown
-    let peak = accountSize
-    let currentBalance = accountSize
+    // Vérifier le trailing drawdown end-of-day
+    // Le drawdown suit le point le plus haut atteint (trailing)
     let maxDrawdownExceeded = false
+    const dailyBalances: Record<string, number> = {}
+    let currentBalance = accountSize
+    let highestBalance = accountSize // Point le plus haut atteint (pour trailing)
 
     pnlEntries
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
       .forEach((entry) => {
+        const dateKey = format(new Date(entry.date), "yyyy-MM-dd")
+        if (!dailyBalances[dateKey]) {
+          dailyBalances[dateKey] = currentBalance
+        }
         currentBalance += entry.amount
-        if (currentBalance > peak) peak = currentBalance
-        const drawdown = peak - currentBalance
-        if (drawdown > rules.maxDrawdown) maxDrawdownExceeded = true
+        dailyBalances[dateKey] = currentBalance
+
+        // Mettre à jour le point le plus haut (trailing)
+        if (currentBalance > highestBalance) {
+          highestBalance = currentBalance
+        }
+
+        // Vérifier le trailing drawdown à la fin de chaque jour
+        // Drawdown = différence entre le point le plus haut et la balance actuelle
+        const trailingDrawdown = highestBalance - currentBalance
+        if (trailingDrawdown > rules.maxDrawdown) {
+          maxDrawdownExceeded = true
+        }
       })
 
     return consistencyCheck && !maxDrawdownExceeded
   }
 }
-

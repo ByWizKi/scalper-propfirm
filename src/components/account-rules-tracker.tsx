@@ -287,9 +287,42 @@ export function AccountRulesTracker({
   // Calculer le PnL total
   const totalPnl = pnlEntries.reduce((sum, entry) => sum + entry.amount, 0)
 
-  // Calculer le drawdown end-of-day actuel
-  const startingBalance = accountSize - rules.maxDrawdown
-  const currentDrawdownLevel = startingBalance + totalPnl
+  // Calculer le trailing drawdown end-of-day
+  // Le seuil suit le point le plus haut atteint (trailing)
+  let currentBalance = accountSize
+  let highestBalance = accountSize // Point le plus haut atteint (pour trailing)
+  let currentDrawdownLevel = accountSize - rules.maxDrawdown // Seuil initial
+  let maxDrawdownExceeded = false
+
+  // Trier les entrées par date pour calculer chronologiquement
+  const sortedPnlEntries = [...pnlEntries].sort(
+    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+  )
+
+  // Calculer le trailing drawdown jour par jour
+  const dailyBalances: Record<string, number> = {}
+  sortedPnlEntries.forEach((entry) => {
+    const dateKey = entry.date.split("T")[0]
+    if (!dailyBalances[dateKey]) {
+      dailyBalances[dateKey] = currentBalance
+    }
+    currentBalance += entry.amount
+    dailyBalances[dateKey] = currentBalance
+
+    // Mettre à jour le point le plus haut (trailing)
+    if (currentBalance > highestBalance) {
+      highestBalance = currentBalance
+    }
+
+    // Calculer le seuil de drawdown (point le plus haut - maxDrawdown)
+    currentDrawdownLevel = highestBalance - rules.maxDrawdown
+
+    // Vérifier si le drawdown est dépassé
+    const trailingDrawdown = highestBalance - currentBalance
+    if (trailingDrawdown > rules.maxDrawdown) {
+      maxDrawdownExceeded = true
+    }
+  })
 
   // Calculer le PnL du jour (aujourd&apos;hui)
   const today = new Date().toISOString().split("T")[0]
@@ -313,7 +346,8 @@ export function AccountRulesTracker({
 
   // Statuts
   const profitTargetStatus = totalPnl >= rules.profitTarget
-  const drawdownStatus = currentDrawdownLevel >= startingBalance
+  // Pour le trailing drawdown, vérifier que la balance actuelle est au-dessus du seuil
+  const drawdownStatus = currentBalance >= currentDrawdownLevel && !maxDrawdownExceeded
   const dailyLossStatus = todayPnl > -rules.dailyLossLimit
   const consistencyStatus = consistencyPercentage <= rules.consistencyRule || totalPnl <= 0
   const minTradingDaysStatus = rules.minTradingDays ? tradingDays >= rules.minTradingDays : true
@@ -321,9 +355,12 @@ export function AccountRulesTracker({
   // Pour Apex, Bulenox, Phidias et Tradeify, utiliser la logique de la stratégie
   // Phidias utilise une perte statique (pas de trailing)
   // Tradeify a des règles spécifiques selon le type de compte
-  // Pour les autres, utiliser la logique end-of-day
+  // Pour les autres, utiliser la logique end-of-day avec trailing drawdown
   const useStrategyEligibility =
-    propfirm === "APEX" || propfirm === "BULENOX" || propfirm === "PHIDIAS" || propfirm === "TRADEIFY"
+    propfirm === "APEX" ||
+    propfirm === "BULENOX" ||
+    propfirm === "PHIDIAS" ||
+    propfirm === "TRADEIFY"
 
   // Calculer l'éligibilité selon la méthode appropriée
   let isEligible: boolean
@@ -344,7 +381,7 @@ export function AccountRulesTracker({
       notes
     )
   } else {
-    // Logique end-of-day pour TopStep et TakeProfitTrader
+    // Logique end-of-day avec trailing drawdown pour TopStep et TakeProfitTrader
     isEligible =
       profitTargetStatus &&
       drawdownStatus &&
@@ -360,7 +397,9 @@ export function AccountRulesTracker({
 
   // Calculs pour les barres de progression
   const profitProgress = Math.min((totalPnl / rules.profitTarget) * 100, 100)
-  const drawdownUsed = rules.maxDrawdown - (currentDrawdownLevel - startingBalance)
+  // Pour le trailing drawdown, calculer le drawdown utilisé (différence entre le pic et la balance actuelle)
+  const trailingDrawdown = highestBalance - currentBalance
+  const drawdownUsed = Math.max(0, trailingDrawdown)
   const drawdownProgress = Math.min((drawdownUsed / rules.maxDrawdown) * 100, 100)
   const dailyLossUsed = Math.abs(Math.min(todayPnl, 0))
   const dailyLossProgress = Math.min((dailyLossUsed / rules.dailyLossLimit) * 100, 100)
@@ -411,10 +450,10 @@ export function AccountRulesTracker({
             <Shield
               className={`h-4 w-4 ${drawdownStatus ? "text-green-600 dark:text-green-500" : "text-red-600 dark:text-red-500"}`}
             />
-            <span className="text-sm font-medium">Drawdown Max (End of Day)</span>
+            <span className="text-sm font-medium">Drawdown Max (Suiveur)</span>
           </div>
           <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
-            {formatCurrency(currentDrawdownLevel)} / {formatCurrency(startingBalance)}
+            {formatCurrency(currentBalance)} / {formatCurrency(currentDrawdownLevel)}
           </span>
         </div>
         <div className="h-2 bg-slate-200/70 dark:bg-slate-800/70 rounded-full overflow-hidden mb-2">
@@ -445,7 +484,8 @@ export function AccountRulesTracker({
             )}
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            Niveau : {formatCurrency(startingBalance)} + profits du jour
+            Seuil : {formatCurrency(currentDrawdownLevel)} (Pic: {formatCurrency(highestBalance)} -{" "}
+            {formatCurrency(rules.maxDrawdown)})
           </p>
         </div>
       </div>
@@ -471,9 +511,9 @@ export function AccountRulesTracker({
                   ? "bg-green-600 dark:bg-green-500"
                   : dailyLossProgress < 75
                     ? "bg-yellow-600 dark:bg-yellow-500"
-                : dailyLossProgress < 100
-                  ? "bg-orange-600 dark:bg-orange-500"
-                  : "bg-red-600 dark:bg-red-500"
+                    : dailyLossProgress < 100
+                      ? "bg-orange-600 dark:bg-orange-500"
+                      : "bg-red-600 dark:bg-red-500"
               }`}
               style={{ width: `${dailyLossProgress}%` }}
             />
@@ -492,7 +532,9 @@ export function AccountRulesTracker({
               ) : (
                 <>
                   <AlertTriangle className="h-3 w-3 text-red-600 dark:text-red-500" />
-                  <p className="text-xs text-red-600 dark:text-red-500">Limite journalière dépassée</p>
+                  <p className="text-xs text-red-600 dark:text-red-500">
+                    Limite journalière dépassée
+                  </p>
                 </>
               )}
             </div>
@@ -530,7 +572,8 @@ export function AccountRulesTracker({
                 <p className="text-xs text-slate-600 dark:text-slate-400">Pas encore de données</p>
               ) : consistencyStatus ? (
                 <p className="text-xs text-slate-600 dark:text-slate-400">
-                  Plus gros jour : {formatCurrency(biggestDay)} ({consistencyPercentage.toFixed(1)}%)
+                  Plus gros jour : {formatCurrency(biggestDay)} ({consistencyPercentage.toFixed(1)}
+                  %)
                 </p>
               ) : (
                 <>

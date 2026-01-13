@@ -11,6 +11,7 @@ import { PropfirmType } from "@/types/account.types"
 export const TRADOVATE_COMPATIBLE_PROPFIRMS: PropfirmType[] = [
   PropfirmType.APEX,
   PropfirmType.TRADEIFY,
+  PropfirmType.TAKEPROFITTRADER,
 ]
 
 /**
@@ -24,4 +25,3 @@ export function isTradovateCompatible(propfirm: string | PropfirmType): boolean 
 
   return TRADOVATE_COMPATIBLE_PROPFIRMS.includes(propfirm as PropfirmType)
 }
-
