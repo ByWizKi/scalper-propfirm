@@ -28,6 +28,11 @@ import {
   type TradeifyAccountType,
   type SelectPayoutOption,
 } from "@/lib/tradeify-account-type"
+import {
+  getLucidAccountType,
+  getLucidAccountTypeLabel,
+  type LucidAccountType,
+} from "@/lib/lucid-account-type"
 
 interface PropfirmAccount {
   id: string
@@ -78,6 +83,14 @@ const SELECT_PAYOUT_OPTIONS = [
   { value: "DAILY", label: "Daily (Daily Payout)" },
 ]
 
+// Types de comptes Lucid
+const LUCID_ACCOUNT_TYPES = [
+  { value: "FLEX", label: "LucidFlex" },
+  { value: "PRO", label: "LucidPro" },
+  { value: "DIRECT", label: "LucidDirect" },
+  { value: "LIVE", label: "LucidLive" },
+]
+
 const ACCOUNT_STATUSES = [
   { value: "ACTIVE", label: "Actif" },
   { value: "VALIDATED", label: "Validé" },
@@ -99,6 +112,7 @@ export function AccountFormDialog({
   const [phidiasFundedType, setPhidiasFundedType] = useState<"CASH" | "LIVE">("CASH")
   const [tradeifyAccountType, setTradeifyAccountType] = useState<TradeifyAccountType>("GROWTH")
   const [selectPayoutOption, setSelectPayoutOption] = useState<SelectPayoutOption>("FLEX")
+  const [lucidAccountType, setLucidAccountType] = useState<LucidAccountType>("FLEX")
   const [formData, setFormData] = useState({
     name: "",
     propfirm: "TOPSTEP",
@@ -131,6 +145,13 @@ export function AccountFormDialog({
         }
       }
 
+      // Détecter le type Lucid
+      const isLucid = account.propfirm === "LUCID"
+      if (isLucid) {
+        const detectedType = getLucidAccountType(account.name, account.notes)
+        setLucidAccountType(detectedType)
+      }
+
       setFormData({
         name: account.name,
         propfirm: account.propfirm,
@@ -159,6 +180,7 @@ export function AccountFormDialog({
       setPhidiasFundedType("CASH")
       setTradeifyAccountType("GROWTH")
       setSelectPayoutOption("FLEX")
+      setLucidAccountType("FLEX")
     }
   }, [account, open])
 
@@ -211,6 +233,27 @@ export function AccountFormDialog({
     ]
   }
 
+  // Pour Lucid DIRECT/LIVE, inclure 25K (parfois disponible)
+  if (
+    formData.propfirm === "LUCID" &&
+    (lucidAccountType === "DIRECT" || lucidAccountType === "LIVE")
+  ) {
+    availableSizes = [
+      { value: "25000", label: "25K" },
+      { value: "50000", label: "50K" },
+      { value: "100000", label: "100K" },
+      { value: "150000", label: "150K" },
+    ]
+  } else if (formData.propfirm === "LUCID") {
+    // FLEX et PRO : 25K, 50K, 100K, 150K
+    availableSizes = [
+      { value: "25000", label: "25K" },
+      { value: "50000", label: "50K" },
+      { value: "100000", label: "100K" },
+      { value: "150000", label: "150K" },
+    ]
+  }
+
   // Réinitialiser la taille si elle n'est pas disponible pour la propfirm sélectionnée
   const handlePropfirmChange = (value: string) => {
     const newAvailableSizes = ACCOUNT_SIZES_BY_PROPFIRM[value as PropfirmType] || []
@@ -244,6 +287,21 @@ export function AccountFormDialog({
         setFormData({ ...formData, propfirm: value, size: "" })
       }
     }
+
+    // Réinitialiser le type Lucid si on change de propfirm
+    if (value !== "LUCID") {
+      setLucidAccountType("FLEX")
+      // Si on passe de Lucid DIRECT/LIVE à une autre propfirm, réinitialiser le type de compte
+      if (
+        formData.accountType === "FUNDED" &&
+        (lucidAccountType === "DIRECT" || lucidAccountType === "LIVE")
+      ) {
+        setFormData({ ...formData, propfirm: value, accountType: "EVAL", size: "" })
+      }
+    } else {
+      // Si on sélectionne Lucid, réinitialiser le type à FLEX par défaut
+      setLucidAccountType("FLEX")
+    }
   }
 
   // Gérer le changement de type Tradeify
@@ -256,6 +314,15 @@ export function AccountFormDialog({
     } else if (formData.size === "25000") {
       // Growth et Select ne supportent pas 25K
       setFormData({ ...formData, size: "" })
+    }
+  }
+
+  // Gérer le changement de type Lucid
+  const handleLucidAccountTypeChange = (value: LucidAccountType) => {
+    setLucidAccountType(value)
+    // Si DIRECT ou LIVE est sélectionné, forcer FUNDED (pas d'évaluation)
+    if (value === "DIRECT" || value === "LIVE") {
+      setFormData({ ...formData, accountType: "FUNDED" })
     }
   }
 
@@ -345,6 +412,35 @@ export function AccountFormDialog({
           finalFormData.notes = formData.notes
             ? `${formData.notes} - ${tradeifyAccountType}`
             : tradeifyAccountType
+        }
+      }
+
+      // Gérer Lucid : ajouter le type dans le nom ou les notes
+      if (formData.propfirm === "LUCID") {
+        const nameLower = formData.name.toLowerCase()
+        const notesLower = (formData.notes || "").toLowerCase()
+        const lucidTypeLabel = getLucidAccountTypeLabel(lucidAccountType)
+        const hasTypeInName =
+          nameLower.includes("flex") ||
+          nameLower.includes("pro") ||
+          nameLower.includes("direct") ||
+          nameLower.includes("live")
+        const hasTypeInNotes =
+          notesLower.includes("flex") ||
+          notesLower.includes("pro") ||
+          notesLower.includes("direct") ||
+          notesLower.includes("live")
+
+        // Ajouter le type dans le nom si pas déjà présent
+        if (!hasTypeInName) {
+          finalFormData.name = `${formData.name} ${lucidTypeLabel}`
+        }
+
+        // Ajouter le type dans les notes si pas déjà présent
+        if (!hasTypeInNotes && !hasTypeInName) {
+          finalFormData.notes = formData.notes
+            ? `${formData.notes} - ${lucidTypeLabel}`
+            : lucidTypeLabel
         }
       }
 
@@ -508,7 +604,9 @@ export function AccountFormDialog({
                     }
                   }}
                   disabled={
-                    formData.propfirm === "TRADEIFY" && tradeifyAccountType === "LIGHTNING"
+                    (formData.propfirm === "TRADEIFY" && tradeifyAccountType === "LIGHTNING") ||
+                    (formData.propfirm === "LUCID" &&
+                      (lucidAccountType === "DIRECT" || lucidAccountType === "LIVE"))
                   }
                 >
                   <SelectTrigger id="accountType">
@@ -520,6 +618,14 @@ export function AccountFormDialog({
                       if (
                         formData.propfirm === "TRADEIFY" &&
                         tradeifyAccountType === "LIGHTNING" &&
+                        type.value === "EVAL"
+                      ) {
+                        return null
+                      }
+                      // Pour Lucid DIRECT/LIVE, désactiver EVAL
+                      if (
+                        formData.propfirm === "LUCID" &&
+                        (lucidAccountType === "DIRECT" || lucidAccountType === "LIVE") &&
                         type.value === "EVAL"
                       ) {
                         return null
@@ -593,7 +699,9 @@ export function AccountFormDialog({
                 </Label>
                 <Select
                   value={tradeifyAccountType}
-                  onValueChange={(value) => handleTradeifyAccountTypeChange(value as TradeifyAccountType)}
+                  onValueChange={(value) =>
+                    handleTradeifyAccountTypeChange(value as TradeifyAccountType)
+                  }
                 >
                   <SelectTrigger id="tradeifyAccountType">
                     <SelectValue />
@@ -646,6 +754,39 @@ export function AccountFormDialog({
                   </p>
                 </div>
               )}
+
+            {/* Choix du type de compte Lucid */}
+            {formData.propfirm === "LUCID" && (
+              <div className="grid gap-2">
+                <Label htmlFor="lucidAccountType" className="text-xs sm:text-sm">
+                  Type de compte Lucid *
+                </Label>
+                <Select
+                  value={lucidAccountType}
+                  onValueChange={(value) => handleLucidAccountTypeChange(value as LucidAccountType)}
+                >
+                  <SelectTrigger id="lucidAccountType">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {LUCID_ACCOUNT_TYPES.map((type) => (
+                      <SelectItem key={type.value} value={type.value}>
+                        {type.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                  {lucidAccountType === "FLEX"
+                    ? "LucidFlex : Évaluation One-Step (le plus flexible), pas de DLL, consistency 50%"
+                    : lucidAccountType === "PRO"
+                      ? "LucidPro : Évaluation classique, DLL selon taille, consistency 35-40%, min 5 jours"
+                      : lucidAccountType === "DIRECT"
+                        ? "LucidDirect : Instant Funded (pas d'évaluation), consistency 20%, 8 jours profitables"
+                        : "LucidLive : Instant Funded (pas d'évaluation), consistency 20%, 8 jours profitables"}
+                </p>
+              </div>
+            )}
 
             {/* Compte d&apos;évaluation lié (seulement pour FUNDED) */}
             {formData.accountType === "FUNDED" && (
