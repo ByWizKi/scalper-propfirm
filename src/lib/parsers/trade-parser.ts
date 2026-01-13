@@ -5,6 +5,51 @@
 export type TradingPlatform = "PROJECT_X" | "TRADOVATE"
 
 /**
+ * Map des commissions Lucid sur Tradovate par symbole (Per Side)
+ * Source: Tableau fourni par Lucid Trading
+ */
+const LUCID_TRADOVATE_COMMISSIONS: Record<string, number> = {
+  // Equity Futures
+  ES: 1.75, // E-mini S&P 500 Futures
+  MES: 0.5, // Micro E-mini S&P 500 Index Futures
+  NQ: 1.75, // E-mini Nasdaq-100 Futures
+  MNQ: 0.5, // Micro E-mini Nasdaq-100 Index Futures
+  RTY: 1.75, // E-mini Russell 2000 Index Futures
+  M2K: 0.5, // Micro E-mini Russell 2000 Index Futures
+  NKD: 1.75, // Nikkei/USD Futures
+  YM: 1.75, // E-mini Dow ($5) Futures
+  MYM: 0.5, // Micro E-mini Dow Jones Industrial Average Index Futures
+  // Currency Futures
+  "6A": 2.4, // Australian Dollar Futures
+  "6B": 2.4, // British Pound Futures
+  "6C": 2.4, // Canadian Dollar Futures
+  "6E": 2.4, // Euro FX Futures
+  "6J": 2.4, // Japanese Yen Futures
+  "6S": 2.4, // Swiss Franc Futures
+  "6N": 2.4, // New Zealand Dollar Futures
+  // Energy Futures
+  CL: 2.0, // Crude Oil Futures
+  MCL: 0.5, // Micro Crude Oil
+  QM: 2.0, // E-mini Crude Oil Futures
+  QG: 1.3, // E-mini Natural Gas Futures
+  NG: 2.0, // Henry Hub Natural Gas Futures
+  // Metal Futures
+  PL: 2.3, // Platinum Futures
+  HG: 2.3, // Copper Futures
+  GC: 2.3, // Gold Futures
+  MGC: 0.8, // Micro Gold Futures
+  SI: 2.3, // Silver
+  // Agricultural Futures
+  HE: 2.8, // Lean Hog Futures
+  LE: 2.8, // Live Cattle Futures
+  ZS: 2.8, // Soybean Futures
+  ZC: 2.8, // Corn Futures
+  ZL: 2.8, // Soybean Oil Futures
+  ZM: 2.8, // Soybean Meal Futures
+  ZW: 2.8, // Chicago SRW Wheat Futures
+}
+
+/**
  * Map des fees Tradeovate par symbole (Round Turn)
  * Source: https://apextraderfunding.com/commission-rates/
  */
@@ -81,8 +126,8 @@ function extractSymbolFromContract(contract: string, product?: string): string {
   // Si on a un Product, l'utiliser en priorité
   if (product && product.trim()) {
     const productUpper = product.trim().toUpperCase()
-    // Vérifier si le product est dans la map
-    if (TRADOVATE_FEES[productUpper]) {
+    // Vérifier si le product est dans la map (fees ou commissions Lucid)
+    if (TRADOVATE_FEES[productUpper] || LUCID_TRADOVATE_COMMISSIONS[productUpper]) {
       return productUpper
     }
   }
@@ -128,6 +173,31 @@ function getTradovateFees(symbol: string, size: number): number {
   }
 
   return Math.abs(size) * feesPerContract
+}
+
+/**
+ * Obtient les commissions Lucid sur Tradovate pour un symbole donné (Per Side)
+ * Les commissions sont calculées par côté (entrée + sortie = 2x la commission)
+ */
+function getLucidTradovateCommissions(symbol: string, size: number): number {
+  if (!symbol || size === 0) {
+    return 0
+  }
+
+  const symbolUpper = symbol.trim().toUpperCase()
+  const commissionPerSide = LUCID_TRADOVATE_COMMISSIONS[symbolUpper]
+
+  if (commissionPerSide === undefined) {
+    // Si le symbole n'est pas trouvé, utiliser une estimation par défaut
+    console.warn(
+      `[Parser Lucid Tradovate] Symbole "${symbolUpper}" non trouvé dans la map des commissions, utilisation de l'estimation par défaut (1.00)`
+    )
+    // Round turn = 2x per side
+    return Math.abs(size) * 1.0 * 2
+  }
+
+  // Round turn = 2x per side (entrée + sortie)
+  return Math.abs(size) * commissionPerSide * 2
 }
 
 export interface ParsedTrade {
@@ -305,7 +375,7 @@ export function parseProjectXCsv(csvContent: string): ParsedTrade[] {
  * Parser pour Tradovate - Format "Position History"
  * Format attendu: Position ID,Timestamp,Trade Date,Net Pos,Net Price,Bought,Avg. Buy,Sold,Avg. Sell,Account,Contract,Product,Product Description,Buy Price,Sell Price,P/L,Currency,Bought Timestamp,Sold Timestamp,Paired Qty
  */
-export function parseTradovateCsv(csvContent: string): ParsedTrade[] {
+export function parseTradovateCsv(csvContent: string, propfirm?: string): ParsedTrade[] {
   // Normaliser les retours à la ligne
   const normalizedContent = csvContent.replace(/\r\n/g, "\n").replace(/\r/g, "\n")
   const allLines = normalizedContent.split("\n")
@@ -517,6 +587,12 @@ export function parseTradovateCsv(csvContent: string): ParsedTrade[] {
       if (commissionsStr && commissionsStr.trim() !== "") {
         // Commissions explicites dans le CSV
         commissions = parseFloat(commissionsStr || "0")
+      } else if (propfirm === "LUCID" && Math.abs(size) > 0) {
+        // Pour les comptes Lucid, calculer les commissions selon les tarifs Lucid
+        const symbol = extractSymbolFromContract(contractStr, productStr)
+        if (symbol) {
+          commissions = getLucidTradovateCommissions(symbol, size)
+        }
       }
 
       // Déterminer le type de trade (Long ou Short basé sur le P/L et les prix)
