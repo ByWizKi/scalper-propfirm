@@ -307,8 +307,11 @@ export default function AccountDetailPage() {
       )
 
       normalizedPnlEntries
-        .sort((a, b) => a.date.getTime() - b.date.getTime())
-        .forEach((entry) => {
+        .sort(
+          (a: { date: Date; amount: number }, b: { date: Date; amount: number }) =>
+            a.date.getTime() - b.date.getTime()
+        )
+        .forEach((entry: { date: Date; amount: number }) => {
           currentBalanceCalc += entry.amount
           if (currentBalanceCalc > highestBalance) {
             highestBalance = currentBalanceCalc

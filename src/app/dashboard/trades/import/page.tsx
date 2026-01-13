@@ -99,7 +99,7 @@ export default function TradesImportPage() {
         setSelectedAccountId(compatibleAccounts[0].id)
       }
     } else if (selectedPlatform === "TRADOVATE") {
-      // Filtrer uniquement les comptes compatibles avec Tradovate (Apex, Tradeify et TakeProfit Trader)
+      // Filtrer uniquement les comptes compatibles avec Tradovate (Apex, Tradeify, TakeProfit Trader et Lucid)
       const compatibleAccounts = allAccounts.filter((acc) => isTradovateCompatible(acc.propfirm))
       setAccounts(compatibleAccounts)
       // Vérifier si le compte actuel est compatible

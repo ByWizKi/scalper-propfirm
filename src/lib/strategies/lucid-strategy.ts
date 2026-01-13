@@ -14,10 +14,7 @@ import { getLucidAccountType, LucidAccountType } from "@/lib/lucid-account-type"
 
 export class LucidStrategy implements PropfirmStrategy {
   // Configuration des règles d'évaluation par type et taille
-  private readonly rulesConfig: Record<
-    LucidAccountType,
-    Record<number, AccountRules>
-  > = {
+  private readonly rulesConfig: Record<LucidAccountType, Record<number, AccountRules>> = {
     FLEX: {
       25000: {
         profitTarget: 1250,
@@ -213,14 +210,15 @@ export class LucidStrategy implements PropfirmStrategy {
     const minDailyProfit = minDailyProfitConfig[accountSize] || 200
 
     if (lucidType === "FLEX") {
-      // LucidFlex : Pas de buffer, pas de cohérence, 5 jours profitables
+      // LucidFlex : Pas de buffer, pas de cohérence en funded, 5 jours profitables
+      // Profit split : 100% premiers 10k totaux, puis 90%
       return {
         taxRate: 0.1, // 90% pour le trader (100% premiers 10k puis 90%)
         requiresCycles: false,
-        hasBuffer: false,
+        hasBuffer: false, // Pas de safety net obligatoire
         minWithdrawal: 500,
-        maxWithdrawal: this.getMaxPayout(accountSize, 0), // Premier payout
-        frequency: "daily", // Instantanée/daily
+        maxWithdrawal: this.getMaxPayout(accountSize, 0, "FLEX"), // Premier payout, limité par paliers
+        frequency: "daily", // Instantanée/daily, processing ultra-rapide
         cycleRequirements: {
           daysPerCycle: 0, // Pas de cycle
           minDailyProfit: minDailyProfit,
@@ -230,13 +228,14 @@ export class LucidStrategy implements PropfirmStrategy {
     }
 
     if (lucidType === "PRO") {
-      // LucidPro : Buffer parfois requis, cohérence 35-40%, 5 jours profitables
+      // LucidPro : Buffer parfois requis, cohérence 35-40% par cycle, 5 jours profitables
+      // Profit split : 90% (ou 100% premiers 10k puis 90%)
       return {
-        taxRate: 0.1, // 90% pour le trader
-        requiresCycles: false,
+        taxRate: 0.1, // 90% pour le trader (100% premiers 10k puis 90%)
+        requiresCycles: false, // Daily possible mais avec conditions strictes
         hasBuffer: false, // Parfois requis mais pas toujours
         minWithdrawal: 500,
-        maxWithdrawal: undefined, // Payouts illimités
+        maxWithdrawal: undefined, // Payouts illimités, scaling possible
         frequency: "daily",
         cycleRequirements: {
           daysPerCycle: 0,
@@ -247,15 +246,16 @@ export class LucidStrategy implements PropfirmStrategy {
     }
 
     // DIRECT/LIVE : Cohérence stricte 20%, 8 jours profitables, buffer parfois requis
+    // Profit split : 90% (100% premiers 10k puis 90%)
     return {
-      taxRate: 0.1, // 90% pour le trader
+      taxRate: 0.1, // 90% pour le trader (100% premiers 10k puis 90%)
       requiresCycles: true,
       hasBuffer: false, // Parfois requis
       minWithdrawal: 500,
       maxWithdrawal: undefined,
-      frequency: "daily", // Moins fréquente (tous les 8 jours min)
+      frequency: "daily", // Moins fréquente (tous les 8 jours min), mais processing rapide
       cycleRequirements: {
-        daysPerCycle: 8, // 8 jours profitables par cycle
+        daysPerCycle: 8, // 8 jours profitables par cycle de payout
         minDailyProfit: minDailyProfit,
         withdrawalPercentage: 100,
       },
@@ -264,46 +264,57 @@ export class LucidStrategy implements PropfirmStrategy {
 
   /**
    * Calcule le maximum payout selon la taille et le numéro de payout
-   * Max 6 payouts par compte
+   * Max 6 payouts par compte (pour LucidFlex)
+   * Les règles varient selon le type de compte
    */
-  private getMaxPayout(accountSize: number, payoutNumber: number): number {
-    const maxPayoutConfig: Record<number, Record<number, number>> = {
-      25000: {
-        0: 2000,
-        1: 2000,
-        2: 2500,
-        3: 3000,
-        4: 3500,
-        5: 4000,
-      },
-      50000: {
-        0: 3000,
-        1: 3000,
-        2: 4000,
-        3: 4500,
-        4: 5000,
-        5: 5000,
-      },
-      100000: {
-        0: 4000,
-        1: 4000,
-        2: 5000,
-        3: 5000,
-        4: 5000,
-        5: 5000,
-      },
-      150000: {
-        0: 5000,
-        1: 5000,
-        2: 5000,
-        3: 5000,
-        4: 5000,
-        5: 5000,
-      },
+  private getMaxPayout(
+    accountSize: number,
+    payoutNumber: number,
+    lucidType?: LucidAccountType
+  ): number {
+    // Pour Flex : payouts limités par paliers
+    if (lucidType === "FLEX") {
+      const maxPayoutConfig: Record<number, Record<number, number>> = {
+        25000: {
+          0: 2000,
+          1: 2000,
+          2: 2500,
+          3: 3000,
+          4: 3500,
+          5: 4000,
+        },
+        50000: {
+          0: 3000,
+          1: 3000,
+          2: 4000,
+          3: 4500,
+          4: 5000,
+          5: 5000,
+        },
+        100000: {
+          0: 4000,
+          1: 4000,
+          2: 5000,
+          3: 5000,
+          4: 5000,
+          5: 5000,
+        },
+        150000: {
+          0: 5000,
+          1: 5000,
+          2: 5000,
+          3: 5000,
+          4: 5000,
+          5: 5000,
+        },
+      }
+
+      const payoutIndex = Math.min(payoutNumber, 5)
+      return maxPayoutConfig[accountSize]?.[payoutIndex] || 5000
     }
 
-    const payoutIndex = Math.min(payoutNumber, 5)
-    return maxPayoutConfig[accountSize]?.[payoutIndex] || 5000
+    // Pour PRO et DIRECT/LIVE : pas de limite de payout (undefined)
+    return undefined as unknown as number
   }
 
   calculateBuffer(_accountSize: number): number {
@@ -326,12 +337,7 @@ export class LucidStrategy implements PropfirmStrategy {
     }
 
     // const currentBalance = accountSize + totalPnl - totalWithdrawals
-    const withdrawalRules = this.getWithdrawalRules(
-      accountSize,
-      accountType,
-      accountName,
-      notes
-    )
+    const withdrawalRules = this.getWithdrawalRules(accountSize, accountType, accountName, notes)
 
     // Calculer le profit disponible (90% pour le trader)
     const availableProfit = totalPnl - totalWithdrawals
@@ -359,9 +365,24 @@ export class LucidStrategy implements PropfirmStrategy {
 
       // Calculer le numéro de payout (approximation)
       const payoutCount = Math.floor(totalWithdrawals / 1000)
-      const maxPayout = this.getMaxPayout(accountSize, payoutCount)
+      const maxPayout = this.getMaxPayout(accountSize, payoutCount, "FLEX")
 
-      return Math.max(0, Math.min(netProfit, maxPayout))
+      // Pour Flex : 100% des premiers 10k totaux, puis 90%
+      const totalProfit = totalPnl
+      const profitAfterWithdrawals = totalPnl - totalWithdrawals
+      let adjustedProfit = profitAfterWithdrawals
+
+      if (totalProfit > 10000) {
+        // 100% des premiers 10k + 90% du reste
+        const first10k = Math.min(10000, profitAfterWithdrawals)
+        const remaining = Math.max(0, profitAfterWithdrawals - 10000)
+        adjustedProfit = first10k + remaining * 0.9
+      } else {
+        // 100% si moins de 10k
+        adjustedProfit = profitAfterWithdrawals
+      }
+
+      return Math.max(0, Math.min(adjustedProfit, maxPayout || Infinity))
     }
 
     if (lucidType === "PRO") {
@@ -381,17 +402,34 @@ export class LucidStrategy implements PropfirmStrategy {
         return 0
       }
 
-      // Vérifier la cohérence si applicable
+      // Vérifier la cohérence 35-40% par cycle de payout
       const totalPnl = pnlEntries.reduce((sum, entry) => sum + entry.amount, 0)
       const biggestDay = Math.max(...Object.values(dailyPnl).filter((v) => v > 0), 0)
       const consistencyPercentage = totalPnl > 0 ? (biggestDay / totalPnl) * 100 : 0
 
-      const rules = this.getAccountRules(accountSize, accountType, accountName, notes)
-      if (rules && rules.consistencyRule > 0 && consistencyPercentage > rules.consistencyRule) {
+      // Cohérence : 35% pour 25k/50k, 40% pour 100k/150k
+      const consistencyRule = accountSize <= 50000 ? 35 : 40
+      if (consistencyPercentage > consistencyRule) {
         return 0
       }
 
-      return Math.max(0, netProfit)
+      // Pour PRO : 100% des premiers 10k totaux, puis 90%
+      // Note: netProfit est déjà à 90%, donc on doit ajuster pour les premiers 10k
+      const totalProfit = totalPnl
+      const profitAfterWithdrawals = totalPnl - totalWithdrawals
+      let adjustedProfit = netProfit
+
+      if (totalProfit > 10000) {
+        // 100% des premiers 10k + 90% du reste
+        const first10k = Math.min(10000, profitAfterWithdrawals)
+        const remaining = Math.max(0, profitAfterWithdrawals - 10000)
+        adjustedProfit = first10k + remaining * 0.9
+      } else {
+        // 100% si moins de 10k (mais netProfit est déjà à 90%, donc on doit corriger)
+        adjustedProfit = profitAfterWithdrawals
+      }
+
+      return Math.max(0, adjustedProfit)
     }
 
     // DIRECT/LIVE : 8 jours profitables, cohérence 20%
@@ -412,7 +450,7 @@ export class LucidStrategy implements PropfirmStrategy {
       return 0
     }
 
-    // Vérifier la cohérence 20%
+    // Vérifier la cohérence 20% (stricte pour DIRECT/LIVE)
     const totalPnlCycle = pnlEntries.reduce((sum, entry) => sum + entry.amount, 0)
     const biggestDay = Math.max(...Object.values(dailyPnl).filter((v) => v > 0), 0)
     const consistencyPercentage = totalPnlCycle > 0 ? (biggestDay / totalPnlCycle) * 100 : 0
@@ -421,7 +459,22 @@ export class LucidStrategy implements PropfirmStrategy {
       return 0
     }
 
-    return Math.max(0, netProfit)
+    // Pour DIRECT/LIVE : 100% des premiers 10k totaux, puis 90%
+    const totalProfit = totalPnlCycle
+    const profitAfterWithdrawals = totalPnlCycle - totalWithdrawals
+    let adjustedProfit = profitAfterWithdrawals
+
+    if (totalProfit > 10000) {
+      // 100% des premiers 10k + 90% du reste
+      const first10k = Math.min(10000, profitAfterWithdrawals)
+      const remaining = Math.max(0, profitAfterWithdrawals - 10000)
+      adjustedProfit = first10k + remaining * 0.9
+    } else {
+      // 100% si moins de 10k
+      adjustedProfit = profitAfterWithdrawals
+    }
+
+    return Math.max(0, adjustedProfit)
   }
 
   isEligibleForValidation(
@@ -449,9 +502,7 @@ export class LucidStrategy implements PropfirmStrategy {
 
     // Vérifier le nombre de jours de trading
     if (rules.minTradingDays && rules.minTradingDays > 0) {
-      const tradingDays = new Set(
-        pnlEntries.map((entry) => format(entry.date, "yyyy-MM-dd"))
-      ).size
+      const tradingDays = new Set(pnlEntries.map((entry) => format(entry.date, "yyyy-MM-dd"))).size
 
       if (tradingDays < rules.minTradingDays) {
         return false
@@ -505,4 +556,3 @@ export class LucidStrategy implements PropfirmStrategy {
     return !maxDrawdownExceeded
   }
 }
-
