@@ -12,6 +12,7 @@ export const TRADOVATE_COMPATIBLE_PROPFIRMS: PropfirmType[] = [
   PropfirmType.APEX,
   PropfirmType.TRADEIFY,
   PropfirmType.TAKEPROFITTRADER,
+  PropfirmType.LUCID,
 ]
 
 /**
